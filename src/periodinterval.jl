@@ -53,7 +53,6 @@ const HourEnding{T <: TimeType} = PeriodEnding{Dates.Hour(1), T}
 HourEnding(i::T, inclusivity) where T = HourEnding{T}(i, inclusivity)
 HourEnding(i::T) where T = HourEnding{T}(i)
 
-# TODO 100% test coverage
 # TODO extensive documentation
 # TODO add `in` tests with DST
 # TODO add tests for hash equality for PeriodEnding, PeriodBeginning, Inclusivity, Interval

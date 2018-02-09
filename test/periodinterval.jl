@@ -69,16 +69,19 @@
     @testset "display" begin
         interval = HourEnding(dt)
         @test string(interval) == "(2016-08-11 HE02]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "PeriodEnding{1 hour, DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false))
         @test string(interval) == "[2013-02-12 HE24)"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "PeriodEnding{1 hour, DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
 
         interval = HourBeginning(dt)
         @test string(interval) == "[2016-08-11 HB02)"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodBeginning{1 hour, DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(true, false))",
@@ -86,6 +89,7 @@
 
         interval = HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true))
         @test string(interval) == "(2013-02-13 HB00]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodBeginning{1 hour, DateTime}(2013-02-13T00:00:00, ",
             "Inclusivity(false, true))",
@@ -93,6 +97,7 @@
 
         interval = HourEnding(ZonedDateTime(dt, tz"America/Winnipeg"))
         @test string(interval) == "(2016-08-11 HE02-05:00]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodEnding{1 hour, $ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
             "Inclusivity(false, true))",
@@ -100,11 +105,13 @@
 
         interval = PeriodEnding{Year(1)}(Date(dt))
         @test string(interval) == "(YE2017]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "PeriodEnding{1 year, Date}(2017-01-01, Inclusivity(false, true))"
 
         interval = PeriodEnding{Month(1)}(dt)
         @test string(interval) == "(2016 MoE09]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodEnding{1 month, DateTime}(2016-09-01T00:00:00, ",
             "Inclusivity(false, true))",
@@ -112,17 +119,20 @@
 
         interval = PeriodEnding{Day(1)}(DateTime(dt))
         @test string(interval) == "(2016-08 DE12]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "PeriodEnding{1 day, DateTime}(2016-08-12T00:00:00, Inclusivity(false, true))"
 
         # Date(dt) will truncate the DateTime to the nearest day instead of rounding up
         interval = PeriodEnding{Day(1)}(Date(dt))
         @test string(interval) == "(2016-08 DE11]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "PeriodEnding{1 day, Date}(2016-08-11, Inclusivity(false, true))"
 
         interval = PeriodEnding{Minute(5)}(dt)
         @test string(interval) == "(2016-08-11 5ME02:00]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodEnding{5 minutes, DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
@@ -130,6 +140,7 @@
 
         interval = PeriodEnding{Second(30)}(dt)
         @test string(interval) == "(2016-08-11 30SE02:00:00]"
+        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "PeriodEnding{30 seconds, DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
@@ -240,6 +251,7 @@
                 @test !isempty(I{P}(dt, Inclusivity(true, false)))
                 @test !isempty(I{P}(dt, Inclusivity(true, true)))
             end
+
             #= Currently invalid:
             for P in [Year(0), Month(0), Day(0), Hour(0), Minute(0), Second(0)]
                 @test isempty(I{P}(dt, Inclusivity(false, false)))
@@ -284,5 +296,16 @@
         he = HourEnding(dt)
         @test intersect(he, PeriodEnding{Hour(2)}(dt)) == Interval{DateTime}(he)
         @test intersect(PeriodEnding{Hour(3)}(dt + Hour(1)), he) == Interval{DateTime}(he)
+
+        # Identical save for inclusivity
+        expected = Interval(dt - Hour(1), dt, Inclusivity(false, false))
+        @test intersect(
+            HourEnding(dt, Inclusivity(false, false)),
+            HourEnding(dt, Inclusivity(true, true)),
+        ) == expected
+        @test intersect(
+            HourEnding(dt, Inclusivity(false, true)),
+            HourEnding(dt, Inclusivity(true, false)),
+        ) == expected
     end
 end

@@ -19,6 +19,28 @@
         end
     end
 
+    @testset "display" begin
+        inc = Inclusivity(false, false)
+        @test string(inc) == "Inclusivity (Open)"
+        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc) == "Inclusivity(false, false)"
+
+        inc = Inclusivity(false, true)
+        @test string(inc) == "Inclusivity (Partial]"
+        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc) == "Inclusivity(false, true)"
+
+        inc = Inclusivity(true, false)
+        @test string(inc) == "Inclusivity [Partial)"
+        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc) == "Inclusivity(true, false)"
+
+        inc = Inclusivity(true, true)
+        @test string(inc) == "Inclusivity [Closed]"
+        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc) == "Inclusivity(true, true)"
+    end
+
     @testset "isless" begin
         @test isless(Inclusivity(0), Inclusivity(1))
         @test isless(Inclusivity(1), Inclusivity(2))

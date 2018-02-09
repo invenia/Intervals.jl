@@ -1,4 +1,4 @@
-abstract type PeriodInterval{P, T} <: AbstractInterval end
+abstract type PeriodInterval{P, T} <: AbstractInterval{T} end
 
 """
     PeriodEnding{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T <: TimeType} -> PeriodEnding{P, T}
@@ -16,7 +16,7 @@ instead.
 
 ### Rounding
 
-The `instant` provided is rounded up to the nearest `duration` using `ceil`. This means that
+The `instant` provided is rounded up to the nearest `P` using `ceil`. This means that
 `PeriodEnding{Hour(1)}(DateTime(2016, 8, 11, 12, 30))` is equivalent to
 `PeriodEnding{Hour(1)}(DateTime(2016, 8, 11, 13))`.
 
@@ -36,11 +36,11 @@ PeriodEnding{1 day, Date}(2016-08-11, Inclusivity(true, false))
 See also: [`PeriodBeginning`](@ref), [`Interval`](@ref), [`Inclusivity`](@ref)
 """
 struct PeriodEnding{P, T <: TimeType} <: PeriodInterval{P, T}
-#@auto_hash_equals struct PeriodEnding{T<:TimeType, P} <: PeriodInterval
     instant::T
     inclusivity::Inclusivity
 
     function PeriodEnding{P, T}(instant::T, inc::Inclusivity) where {P, T <: TimeType}
+        Base.Dates.value(P) <= 0 && throw(DomainError("P must be positive"))
         return new(ceil(instant, P::Period), inc)
     end
 end
@@ -53,13 +53,13 @@ const HourEnding{T <: TimeType} = PeriodEnding{Dates.Hour(1), T}
 HourEnding(i::T, inclusivity) where T = HourEnding{T}(i, inclusivity)
 HourEnding(i::T) where T = HourEnding{T}(i)
 
-# TODO do you really need autohashequals? probably not
 # TODO 100% test coverage
+# TODO extensive documentation
 # TODO add `in` tests with DST
-# TODO check equality, hashing, etc.
 # TODO add tests for hash equality for PeriodEnding, PeriodBeginning, Inclusivity, Interval
-# TODO test isless
 # TODO generalize PeriodEnding and PeriodBeginning to IntervalEnding and IntervalBeginning?
+# TODO generalize PeriodEdning and PeriodBeginning to PeriodInterval with +/- period
+#      (and different default intervals depending on +/-), fix rounding for zeroes...
 
 """
     PeriodBeginning{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T <: TimeType} -> PeriodBeginning{P, T}
@@ -77,8 +77,8 @@ instead.
 
 ### Rounding
 
-The `instant` provided is rounded down to the nearest `duration` using `floor`. This means
-that `PeriodBeginning{Hour(1)}(DateTime(2016, 8, 11, 12, 30))` is equivalent to
+The `instant` provided is rounded down to the nearest `P` using `floor`. This means that
+`PeriodBeginning{Hour(1)}(DateTime(2016, 8, 11, 12, 30))` is equivalent to
 `PeriodBeginning{Hour(1)}(DateTime(2016, 8, 11, 12))`.
 
 ### Example
@@ -102,6 +102,7 @@ struct PeriodBeginning{P, T<:TimeType} <: PeriodInterval{P, T}
     inclusivity::Inclusivity
 
     function PeriodBeginning{P, T}(instant::T, inc::Inclusivity) where {P, T <: TimeType}
+        Base.Dates.value(P) <= 0 && throw(DomainError("P must be positive"))
         return new(floor(instant, P::Period), inc)
     end
 end
@@ -115,15 +116,29 @@ const HourBeginning{T} = PeriodBeginning{Dates.Hour(1), T} where T <: TimeType
 HourBeginning(i::T, inclusivity) where T = HourBeginning{T}(i, inclusivity)
 HourBeginning(i::T) where T = HourBeginning{T}(i)
 
+Base.copy(x::I) where {I <: PeriodInterval} = I(x.instant, x.inclusivity)
+
+##### ACCESSORS #####
+
+Base.start(interval::PeriodEnding{P}) where P = interval.instant - P
+Base.start(interval::PeriodBeginning) = interval.instant
+
+finish(interval::PeriodEnding) = interval.instant
+finish(interval::PeriodBeginning{P}) where P = interval.instant + P
+
+span(interval::PeriodInterval{P}) where P = P
+
 ##### CONVERSION #####
 
-function Base.convert(::Type{Interval{T}}, interval::PeriodEnding{P, T}) where {P, T}
-    return Interval{T}(interval.instant - P, interval.instant, interval.inclusivity)
+function Base.convert(::Type{Interval{T}}, interval::PeriodInterval{P, T}) where {P, T}
+    return Interval{T}(start(interval), finish(interval), inclusivity(interval))
 end
 
-function Base.convert(::Type{Interval{T}}, interval::PeriodBeginning{P, T}) where {P, T}
-    return Interval{T}(interval.instant, interval.instant + P, interval.inclusivity)
-end
+Base.convert(::Type{T}, interval::PeriodInterval{P, T}) where {P, T} = interval.instant
+
+# Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
+Base.Date(interval::PeriodInterval{P, Date}) where P = interval.instant
+Base.DateTime(interval::PeriodInterval{P, DateTime}) where P = interval.instant
 
 ##### DISPLAY #####
 
@@ -159,29 +174,29 @@ end
 
 ##### ARITHMETIC #####
 
-function Base.:+(interval::PeriodEnding{P, T}, p::Period) where {P, T}
-    return PeriodEnding{P, T}(interval.instant + p, interval.inclusivity)
-end
-
-function Base.:+(interval::PeriodBeginning{P, T}, p::Period) where {P, T}
-    return PeriodEnding{P, T}(interval.instant + p, interval.inclusivity)
+function Base.:+(interval::I, p::Period) where I <: PeriodInterval
+    return I(interval.instant + p, interval.inclusivity)
 end
 
 Base.:+(period::Period, interval::PeriodInterval) = interval + period
 Base.:-(interval::PeriodInterval, period::Period) = interval + -period
 
 # Required for StepRange{<:PeriodInterval}
-Base.:-(a::I, b::I) where {P, T, I <: PeriodInterval{P, T}} = a.instant - b.instant
+Base.:-(a::I, b::I) where {I <: PeriodInterval} = a.instant - b.instant
+
+##### RANGE #####
 
 # Required for StepRange{<:PeriodInterval}
 function Base.steprem(a::I, b::I, c) where {P, T, I <: PeriodInterval{P, T}}
-    return Base.steprem(a.instant,b.instant,c)
+    return Base.steprem(a.instant, b.instant, c)
 end
 
 # Infer step for two-argument StepRange{<:PeriodInterval}
 function Base.colon(start::I, stop::I) where {P, T, I <: PeriodInterval{P, T}}
     return colon(start, P, stop)
 end
+
+Base.length(r::StepRange{<:PeriodInterval}) = length(r.start.instant:r.step:r.stop.instant)
 
 ##### EQUALITY #####
 
@@ -193,8 +208,4 @@ end
 
 function Base.isempty(interval::I) where {P, T, I <: PeriodInterval{P, T}}
     return Base.Dates.value(P) == 0 && interval.inclusivity != Inclusivity(true, true)
-end
-
-function Base.in(x::T, interval::I) where {P, T, I <: PeriodInterval{P, T}}
-    return in(x, Interval{T}(interval))
 end

@@ -33,10 +33,14 @@ function summary(dt::TimeType, p::Day, s::String)
 end
 
 function summary(dt::TimeType, p::Hour, s::String)
-    # Display HE24 as HE24
-    hr = mod(hour(dt) - 1, 24) + 1
-    if hr == 24
-        dt -= Day(1)
+    hr = hour(dt)
+
+    if s == "E"
+        # Display HE24 as HE24
+        hr = mod(hr - 1, 24) + 1
+        if hr == 24
+            dt -= Day(1)
+        end
     end
 
     return @sprintf(
@@ -58,7 +62,7 @@ end
 
 function summary(dt::TimeType, p::Second, s::String)
     return @sprintf(
-        "%04d-%02d-%02d %s%s%02d:%02d%02d",
+        "%04d-%02d-%02d %s%s%02d:%02d:%02d",
         year(dt), month(dt), day(dt),
         summary(value(p), "S"), s,
         hour(dt), minute(dt), second(dt),

@@ -4,9 +4,8 @@ module PeriodIntervals
 
 using Base.Dates
 using TimeZones
-#using AutoHashEquals
 
-abstract type AbstractInterval end
+abstract type AbstractInterval{T} end
 
 include("inclusivity.jl")
 include("interval.jl")
@@ -21,6 +20,9 @@ export AbstractInterval,
        HourEnding,
        HourBeginning,
        Inclusivity,
+       inclusivity,
+       finish,
+       span,
        ..
 
 end

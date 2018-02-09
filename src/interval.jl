@@ -50,7 +50,7 @@ Note that the `Inclusivity` value is also reversed in this case.
 
 See also: [`PeriodBeginning`](@ref), [`PeriodEnding`](@ref), [`Inclusivity`](@ref)
 """
-struct Interval{T} <: AbstractInterval
+struct Interval{T} <: AbstractInterval{T}
 #@auto_hash_equals struct Interval{T} <: AbstractInterval
     start::T
     finish::T
@@ -77,14 +77,27 @@ function Interval{T}() where T <: ZonedDateTime
     return Interval{T}(T(0, tz"UTC"), T(0, tz"UTC"), Inclusivity(false, false))
 end
 
+Base.copy(x::Interval{T}) where T = Interval{T}(x.start, x.finish, x.inclusivity)
+
+##### ACCESSORS #####
+
+Base.start(interval::Interval) = interval.start
+finish(interval::Interval) = interval.finish
+span(interval::Interval) = interval.finish - interval.start
+inclusivity(interval::AbstractInterval) = interval.inclusivity
+
 ##### DISPLAY #####
 
 function Base.show(io::IO, interval::Interval{T}) where T
     if get(io, :compact, false)
         print(io, interval)
     else
-        print(io, "Interval{$T}(", interval.start, ", ", interval.finish, ", ")
-        show(io, interval.inclusivity)  # Display inclusivity in Julia (not human) format
+        print(io, "Interval{$T}(")
+        show(io, interval.start)
+        print(io, ", ")
+        show(io, interval.finish)
+        print(io, ", ")
+        show(io, interval.inclusivity)
         print(io, ")")
     end
 end
@@ -112,20 +125,23 @@ function Base.:+(a::Interval{T}, b::T) where T
     return Interval{T}(a.start + b, a.finish + b, a.inclusivity)
 end
 
+function Base.:+(a::Interval{Char}, b::Integer)
+    return Interval{Char}(a.start + b, a.finish + b, a.inclusivity)
+end
+
 function Base.:+(a::Interval{T}, b::Period) where T <: TimeType
     return Interval{T}(a.start + b, a.finish + b, a.inclusivity)
 end
 
 Base.:+(a::T, b::Interval{T}) where T = b + a
+Base.:+(a::Integer, b::Interval{Char}) = b + a
 Base.:+(a::Period, b::Interval{T}) where T <: TimeType = b + a
 
 Base.:-(a::Interval{T}, b::T) where T = a + -b
+Base.:-(a::Interval{Char}, b::Integer) = a + -b
 Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 
 ##### EQUALITY #####
-
-# TODO add equality/hash tests
-# TODO test isless
 
 Base.isless(a::Interval, b::Interval) = isempty(intersect(a, b)) && isless(a.start, b.start)
 
@@ -138,50 +154,50 @@ function Base.isempty(i::Interval)
     )
 end
 
-function Base.in(x::T, interval::Interval{T}) where T
-    check_start = interval.inclusivity.start ? (>=) : (>)
-    check_finish = interval.inclusivity.finish ? (<=) : (<)
-    return check_start(x, interval.start) && check_finish(x, interval.finish)
+function Base.in(x::T, interval::AbstractInterval{T}) where T
+    check_start = inclusivity(interval).start ? (>=) : (>)
+    check_finish = inclusivity(interval).finish ? (<=) : (<)
+    return check_start(x, start(interval)) && check_finish(x, finish(interval))
 end
 
-function Base.intersect(a::Interval{T}, b::Interval{T}) where T
-    start = a.start > b.start ? a.start : b.start
-    finish = a.finish < b.finish ? a.finish : b.finish
+# TODO: Should probably define union, too. There is power in a union.
+
+function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    startpoint = start(a) > start(b) ? start(a) : start(b)
+    endpoint = finish(a) < finish(b) ? finish(a) : finish(b)
 
     # If start > finish, there's no intersection, so we explicitly return an empty interval.
     # We can't just return Interval(start, finish, inclusivity) because the constructor
     # would rearrange start and finish in this case to make a non-empty interval.
-    start > finish && return Interval{T}()
+    startpoint > endpoint && return Interval{T}()
 
     # These two consecutive ifs could be cleaned up with a fancy loop (but don't forget to
     # change > to < when comparing a.finish to b.finish!
-    if a.inclusivity.start == b.inclusivity.start
+    if inclusivity(a).start == inclusivity(b).start
         # If a and b have the same inclusivity, the inclusivity of the intersection is easy.
-        i_start = a.inclusivity.start
+        i_start = inclusivity(a).start
     else
-        if a.start == b.start
+        if start(a) == start(b)
             i_start = false
-        elseif a.start > b.start
-            i_start = a.inclusivity.start
+        elseif start(a) > start(b)
+            i_start = inclusivity(a).start
         else
-            i_start = b.inclusivity.start
+            i_start = inclusivity(b).start
         end
     end
 
-    if a.inclusivity.finish == b.inclusivity.finish
+    if inclusivity(a).finish == inclusivity(b).finish
         # If a and b have the same inclusivity, the inclusivity of the intersection is easy.
-        i_finish = a.inclusivity.finish
+        i_finish = inclusivity(a).finish
     else
-        if a.finish == b.finish
+        if finish(a) == finish(b)
             i_finish = false
-        elseif a.finish < b.finish
-            i_finish = a.inclusivity.finish
+        elseif finish(a) < finish(b)
+            i_finish = inclusivity(a).finish
         else
-            i_finish = b.inclusivity.finish
+            i_finish = inclusivity(b).finish
         end
     end
 
-    return Interval{T}(start, finish, Inclusivity(i_start, i_finish))
+    return Interval{T}(startpoint, endpoint, Inclusivity(i_start, i_finish))
 end
-
-# TODO: Should probably define union, too. There is power in a union.

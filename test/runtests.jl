@@ -1,8 +1,10 @@
 using PeriodIntervals
+using TimeZones
 using Base.Test
+using Base.Dates
 
 @testset "PeriodIntervals" begin
     include("inclusivity.jl")
     include("interval.jl")
-    @test 1 == 2
+    include("periodinterval.jl")
 end

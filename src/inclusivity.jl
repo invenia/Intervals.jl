@@ -30,6 +30,9 @@ function Base.convert(::Type{I}, x::Inclusivity) where I <: Integer
     return I(x.finish << 1 + x.start)
 end
 
+Base.start(x::Inclusivity) = x.start
+finish(x::Inclusivity) = x.finish
+
 Base.isless(a::Inclusivity, b::Inclusivity) = isless(convert(Int, a), convert(Int, b))
 
 function Base.show(io::IO, x::Inclusivity)

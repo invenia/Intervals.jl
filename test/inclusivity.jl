@@ -1,34 +1,34 @@
 @testset "Inclusivity" begin
     @testset "constructor" begin
-        for (start, finish) in [(false, false), (false, true), (true, false), (true, true)]
-            inc = S3DB.Inclusivity(start, finish)
-            @test (inc.start, inc.finish) == (start, finish)
+        for (s, f) in [(false, false), (false, true), (true, false), (true, true)]
+            inc = Inclusivity(s, f)
+            @test (start(inc), finish(inc)) == (s, f)
         end
 
-        @test S3DB.Inclusivity(0) == S3DB.Inclusivity(false, false)
-        @test S3DB.Inclusivity(1) == S3DB.Inclusivity(true, false)
-        @test S3DB.Inclusivity(2) == S3DB.Inclusivity(false, true)
-        @test S3DB.Inclusivity(3) == S3DB.Inclusivity(true, true)
+        @test Inclusivity(0) == Inclusivity(false, false)
+        @test Inclusivity(1) == Inclusivity(true, false)
+        @test Inclusivity(2) == Inclusivity(false, true)
+        @test Inclusivity(3) == Inclusivity(true, true)
     end
 
     @testset "convert" begin
         for i in 0:3
             for T in [UInt8, UInt32, Int32, Int64]
-                @test convert(T, S3DB.Inclusivity(i)) == T(i)
+                @test convert(T, Inclusivity(i)) == T(i)
             end
         end
     end
 
     @testset "isless" begin
-        @test isless(S3DB.Inclusivity(0), S3DB.Inclusivity(1))
-        @test isless(S3DB.Inclusivity(1), S3DB.Inclusivity(2))
-        @test isless(S3DB.Inclusivity(2), S3DB.Inclusivity(3))
-        @test !isless(S3DB.Inclusivity(0), S3DB.Inclusivity(0))
-        @test !isless(S3DB.Inclusivity(1), S3DB.Inclusivity(0))
+        @test isless(Inclusivity(0), Inclusivity(1))
+        @test isless(Inclusivity(1), Inclusivity(2))
+        @test isless(Inclusivity(2), Inclusivity(3))
+        @test !isless(Inclusivity(0), Inclusivity(0))
+        @test !isless(Inclusivity(1), Inclusivity(0))
     end
 
     @testset "sort" begin
-        @test sort(map(S3DB.Inclusivity, 0:3)) == map(S3DB.Inclusivity, 0:3)
-        @test sort(map(S3DB.Inclusivity, 3:-1:0)) == map(S3DB.Inclusivity, 0:3)
+        @test sort(map(Inclusivity, 0:3)) == map(Inclusivity, 0:3)
+        @test sort(map(Inclusivity, 3:-1:0)) == map(Inclusivity, 0:3)
     end
 end

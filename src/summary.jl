@@ -5,18 +5,18 @@ summary(interval::PeriodBeginning{P, T}) where {P, T} = summary(interval, "B")
 
 function summary(interval::PeriodInterval{P, T}, s::String) where {P, T}
     return string(
-        interval.inclusivity.start ? '[' : '(',
+        first(interval.inclusivity) ? '[' : '(',
         summary(interval.instant, P, s),
-        interval.inclusivity.finish ? ']' : ')',
+        last(interval.inclusivity) ? ']' : ')',
     )
 end
 
 function summary(interval::PeriodInterval{P, ZonedDateTime}, s::String) where {P}
     return string(
-        interval.inclusivity.start ? '[' : '(',
+        first(interval.inclusivity) ? '[' : '(',
         summary(interval.instant, P, s),
         interval.instant.zone.offset,
-        interval.inclusivity.finish ? ']' : ')',
+        last(interval.inclusivity) ? ']' : ')',
     )
 end
 

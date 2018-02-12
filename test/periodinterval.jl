@@ -42,8 +42,8 @@
         P = Minute(15)
         interval = PeriodEnding{P}(dt, inc)
 
-        @test start(interval) == DateTime(2016, 8, 11, 1, 45)
-        @test finish(interval) == dt
+        @test first(interval) == DateTime(2016, 8, 11, 1, 45)
+        @test last(interval) == dt
         @test span(interval) == P
         @test inclusivity(interval) == inc
 
@@ -51,8 +51,8 @@
         P = Day(1)
         interval = PeriodBeginning{P}(dt, inc)
 
-        @test start(interval) == DateTime(2016, 8, 11)
-        @test finish(interval) == DateTime(2016, 8, 12)
+        @test first(interval) == DateTime(2016, 8, 11)
+        @test last(interval) == DateTime(2016, 8, 12)
         @test span(interval) == P
         @test inclusivity(interval) == inc
 

@@ -2,7 +2,7 @@
     @testset "constructor" begin
         for (s, f) in [(false, false), (false, true), (true, false), (true, true)]
             inc = Inclusivity(s, f)
-            @test (start(inc), finish(inc)) == (s, f)
+            @test (first(inc), last(inc)) == (s, f)
         end
 
         @test Inclusivity(0) == Inclusivity(false, false)

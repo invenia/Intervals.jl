@@ -96,7 +96,6 @@ PeriodBeginning{1 day, Date}(2016-08-11, Inclusivity(false, true))
 See also: [`PeriodEnding`](@ref), [`Interval`](@ref), [`Inclusivity`](@ref)
 """
 struct PeriodBeginning{P, T<:TimeType} <: PeriodInterval{P, T}
-#@auto_hash_equals struct PeriodBeginning{T<:TimeType, P} <: PeriodInterval
     instant::T
     inclusivity::Inclusivity
 
@@ -119,18 +118,18 @@ Base.copy(x::I) where {I <: PeriodInterval} = I(x.instant, x.inclusivity)
 
 ##### ACCESSORS #####
 
-Base.start(interval::PeriodEnding{P}) where P = interval.instant - P
-Base.start(interval::PeriodBeginning) = interval.instant
+Base.first(interval::PeriodEnding{P}) where P = interval.instant - P
+Base.first(interval::PeriodBeginning) = interval.instant
 
-finish(interval::PeriodEnding) = interval.instant
-finish(interval::PeriodBeginning{P}) where P = interval.instant + P
+Base.last(interval::PeriodEnding) = interval.instant
+Base.last(interval::PeriodBeginning{P}) where P = interval.instant + P
 
 span(interval::PeriodInterval{P}) where P = P
 
 ##### CONVERSION #####
 
 function Base.convert(::Type{Interval{T}}, interval::PeriodInterval{P, T}) where {P, T}
-    return Interval{T}(start(interval), finish(interval), inclusivity(interval))
+    return Interval{T}(first(interval), last(interval), inclusivity(interval))
 end
 
 Base.convert(::Type{T}, interval::PeriodInterval{P, T}) where {P, T} = interval.instant

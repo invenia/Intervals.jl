@@ -34,22 +34,22 @@
                 inc = Inclusivity(i)
                 interval = Interval(a, b, inc)
 
-                @test start(interval) == a
-                @test finish(interval) == b
+                @test first(interval) == a
+                @test last(interval) == b
                 @test span(interval) == b - a
                 @test inclusivity(interval) == inc
             end
         end
 
         # DST transition
-        startpoint = ZonedDateTime(2018, 3, 11, 1, tz"America/Winnipeg")
+        firstpoint = ZonedDateTime(2018, 3, 11, 1, tz"America/Winnipeg")
         endpoint = ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
-        interval = Interval(startpoint, endpoint)
+        interval = Interval(firstpoint, endpoint)
         @test span(interval) == Hour(1)
 
-        startpoint = ZonedDateTime(2018, 11, 4, 0, tz"America/Winnipeg")
+        firstpoint = ZonedDateTime(2018, 11, 4, 0, tz"America/Winnipeg")
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
-        interval = Interval(startpoint, endpoint)
+        interval = Interval(firstpoint, endpoint)
         @test span(interval) == Hour(3)
     end
 
@@ -137,17 +137,17 @@
         end
 
         # DST transition
-        startpoint = ZonedDateTime(2018, 3, 11, 1, tz"America/Winnipeg")
+        firstpoint = ZonedDateTime(2018, 3, 11, 1, tz"America/Winnipeg")
         endpoint = ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
-        interval = Interval(startpoint, endpoint) + Hour(1)
-        @test start(interval) == ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
-        @test finish(interval) == ZonedDateTime(2018, 3, 11, 4, tz"America/Winnipeg")
+        interval = Interval(firstpoint, endpoint) + Hour(1)
+        @test first(interval) == ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
+        @test last(interval) == ZonedDateTime(2018, 3, 11, 4, tz"America/Winnipeg")
 
-        startpoint = ZonedDateTime(2018, 11, 4, 0, tz"America/Winnipeg")
+        firstpoint = ZonedDateTime(2018, 11, 4, 0, tz"America/Winnipeg")
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
-        interval = Interval(startpoint, endpoint) + Hour(1)
-        @test start(interval) == ZonedDateTime(2018, 11, 4, 1, tz"America/Winnipeg", 1)
-        @test finish(interval) == ZonedDateTime(2018, 11, 4, 3, tz"America/Winnipeg")
+        interval = Interval(firstpoint, endpoint) + Hour(1)
+        @test first(interval) == ZonedDateTime(2018, 11, 4, 1, tz"America/Winnipeg", 1)
+        @test last(interval) == ZonedDateTime(2018, 11, 4, 3, tz"America/Winnipeg")
     end
 
     @testset "isempty" begin

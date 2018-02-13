@@ -103,7 +103,6 @@ end
 
 function Base.print(io::IO, interval::Interval)
     # Print to io in order to keep properties like :limit and :compact
-
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)
     end

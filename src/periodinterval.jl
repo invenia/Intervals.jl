@@ -54,10 +54,8 @@ HourEnding(i::T, inclusivity) where T = HourEnding{T}(i, inclusivity)
 HourEnding(i::T) where T = HourEnding{T}(i)
 
 # TODO extensive documentation
-# TODO add `in` tests with DST
-# TODO add tests for hash equality for PeriodEnding, PeriodBeginning, Inclusivity, Interval
 # TODO generalize PeriodEnding and PeriodBeginning to IntervalEnding and IntervalBeginning?
-# TODO generalize PeriodEdning and PeriodBeginning to PeriodInterval with +/- period
+# TODO generalize PeriodEnding and PeriodBeginning to PeriodInterval with +/- period
 #      (and different default intervals depending on +/-), fix rounding for zeroes...
 
 """
@@ -110,7 +108,6 @@ PeriodBeginning{P}(i::T, inclusivity) where {P, T} = PeriodBeginning{P, T}(i, in
 PeriodBeginning{P}(i::T) where {P, T} = PeriodBeginning{P, T}(i)
 
 const HourBeginning{T} = PeriodBeginning{Dates.Hour(1), T} where T <: TimeType
-#HourBeginning{T}(i) where T = HourBeginning{T}(i, Inclusivity(false, true))
 HourBeginning(i::T, inclusivity) where T = HourBeginning{T}(i, inclusivity)
 HourBeginning(i::T) where T = HourBeginning{T}(i)
 
@@ -140,21 +137,25 @@ Base.DateTime(interval::PeriodInterval{P, DateTime}) where P = interval.instant
 
 ##### DISPLAY #####
 
-function Base.show(io::IO, interval::PeriodEnding{P, T}) where {P, T}
-    if get(io, :compact, false)
-        print(io, interval)
-    else
-        print(io, "PeriodEnding{$P, $T}($(interval.instant), ")
-        show(io, interval.inclusivity)
-        print(io, ")")
-    end
+Base.show(io::IO, ::Type{HourEnding}) = print(io, "HourEnding")
+Base.show(io::IO, ::Type{HourBeginning}) = print(io, "HourBeginning")
+
+Base.show(io::IO, ::Type{HourEnding{T}}) where T = print(io, "HourEnding{$T}")
+Base.show(io::IO, ::Type{HourBeginning{T}}) where T = print(io, "HourBeginning{$T}")
+
+function Base.show(io::IO, ::Type{PeriodEnding{P, T}}) where {P, T}
+    print(io, "PeriodEnding{$P, $T}")
 end
 
-function Base.show(io::IO, interval::PeriodBeginning{P, T}) where {P, T}
+function Base.show(io::IO, ::Type{PeriodBeginning{P, T}}) where {P, T}
+    print(io, "PeriodBeginning{$P, $T}")
+end
+
+function Base.show(io::IO, interval::T) where T <: PeriodInterval
     if get(io, :compact, false)
         print(io, interval)
     else
-        print(io, "PeriodBeginning{$P, $T}($(interval.instant), ")
+        print(io, "$T($(interval.instant), ")
         show(io, interval.inclusivity)
         print(io, ")")
     end
@@ -162,7 +163,6 @@ end
 
 function Base.print(io::IO, interval::PeriodInterval)
     # Print to io in order to keep properties like :limit and :compact
-
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)
     end

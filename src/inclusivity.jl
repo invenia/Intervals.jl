@@ -26,6 +26,8 @@ equivalent to `Inclusivity(1)`.
 """
 Inclusivity(i::Integer) = Inclusivity(i & 0b01 > 0, i & 0b10 > 0)
 
+Base.copy(x::Inclusivity) = Inclusivity(x.first, x.last)
+
 function Base.convert(::Type{I}, x::Inclusivity) where I <: Integer
     return I(x.last << 1 + x.first)
 end

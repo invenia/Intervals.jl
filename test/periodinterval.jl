@@ -67,39 +67,54 @@
     end
 
     @testset "display" begin
+        @test sprint(show, HourEnding) == "HourEnding"
+        @test sprint(show, HourBeginning) == "HourBeginning"
+        @test sprint(show, PeriodEnding{Hour(1)}) == "HourEnding"
+        @test sprint(show, PeriodBeginning{Hour(1)}) == "HourBeginning"
+
+        @test sprint(show, HourEnding{DateTime}) == "HourEnding{DateTime}"
+        @test sprint(show, HourBeginning{DateTime}) == "HourBeginning{DateTime}"
+        @test sprint(show, PeriodEnding{Hour(1), DateTime}) == "HourEnding{DateTime}"
+        @test sprint(show, PeriodBeginning{Hour(1), DateTime}) == "HourBeginning{DateTime}"
+
+        @test sprint(show, PeriodEnding{Day(1)}) ==
+            "PeriodIntervals.PeriodEnding{1 day,T} where T<:Base.Dates.TimeType"
+        @test sprint(show, PeriodBeginning{Day(1)}) ==
+            "PeriodIntervals.PeriodBeginning{1 day,T} where T<:Base.Dates.TimeType"
+        @test sprint(show, PeriodEnding{Day(1), DateTime}) ==
+            "PeriodEnding{1 day, DateTime}"
+        @test sprint(show, PeriodBeginning{Day(1), DateTime}) ==
+            "PeriodBeginning{1 day, DateTime}"
+
         interval = HourEnding(dt)
         @test string(interval) == "(2016-08-11 HE02]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "PeriodEnding{1 hour, DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
+            "HourEnding{DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false))
         @test string(interval) == "[2013-02-12 HE24)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "PeriodEnding{1 hour, DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
+            "HourEnding{DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
 
         interval = HourBeginning(dt)
         @test string(interval) == "[2016-08-11 HB02)"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "PeriodBeginning{1 hour, DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(true, false))",
-        )
+        @test sprint(show, interval) ==
+            "HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))"
 
         interval = HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true))
         @test string(interval) == "(2013-02-13 HB00]"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "PeriodBeginning{1 hour, DateTime}(2013-02-13T00:00:00, ",
-            "Inclusivity(false, true))",
-        )
+        @test sprint(show, interval) ==
+            "HourBeginning{DateTime}(2013-02-13T00:00:00, Inclusivity(false, true))"
 
         interval = HourEnding(ZonedDateTime(dt, tz"America/Winnipeg"))
         @test string(interval) == "(2016-08-11 HE02-05:00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "PeriodEnding{1 hour, $ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
+            "HourEnding{$ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
             "Inclusivity(false, true))",
         )
 
@@ -279,6 +294,13 @@
         @test !in(dt + Hour(1), HourBeginning(dt))
         @test in(dt + Hour(1), HourBeginning(dt, Inclusivity(false, true)))
         @test !in(dt + Hour(2), HourBeginning(dt))
+
+        zdt = ZonedDateTime(dt, tz"America/Winnipeg")
+        @test in(ZonedDateTime(dt - Minute(30), tz"America/Winnipeg"), HourEnding(zdt))
+        @test !in(ZonedDateTime(dt + Minute(30), tz"America/Winnipeg"), HourEnding(zdt))
+        @test !in(ZonedDateTime(dt - Hour(1), tz"America/Winnipeg"), HourEnding(zdt))
+        @test !in(ZonedDateTime(dt - Minute(30), tz"UTC"), HourEnding(zdt))
+        @test in(ZonedDateTime(dt + Minute(270), tz"UTC"), HourEnding(zdt))
     end
 
     @testset "intersect" begin

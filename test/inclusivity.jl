@@ -19,6 +19,16 @@
         end
     end
 
+    @testset "equality" begin
+        inc = Inclusivity(false, true)
+        cp = copy(inc)
+        diff = Inclusivity(true, false)
+        @test isequal(inc, cp)
+        @test hash(inc) == hash(cp)
+        @test !isequal(inc, diff)
+        @test hash(inc) != hash(diff)
+    end
+
     @testset "display" begin
         inc = Inclusivity(false, false)
         @test string(inc) == "Inclusivity (Open)"

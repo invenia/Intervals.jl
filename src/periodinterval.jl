@@ -1,7 +1,7 @@
 abstract type PeriodInterval{P, T} <: AbstractInterval{T} end
 
 """
-    PeriodEnding{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T <: TimeType} -> PeriodEnding{P, T}
+    PeriodEnding{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T} -> PeriodEnding{P, T}
 
 `PeriodEnding` is a subtype of `AbstractInterval` that represents a span of time
 (defined by the value parameter `P`) that ends at a specific time (`instant::T`).
@@ -35,11 +35,11 @@ PeriodEnding{1 day, Date}(2016-08-11, Inclusivity(true, false))
 
 See also: [`PeriodBeginning`](@ref), [`Interval`](@ref), [`Inclusivity`](@ref)
 """
-struct PeriodEnding{P, T <: TimeType} <: PeriodInterval{P, T}
+struct PeriodEnding{P, T} <: PeriodInterval{P, T}
     instant::T
     inclusivity::Inclusivity
 
-    function PeriodEnding{P, T}(instant::T, inc::Inclusivity) where {P, T <: TimeType}
+    function PeriodEnding{P, T}(instant::T, inc::Inclusivity) where {P, T}
         Base.Dates.value(P) <= 0 && throw(DomainError("P must be positive"))
         return new(ceil(instant, P::Period), inc)
     end
@@ -49,17 +49,17 @@ PeriodEnding{P, T}(i::T) where {P, T} = PeriodEnding{P, T}(i::T, Inclusivity(fal
 PeriodEnding{P}(i::T, inclusivity) where {P, T} = PeriodEnding{P, T}(i, inclusivity)
 PeriodEnding{P}(i::T) where {P, T} = PeriodEnding{P, T}(i)
 
-const HourEnding{T <: TimeType} = PeriodEnding{Dates.Hour(1), T}
+const HourEnding{T} = PeriodEnding{Dates.Hour(1), T}
 HourEnding(i::T, inclusivity) where T = HourEnding{T}(i, inclusivity)
 HourEnding(i::T) where T = HourEnding{T}(i)
 
 # TODO extensive documentation
 # TODO generalize PeriodEnding and PeriodBeginning to IntervalEnding and IntervalBeginning?
-# TODO generalize PeriodEnding and PeriodBeginning to PeriodInterval with +/- period
-#      (and different default intervals depending on +/-), fix rounding for zeroes...
+# TODO generalize IntervalEnding and IntervalBeginning to AnchoredInterval with +/- period
+#      (and different default inclusivities depending on +/-), fix rounding for zeroes...
 
 """
-    PeriodBeginning{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T <: TimeType} -> PeriodBeginning{P, T}
+    PeriodBeginning{P, T}(instant::T, [inclusivity::Inclusivity]) where {P, T} -> PeriodBeginning{P, T}
 
 `PeriodBeginning` is a subtype of `AbstractInterval` that represents a span of time
 (defined by the value parameter `P`) that begins at a specific time (`instant::T`).
@@ -93,11 +93,11 @@ PeriodBeginning{1 day, Date}(2016-08-11, Inclusivity(false, true))
 
 See also: [`PeriodEnding`](@ref), [`Interval`](@ref), [`Inclusivity`](@ref)
 """
-struct PeriodBeginning{P, T<:TimeType} <: PeriodInterval{P, T}
+struct PeriodBeginning{P, T} <: PeriodInterval{P, T}
     instant::T
     inclusivity::Inclusivity
 
-    function PeriodBeginning{P, T}(instant::T, inc::Inclusivity) where {P, T <: TimeType}
+    function PeriodBeginning{P, T}(instant::T, inc::Inclusivity) where {P, T}
         Base.Dates.value(P) <= 0 && throw(DomainError("P must be positive"))
         return new(floor(instant, P::Period), inc)
     end
@@ -107,7 +107,7 @@ PeriodBeginning{P, T}(i::T) where {P, T} = PeriodBeginning{P, T}(i, Inclusivity(
 PeriodBeginning{P}(i::T, inclusivity) where {P, T} = PeriodBeginning{P, T}(i, inclusivity)
 PeriodBeginning{P}(i::T) where {P, T} = PeriodBeginning{P, T}(i)
 
-const HourBeginning{T} = PeriodBeginning{Dates.Hour(1), T} where T <: TimeType
+const HourBeginning{T} = PeriodBeginning{Dates.Hour(1), T} where T
 HourBeginning(i::T, inclusivity) where T = HourBeginning{T}(i, inclusivity)
 HourBeginning(i::T) where T = HourBeginning{T}(i)
 
@@ -137,8 +137,8 @@ Base.DateTime(interval::PeriodInterval{P, DateTime}) where P = interval.instant
 
 ##### DISPLAY #####
 
-Base.show(io::IO, ::Type{HourEnding}) = print(io, "HourEnding")
-Base.show(io::IO, ::Type{HourBeginning}) = print(io, "HourBeginning")
+Base.show(io::IO, ::Type{HourEnding}) = print(io, "HourEnding{T}")
+Base.show(io::IO, ::Type{HourBeginning}) = print(io, "HourBeginning{T}")
 
 Base.show(io::IO, ::Type{HourEnding{T}}) where T = print(io, "HourEnding{$T}")
 Base.show(io::IO, ::Type{HourBeginning{T}}) where T = print(io, "HourBeginning{$T}")

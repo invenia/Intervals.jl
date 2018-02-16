@@ -67,10 +67,10 @@
     end
 
     @testset "display" begin
-        @test sprint(show, HourEnding) == "HourEnding"
-        @test sprint(show, HourBeginning) == "HourBeginning"
-        @test sprint(show, PeriodEnding{Hour(1)}) == "HourEnding"
-        @test sprint(show, PeriodBeginning{Hour(1)}) == "HourBeginning"
+        @test sprint(show, HourEnding) == "HourEnding{T}"
+        @test sprint(show, HourBeginning) == "HourBeginning{T}"
+        @test sprint(show, PeriodEnding{Hour(1)}) == "HourEnding{T}"
+        @test sprint(show, PeriodBeginning{Hour(1)}) == "HourBeginning{T}"
 
         @test sprint(show, HourEnding{DateTime}) == "HourEnding{DateTime}"
         @test sprint(show, HourBeginning{DateTime}) == "HourBeginning{DateTime}"
@@ -78,9 +78,9 @@
         @test sprint(show, PeriodBeginning{Hour(1), DateTime}) == "HourBeginning{DateTime}"
 
         @test sprint(show, PeriodEnding{Day(1)}) ==
-            "PeriodIntervals.PeriodEnding{1 day,T} where T<:Base.Dates.TimeType"
+            "PeriodIntervals.PeriodEnding{1 day,T} where T"
         @test sprint(show, PeriodBeginning{Day(1)}) ==
-            "PeriodIntervals.PeriodBeginning{1 day,T} where T<:Base.Dates.TimeType"
+            "PeriodIntervals.PeriodBeginning{1 day,T} where T"
         @test sprint(show, PeriodEnding{Day(1), DateTime}) ==
             "PeriodEnding{1 day, DateTime}"
         @test sprint(show, PeriodBeginning{Day(1), DateTime}) ==
@@ -203,6 +203,23 @@
         @test !isequal(hour1, hour2)
         @test hash(hour1) != hash(hour2)
         @test isless(hour1, hour2)
+
+        # Comparisons between PeriodEnding{P, T} and T
+        @test isless(dt - Hour(2), HourEnding(dt))
+        @test isless(dt - Hour(1), HourEnding(dt, Inclusivity(false, false)))
+        @test !isless(dt - Hour(1), HourEnding(dt, Inclusivity(true, true)))
+        @test !isless(dt - Minute(30), HourEnding(dt))
+        @test !isless(dt, HourEnding(dt, Inclusivity(false, false)))
+        @test !isless(dt, HourEnding(dt, Inclusivity(true, true)))
+        @test !isless(dt + Hour(1), HourEnding(dt))
+
+        @test !isless(HourEnding(dt), dt - Hour(2))
+        @test !isless(HourEnding(dt, Inclusivity(false, false)), dt - Hour(1))
+        @test !isless(HourEnding(dt, Inclusivity(true, true)), dt - Hour(1))
+        @test !isless(HourEnding(dt), dt - Minute(30))
+        @test isless(HourEnding(dt, Inclusivity(false, false)), dt)
+        @test !isless(HourEnding(dt, Inclusivity(true, true)), dt)
+        @test isless(HourEnding(dt), dt + Hour(1))
     end
 
     @testset "arithmetic" begin

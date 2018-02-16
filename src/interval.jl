@@ -143,20 +143,26 @@ Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 
 Base.isless(a::Interval, b::Interval) = isempty(intersect(a, b)) && isless(a.first, b.first)
 
+function Base.isless(a::AbstractInterval{T}, b::T) where T
+    check = last(inclusivity(a)) ? (<) : (<=)
+    return check(last(a), b)
+end
+
+function Base.isless(a::T, b::AbstractInterval{T}) where T
+    check = first(inclusivity(b)) ? (<) : (<=)
+    return check(a, first(b))
+end
+
 ##### SET OPERATIONS #####
 
 function Base.isempty(i::Interval)
     return (
-        i.first > i.last ||   # Shouldn't be possible, but check anyway.
-        (i.first == i.last && i.inclusivity != Inclusivity(true, true))
+        first(i) > last(i) ||   # Shouldn't be possible, but check anyway.
+        (first(i) == last(i) && inclusivity(i) != Inclusivity(true, true))
     )
 end
 
-function Base.in(x::T, interval::AbstractInterval{T}) where T
-    check_first = inclusivity(interval).first ? (>=) : (>)
-    check_last = inclusivity(interval).last ? (<=) : (<)
-    return check_first(x, first(interval)) && check_last(x, last(interval))
-end
+Base.in(a::T, b::AbstractInterval{T}) where T = !isless(a, b) && !isless(b, a)
 
 # TODO: Should probably define union, too. There is power in a union.
 

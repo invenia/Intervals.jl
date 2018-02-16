@@ -123,6 +123,39 @@
             Interval(10, 20, Inclusivity(true, false)),
             Interval(0, 10, Inclusivity(false, true)),
         )
+
+        # Comparisons between Interval{T} and T
+        @test isless(5, Interval(10, 20))
+        @test isless(10, Interval(10, 20, Inclusivity(false, false)))
+        @test !isless(10, Interval(10, 20))
+        @test !isless(15, Interval(10, 20))
+        @test !isless(20, Interval(10, 20))
+        @test !isless(20, Interval(10, 20, Inclusivity(false, false)))
+        @test !isless(25, Interval(10, 20))
+
+        @test !isless(Interval(10, 20), 5)
+        @test !isless(Interval(10, 20, Inclusivity(false, false)), 10)
+        @test !isless(Interval(10, 20), 10)
+        @test !isless(Interval(10, 20), 15)
+        @test !isless(Interval(10, 20), 20)
+        @test isless(Interval(10, 20, Inclusivity(false, false)), 20)
+        @test isless(Interval(10, 20), 25)
+
+        @test isless(Date(2013), Interval(Date(2014), Date(2016)))
+        @test isless(Date(2014), Interval(Date(2014), Date(2016), Inclusivity(0)))
+        @test !isless(Date(2014), Interval(Date(2014), Date(2016)))
+        @test !isless(Date(2015), Interval(Date(2014), Date(2016)))
+        @test !isless(Date(2016), Interval(Date(2014), Date(2016)))
+        @test !isless(Date(2016), Interval(Date(2014), Date(2016), Inclusivity(0)))
+        @test !isless(Date(2017), Interval(Date(2014), Date(2016)))
+
+        @test !isless(Interval(Date(2014), Date(2016)), Date(2013))
+        @test !isless(Interval(Date(2014), Date(2016), Inclusivity(0)), Date(2014))
+        @test !isless(Interval(Date(2014), Date(2016)), Date(2014))
+        @test !isless(Interval(Date(2014), Date(2016)), Date(2015))
+        @test !isless(Interval(Date(2014), Date(2016)), Date(2016))
+        @test isless(Interval(Date(2014), Date(2016), Inclusivity(0)), Date(2016))
+        @test isless(Interval(Date(2014), Date(2016)), Date(2017))
     end
 
     @testset "arithmetic" begin

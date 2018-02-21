@@ -283,6 +283,13 @@
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
         interval = AnchoredInterval{Hour(-2)}(endpoint)
         @test span(interval) == Hour(2)
+
+        # Non-period AnchoredIntervals
+        @test AnchoredInterval{10}('a') + 2 == AnchoredInterval{10}('c')
+        @test AnchoredInterval{10}('d') - 2 == AnchoredInterval{10}('b')
+
+        @test AnchoredInterval{-1}(20) + 2 == AnchoredInterval{-1}(22)
+        @test AnchoredInterval{-1}(20) - 2 == AnchoredInterval{-1}(18)
     end
 
     @testset "range" begin

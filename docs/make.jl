@@ -1,13 +1,13 @@
-using Documenter, PeriodIntervals
+using Documenter, Intervals
 
 makedocs(;
-    modules=[PeriodIntervals],
+    modules=[Intervals],
     format=:html,
     pages=[
         "Home" => "index.md",
     ],
-    repo="https://github.com/invenia/PeriodIntervals.jl/blob/{commit}{path}#L{line}",
-    sitename="PeriodIntervals.jl",
+    repo="https://github.com/invenia/Intervals.jl/blob/{commit}{path}#L{line}",
+    sitename="Intervals.jl",
     authors="Invenia Technical Computing Corporation",
     assets=[
         "assets/invenia.css",
@@ -16,7 +16,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/invenia/PeriodIntervals.jl",
+    repo="github.com/invenia/Intervals.jl",
     target="build",
     julia="0.6",
     deps=nothing,

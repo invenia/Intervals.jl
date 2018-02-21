@@ -1,9 +1,9 @@
-using PeriodIntervals
+using Intervals
 using TimeZones
 using Base.Test
 using Base.Dates
 
-@testset "PeriodIntervals" begin
+@testset "Intervals" begin
     include("inclusivity.jl")
     include("interval.jl")
     include("anchoredinterval.jl")

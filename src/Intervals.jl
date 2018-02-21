@@ -1,6 +1,6 @@
 __precompile__()
 
-module PeriodIntervals
+module Intervals
 
 using Base.Dates
 using TimeZones

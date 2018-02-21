@@ -33,10 +33,10 @@ install:
 build_script:
   # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.clone(pwd(), \"PeriodIntervals\"); Pkg.build(\"PeriodIntervals\")"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.clone(pwd(), \"Intervals\"); Pkg.build(\"Intervals\")"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "Pkg.test(\"PeriodIntervals\"; coverage=true)"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"Intervals\"; coverage=true)"
 
 after_test:
-  - C:\projects\julia\bin\julia -e "cd(Pkg.dir(\"PeriodIntervals\")); Pkg.add(\"Coverage\"); using Coverage; Codecov.submit(process_folder())"
+  - C:\projects\julia\bin\julia -e "cd(Pkg.dir(\"Intervals\")); Pkg.add(\"Coverage\"); using Coverage; Codecov.submit(process_folder())"

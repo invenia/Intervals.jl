@@ -1,4 +1,4 @@
-# PeriodIntervals
+# Intervals
 
 This package defines:
 * `AbstractInterval`, along with its subtypes:
@@ -9,8 +9,6 @@ This package defines:
     * `HourBeginning`, a type alias for `AnchoredInterval{Hour(1), T}`
 * `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
   closed
-
-**TODO:** Rename this package, because "PeriodIntervals" no longer fits.
 
 ## API
 

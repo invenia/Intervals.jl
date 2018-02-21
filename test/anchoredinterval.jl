@@ -102,9 +102,9 @@
         @test sprint(show, AnchoredInterval{Hour(1), DateTime}) == "HourBeginning{DateTime}"
 
         @test sprint(show, AnchoredInterval{Day(-1)}) ==
-            "PeriodIntervals.AnchoredInterval{-1 day,T} where T"
+            "Intervals.AnchoredInterval{-1 day,T} where T"
         @test sprint(show, AnchoredInterval{Day(1)}) ==
-            "PeriodIntervals.AnchoredInterval{1 day,T} where T"
+            "Intervals.AnchoredInterval{1 day,T} where T"
         @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
             "AnchoredInterval{-1 day, DateTime}"
         @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==

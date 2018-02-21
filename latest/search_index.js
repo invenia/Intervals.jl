@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "PeriodIntervals.Inclusivity",
     "category": "Method",
-    "text": "Inclusivity(i::Integer) -> Inclusivity\n\nDefines whether an interval is open, half-open, or closed, using an integer code:\n\nInclusivity Values\n\n0: Neither endpoint is included (the AbstractInterval is open) 1: Only the lesser endpoint is included (the AbstractInterval is left-closed) 2: Only the greater endpoint is included (the AbstractInterval is right-closed) 3: Both endpoints are included (the AbstractInterval is closed)\n\nNote that this constructor does not perform bounds-checking: instead it checks the values of the two least-significant bits of the integer. This means that Inclusivity(5) is equivalent to Inclusivity(1).\n\n\n\n"
+    "text": "Inclusivity(i::Integer) -> Inclusivity\n\nDefines whether an interval is open, half-open, or closed, using an integer code:\n\nInclusivity Values\n\n0: Neither endpoint is included (the AbstractInterval is open)\n1: Only the lesser endpoint is included (the AbstractInterval is left-closed)\n2: Only the greater endpoint is included (the AbstractInterval is right-closed)\n3: Both endpoints are included (the AbstractInterval is closed)\n\nNote that this constructor does not perform bounds-checking: instead it checks the values of the two least-significant bits of the integer. This means that Inclusivity(5) is equivalent to Inclusivity(1).\n\n\n\n"
 },
 
 {

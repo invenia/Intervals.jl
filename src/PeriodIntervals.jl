@@ -9,19 +9,19 @@ abstract type AbstractInterval{T} end
 
 include("inclusivity.jl")
 include("interval.jl")
-include("periodinterval.jl")
+include("anchoredinterval.jl")
 include("summary.jl")
 
 export AbstractInterval,
        Interval,
-       PeriodInterval,
-       PeriodEnding,
-       PeriodBeginning,
+       AnchoredInterval,
        HourEnding,
        HourBeginning,
        Inclusivity,
        inclusivity,
-       finish,
+       first,
+       last,
+       anchor,
        span,
        ..
 

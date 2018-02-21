@@ -8,10 +8,11 @@
 
 Defines `AbstractInterval` and its subtypes:
 * `Interval{T}`, which represents a non-iterable range between two values of type `T`
-* `PeriodBeginning{P, T}`, which represents a non-iterable range of total duration `P`,
-  starting at a value of type `T`
-* `PeriodEnding{P, T}`, which represents a non-iterable range of total duration `P`, ending
-  at a value of type `T`
+* `AnchoredInterval{P, T}`, which represents a non-iterable range defined by a single value
+  `anchor::T` and the value type `P` which represents the size of the range
 
 Also defines `Inclusivity`, which represents whether an `AbstractInterval` is open, closed,
-or partially open.
+or partially open, and `HourEnding` and `HourBeginning`, which are type aliases for
+`AnchoredInterval{Hour(-1)}` and `AnchoredInterval{Hour(1)}` respectively.
+
+**TODO:** Rename this package, because "PeriodIntervals" no longer fits.

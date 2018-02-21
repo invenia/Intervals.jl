@@ -6,5 +6,5 @@ using Base.Dates
 @testset "PeriodIntervals" begin
     include("inclusivity.jl")
     include("interval.jl")
-    include("periodinterval.jl")
+    include("anchoredinterval.jl")
 end

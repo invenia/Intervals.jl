@@ -1,22 +1,21 @@
 using Base.Dates: value
 
-summary(interval::PeriodEnding{P, T}) where {P, T} = summary(interval, "E")
-summary(interval::PeriodBeginning{P, T}) where {P, T} = summary(interval, "B")
+summary(interval::AnchoredInterval{P}) where P = summary(interval, P > zero(P) ? "B" : "E")
 
-function summary(interval::PeriodInterval{P, T}, s::String) where {P, T}
+function summary(interval::AnchoredInterval{P, T}, s::String) where {P, T}
     return string(
-        first(interval.inclusivity) ? '[' : '(',
-        summary(interval.instant, P, s),
-        last(interval.inclusivity) ? ']' : ')',
+        first(inclusivity(interval)) ? '[' : '(',
+        summary(anchor(interval), abs(P), s),
+        last(inclusivity(interval)) ? ']' : ')',
     )
 end
 
-function summary(interval::PeriodInterval{P, ZonedDateTime}, s::String) where {P}
+function summary(interval::AnchoredInterval{P, ZonedDateTime}, s::String) where P
     return string(
-        first(interval.inclusivity) ? '[' : '(',
-        summary(interval.instant, P, s),
-        interval.instant.zone.offset,
-        last(interval.inclusivity) ? ']' : ')',
+        first(inclusivity(interval)) ? '[' : '(',
+        summary(anchor(interval), abs(P), s),
+        anchor(interval).zone.offset,
+        last(inclusivity(interval)) ? ']' : ')',
     )
 end
 

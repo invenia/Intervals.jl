@@ -48,7 +48,7 @@ Interval{Date}(2013-02-13, 2016-08-11, Inclusivity(true, false))
 
 Note that the `Inclusivity` value is also reversed in this case.
 
-See also: [`PeriodBeginning`](@ref), [`PeriodEnding`](@ref), [`Inclusivity`](@ref)
+See also: [`AnchoredInterval`](@ref), [`Inclusivity`](@ref)
 """
 struct Interval{T} <: AbstractInterval{T}
     first::T
@@ -101,7 +101,7 @@ function Base.show(io::IO, interval::Interval{T}) where T
     end
 end
 
-function Base.print(io::IO, interval::Interval)
+function Base.print(io::IO, interval::AbstractInterval)
     # Print to io in order to keep properties like :limit and :compact
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)
@@ -109,26 +109,26 @@ function Base.print(io::IO, interval::Interval)
 
     print(
         io,
-        interval.inclusivity.first ? "[" : "(",
-        interval.first,
+        first(inclusivity(interval)) ? "[" : "(",
+        first(interval),
         "..",
-        interval.last,
-        interval.inclusivity.last ? "]" : ")",
+        last(interval),
+        last(inclusivity(interval)) ? "]" : ")",
     )
 end
 
 ##### ARITHMETIC #####
 
 function Base.:+(a::Interval{T}, b::T) where T
-    return Interval{T}(a.first + b, a.last + b, a.inclusivity)
+    return Interval{T}(first(a) + b, last(a) + b, inclusivity(a))
 end
 
 function Base.:+(a::Interval{Char}, b::Integer)
-    return Interval{Char}(a.first + b, a.last + b, a.inclusivity)
+    return Interval{Char}(first(a) + b, last(a) + b, inclusivity(a))
 end
 
 function Base.:+(a::Interval{T}, b::Period) where T <: TimeType
-    return Interval{T}(a.first + b, a.last + b, a.inclusivity)
+    return Interval{T}(first(a) + b, last(a) + b, inclusivity(a))
 end
 
 Base.:+(a::T, b::Interval{T}) where T = b + a
@@ -141,7 +141,9 @@ Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 
 ##### EQUALITY #####
 
-Base.isless(a::Interval, b::Interval) = isempty(intersect(a, b)) && isless(a.first, b.first)
+function Base.isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    isempty(intersect(a, b)) && isless(first(a), first(b))
+end
 
 function Base.isless(a::AbstractInterval{T}, b::T) where T
     check = last(inclusivity(a)) ? (<) : (<=)

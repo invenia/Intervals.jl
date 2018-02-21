@@ -4,14 +4,13 @@
 `AnchoredInterval` is a subtype of `AbstractInterval` that represents a non-iterable range
 or span of values defined not by a startpoint and an endpoint but instead by a single
 `anchor` point and the value type `P` which represents the size of the range. When `P` is
-positive, the `anchor` represents the start of the range; when `P` is negative, the `anchor`
-represents the endpoint.
+positive, the `anchor` represents the lesser endpoint (the beginning of the range); when `P`
+is negative, the `anchor` represents the greater endpoint (the end of the range).
 
-The interval represented by an `AnchoredInterval` value may be closed (both the start and
-endpoint are included in the interval), open (neither the start nor the endpoint are
-included), or partially open. This openness is defined by `inclusivity`, which defaults to
-partially open (with the start included for positive values of `P` and the endpoint included
-for negative values).
+The interval represented by an `AnchoredInterval` value may be closed (both endpoints are
+included in the interval), open (neither endpoint is included), or half-open. This openness
+is defined by an `Inclusivity` value, which defaults to half-open (with the lesser endpoint
+included for positive values of `P` and the greater endpoint included for negative values).
 
 ### Why?
 
@@ -56,8 +55,8 @@ struct AnchoredInterval{P, T} <: AbstractInterval{T}
     end
 end
 
-# When an interval is anchored to the endpoint, we default to Inclusivity(false, true)
-# When an interval is anchored to the start, we default to Inclusivity(true, false)
+# When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
+# When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
 function AnchoredInterval{P, T}(i::T) where {P, T}
     return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
 end

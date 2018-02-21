@@ -2,13 +2,11 @@
     Interval(first, last, [inclusivity::Inclusivity]) -> Interval
 
 An `Interval` represents a non-iterable range or span of values (non-interable because,
-unlike a `StepRange`, there is no step).
+unlike a `StepRange`, no step is defined).
 
-`Interval`s can be closed (both `first` and `last` are included in the span), closed
-(neither `first` nor `last` are included in the span), or partially open. An `Interval`'s
-openness is defined by an `Inclusivity` value.
-
-If no `Inclusivity` is provided, the `Interval` defaults to closed.
+An `Interval` can be closed (both `first` and `last` are included), open (neither `first`
+nor `last` are included in the span), or half-open. This openness is defined by an
+`Inclusivity` value, which defaults to closed.
 
 ### Example
 
@@ -24,6 +22,9 @@ true
 
 julia> in(100, i)
 false
+
+julia> intersect(Interval(0, 25, Inclusivity(false, false)), Interval(20, 50, Inclusivity(true, true))
+Interval{Int64}(20, 25, Inclusivity(true, false))
 ```
 
 ### Infix Constructor: `..`
@@ -57,9 +58,9 @@ struct Interval{T} <: AbstractInterval{T}
 
     function Interval{T}(f::T, l::T, inc::Inclusivity) where T
         return new(
-            f <= l ? f : l,
-            l >= f ? l : f,
-            f <= l ? inc : Inclusivity(last(inc), first(inc)),
+            f ≤ l ? f : l,
+            l ≥ f ? l : f,
+            f ≤ l ? inc : Inclusivity(last(inc), first(inc)),
         )
     end
 end

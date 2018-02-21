@@ -36,12 +36,12 @@
         @test sprint(show, inc) == "Inclusivity(false, false)"
 
         inc = Inclusivity(false, true)
-        @test string(inc) == "Inclusivity (Partial]"
+        @test string(inc) == "Inclusivity (Right]"
         @test sprint(showcompact, inc) == string(inc)
         @test sprint(show, inc) == "Inclusivity(false, true)"
 
         inc = Inclusivity(true, false)
-        @test string(inc) == "Inclusivity [Partial)"
+        @test string(inc) == "Inclusivity [Left)"
         @test sprint(showcompact, inc) == string(inc)
         @test sprint(show, inc) == "Inclusivity(true, false)"
 

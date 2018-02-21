@@ -15,10 +15,10 @@ Defines whether an interval is open, half-open, or closed, using an integer code
 
 ### Inclusivity Values
 
-0: Neither endpoint is included (the `AbstractInterval` is open)
-1: Only the lesser endpoint is included (the `AbstractInterval` is left-closed)
-2: Only the greater endpoint is included (the `AbstractInterval` is right-closed)
-3: Both endpoints are included (the `AbstractInterval` is closed)
+* `0`: Neither endpoint is included (the `AbstractInterval` is open)
+* `1`: Only the lesser endpoint is included (the `AbstractInterval` is left-closed)
+* `2`: Only the greater endpoint is included (the `AbstractInterval` is right-closed)
+* `3`: Both endpoints are included (the `AbstractInterval` is closed)
 
 Note that this constructor does not perform bounds-checking: instead it checks the values
 of the two least-significant bits of the integer. This means that `Inclusivity(5)` is

@@ -23,7 +23,7 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 
 ### Rounding
 
-If `P <: Period`, the `anchor` provided is rounded up or down to the nearest `P`, as
+If `P` is a `Period`, the `anchor` provided is rounded up or down to the nearest `P`, as
 appropriate, using `ceil` or `floor`. This means that
 `AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12, 30))` is equivalent to
 `AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 13))`.

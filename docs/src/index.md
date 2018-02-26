@@ -10,6 +10,14 @@ This package defines:
 * `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
   closed
 
+## Example Usage
+
+```julia
+using Intervals
+
+:v
+```
+
 ## API
 
 ```@docs

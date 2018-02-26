@@ -20,12 +20,32 @@
         )
 
         for (a, b, _) in test_values
+            @test a..b == Interval(a, b)
             @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
+            @test Interval(a, b, true, false) ==
+                Interval{typeof(a)}(a, b, Inclusivity(true, false))
+            @test Interval{typeof(a)}(a, b, true, false) ==
+                Interval{typeof(a)}(a, b, Inclusivity(true, false))
             @test Interval(a, b, Inclusivity(true, false)) ==
                 Interval{typeof(a)}(a, b, Inclusivity(true, false))
             @test Interval(b, a, Inclusivity(true, false)) ==
                 Interval{typeof(a)}(a, b, Inclusivity(false, true))
         end
+    end
+
+    @testset "conversion" begin
+        @test_throws DomainError Int(Interval(10, 10, Inclusivity(false, false)))
+        @test_throws DomainError Int(Interval(10, 10, Inclusivity(false, true)))
+        @test_throws DomainError Int(Interval(10, 10, Inclusivity(true, false)))
+        @test Int(Interval(10, 10, Inclusivity(true, true))) == 10
+        @test_throws DomainError Int(Interval(10, 11, Inclusivity(true, true)))
+
+        dt = Date(2013, 2, 13)
+        @test_throws DomainError Date(Interval(dt, dt, Inclusivity(false, false)))
+        @test_throws DomainError Date(Interval(dt, dt, Inclusivity(false, true)))
+        @test_throws DomainError Date(Interval(dt, dt, Inclusivity(true, false)))
+        @test Date(Interval(dt, dt, Inclusivity(true, true))) == dt
+        @test_throws DomainError Date(Interval(dt, dt + Day(1), Inclusivity(true, true)))
     end
 
     @testset "accessors" begin
@@ -38,6 +58,8 @@
                 @test last(interval) == b
                 @test span(interval) == b - a
                 @test inclusivity(interval) == inc
+                @test isclosed(interval) == (first(inc) && last(inc))
+                @test isopen(interval) == !(first(inc) || last(inc))
             end
         end
 

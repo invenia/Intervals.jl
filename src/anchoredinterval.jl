@@ -1,11 +1,12 @@
 """
     AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -> AnchoredInterval{P, T}
+    AnchoredInterval{P, T}(anchor::T, [closed_left::Bool, closed_right::Bool]) where {P, T} -> AnchoredInterval{P, T}
 
 `AnchoredInterval` is a subtype of `AbstractInterval` that represents a non-iterable range
-or span of values defined not by a startpoint and an endpoint but instead by a single
-`anchor` point and the value type `P` which represents the size of the range. When `P` is
-positive, the `anchor` represents the lesser endpoint (the beginning of the range); when `P`
-is negative, the `anchor` represents the greater endpoint (the end of the range).
+or span of values defined not by two endpoints but instead by a single `anchor` point and
+the value type `P` which represents the size of the range. When `P` is positive, the
+`anchor` represents the lesser endpoint (the beginning of the range); when `P` is negative,
+the `anchor` represents the greater endpoint (the end of the range).
 
 The interval represented by an `AnchoredInterval` value may be closed (both endpoints are
 included in the interval), open (neither endpoint is included), or half-open. This openness
@@ -37,7 +38,7 @@ HourEnding{DateTime}(2016-08-11T12:00:00, Inclusivity(false, true))
 julia> AnchoredInterval{Day(1)}(DateTime(2016, 8, 11))
 AnchoredInterval{1 day, DateTime}(2016-08-11T00:00:00, Inclusivity(true, false))
 
-julia> AnchoredInterval{Minute(5)}(DateTime(2016, 8, 11, 12, 30, 5), Inclusivity(true, true))
+julia> AnchoredInterval{Minute(5)}(DateTime(2016, 8, 11, 12, 30, 5), true, true)
 AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, true))
 ```
 
@@ -61,16 +62,26 @@ function AnchoredInterval{P, T}(i::T) where {P, T}
     return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
 end
 
-AnchoredInterval{P}(i::T, inclusivity) where {P, T} = AnchoredInterval{P, T}(i, inclusivity)
+AnchoredInterval{P}(i::T, inc::Inclusivity) where {P, T} = AnchoredInterval{P, T}(i, inc)
 AnchoredInterval{P}(i::T) where {P, T} = AnchoredInterval{P, T}(i)
 
+function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
+    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+end
+
+function AnchoredInterval{P}(i::T, x::Bool, y::Bool) where {P, T}
+    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+end
+
 const HourEnding{T} = AnchoredInterval{Hour(-1), T}
-HourEnding(i::T, inclusivity) where T = HourEnding{T}(i, inclusivity)
 HourEnding(i::T) where T = HourEnding{T}(i)
+HourEnding(i::T, inc::Inclusivity) where T = HourEnding{T}(i, inc)
+HourEnding(i::T, x::Bool, y::Bool) where T = HourEnding{T}(i, x, y)
 
 const HourBeginning{T} = AnchoredInterval{Hour(1), T}
-HourBeginning(i::T, inclusivity) where T = HourBeginning{T}(i, inclusivity)
 HourBeginning(i::T) where T = HourBeginning{T}(i)
+HourBeginning(i::T, inc::Inclusivity) where T = HourBeginning{T}(i, inc)
+HourBeginning(i::T, x::Bool, y::Bool) where T = HourBeginning{T}(i, x, y)
 
 function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
     return AnchoredInterval{P, T}(anchor(x), inclusivity(x))
@@ -89,11 +100,11 @@ function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P, T}) whe
     return Interval{T}(first(interval), last(interval), inclusivity(interval))
 end
 
-Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = interval.anchor
+Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Base.Date(interval::AnchoredInterval{P, Date}) where P = anchor(interval)
-Base.DateTime(interval::AnchoredInterval{P, DateTime}) where P = anchor(interval)
+Base.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
+Base.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
 
 ##### DISPLAY #####
 
@@ -172,5 +183,5 @@ end
 ##### SET OPERATIONS #####
 
 function Base.isempty(interval::AnchoredInterval{P, T}) where {P, T}
-    return P == zero(P) && inclusivity(interval) != Inclusivity(true, true)
+    return P == zero(P) && !isclosed(interval)
 end

@@ -35,6 +35,9 @@ end
 Base.first(x::Inclusivity) = x.first
 Base.last(x::Inclusivity) = x.last
 
+isclosed(x::Inclusivity) = first(x) && last(x)
+Base.isopen(x::Inclusivity) = !(first(x) || last(x))
+
 Base.isless(a::Inclusivity, b::Inclusivity) = isless(convert(Int, a), convert(Int, b))
 
 function Base.show(io::IO, x::Inclusivity)
@@ -46,8 +49,8 @@ function Base.show(io::IO, x::Inclusivity)
 end
 
 function Base.print(io::IO, x::Inclusivity)
-    first = x.first ? '[' : '('
-    last = x.last ? ']' : ')'
-    desc = Int(x) == 3 ? "Closed" : Int(x) == 0 ? "Open" : Int(x) == 1 ? "Left" : "Right"
-    print(io, "Inclusivity ", first, desc, last)
+    open_char = first(x) ? '[' : '('
+    close_char = last(x) ? ']' : ')'
+    desc = isclosed(x) ? "Closed" : isopen(x) ? "Open" : first(x) ? "Left" : "Right"
+    print(io, "Inclusivity ", open_char, desc, close_char)
 end

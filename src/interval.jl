@@ -1,17 +1,18 @@
 """
     Interval(first, last, [inclusivity::Inclusivity]) -> Interval
+    Interval(first, last, [closed_left::Bool, closed_right::Bool]) -> Interval
 
 An `Interval` represents a non-iterable range or span of values (non-interable because,
 unlike a `StepRange`, no step is defined).
 
-An `Interval` can be closed (both `first` and `last` are included), open (neither `first`
-nor `last` are included in the span), or half-open. This openness is defined by an
+An `Interval` can be closed (both `first` and `last` are included in the interval), open
+(neither `first` nor `last` are included), or half-open. This openness is defined by an
 `Inclusivity` value, which defaults to closed.
 
 ### Example
 
 ```julia
-julia> i = Interval(0, 100, Inclusivity(true, false))
+julia> i = Interval(0, 100, true, false)
 Interval{Int64}(0, 100, Inclusivity(true, false))
 
 julia> in(0, i)
@@ -23,7 +24,7 @@ true
 julia> in(100, i)
 false
 
-julia> intersect(Interval(0, 25, Inclusivity(false, false)), Interval(20, 50, Inclusivity(true, true))
+julia> intersect(Interval(0, 25, false, false), Interval(20, 50, true, true)
 Interval{Int64}(20, 25, Inclusivity(true, false))
 ```
 
@@ -43,7 +44,7 @@ The `Interval` constructor will compare `first` and `last`; if it findes that
 calls to `in` and `intersect`:
 
 ```julia
-julia> i = Interval(Date(2016, 8, 11), Date(2013, 2, 13), Inclusivity(false, true))
+julia> i = Interval(Date(2016, 8, 11), Date(2013, 2, 13), false, true)
 Interval{Date}(2013-02-13, 2016-08-11, Inclusivity(true, false))
 ```
 
@@ -66,6 +67,8 @@ struct Interval{T} <: AbstractInterval{T}
 end
 
 Interval(f::T, l::T, inclusivity) where T = Interval{T}(f, l, inclusivity)
+Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
+Interval(f, l, x::Bool, y::Bool) = Interval(f, l, Inclusivity(x, y))
 Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 (..)(f::T, l::T) where T = Interval(f, l)
 
@@ -85,6 +88,19 @@ Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
 span(interval::Interval) = interval.last - interval.first
 inclusivity(interval::AbstractInterval) = interval.inclusivity
+isclosed(interval::AbstractInterval) = isclosed(inclusivity(interval))
+Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
+
+##### CONVERSION #####
+
+function Base.convert(::Type{T}, i::Interval{T}) where T
+    first(i) == last(i) && isclosed(i) && return first(i)
+    throw(DomainError())
+end
+
+# Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
+Base.Date(interval::Interval{Date}) = convert(Date, interval)
+Base.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
 
 ##### DISPLAY #####
 

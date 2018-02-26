@@ -11,6 +11,26 @@
         @test Inclusivity(3) == Inclusivity(true, true)
     end
 
+    @testset "accessors" begin
+        inc = Inclusivity(false, false)
+        @test !first(inc)
+        @test !last(inc)
+        @test isopen(inc)
+        @test !isclosed(inc)
+
+        inc = Inclusivity(false, true)
+        @test !first(inc)
+        @test last(inc)
+        @test !isopen(inc)
+        @test !isclosed(inc)
+
+        inc = Inclusivity(true, true)
+        @test first(inc)
+        @test last(inc)
+        @test !isopen(inc)
+        @test isclosed(inc)
+    end
+
     @testset "convert" begin
         for i in 0:3
             for T in [UInt8, UInt32, Int32, Int64]

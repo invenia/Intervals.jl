@@ -21,6 +21,7 @@ export AbstractInterval,
        inclusivity,
        first,
        last,
+       isclosed,
        anchor,
        span,
        ..

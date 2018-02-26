@@ -22,6 +22,15 @@
         @test HourBeginning(dt) == expected
         @test HourBeginning(dt + Minute(59)) == expected
 
+        # Lazy inclusivity constructor
+        @test HourEnding{DateTime}(dt, true, false) ==
+            HourEnding{DateTime}(dt, Inclusivity(true, false))
+        @test HourEnding(dt, true, false) == HourEnding(dt, Inclusivity(true, false))
+        @test AnchoredInterval{Day(1), DateTime}(dt, false, false) ==
+            AnchoredInterval{Day(1), DateTime}(dt, Inclusivity(false, false))
+        @test AnchoredInterval{Day(1)}(dt, false, false) ==
+            AnchoredInterval{Day(1)}(dt, Inclusivity(false, false))
+
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval

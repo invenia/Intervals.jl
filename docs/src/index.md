@@ -12,10 +12,110 @@ This package defines:
 
 ## Example Usage
 
+### Intersection
+
 ```julia
 using Intervals
 
-:v
+julia> a = 1..10
+Interval{Int64}(1, 10, Inclusivity(true, true))
+
+julia> b = 5..15
+Interval{Int64}(5, 15, Inclusivity(true, true))
+
+julia> intersect(a, b)
+Interval{Int64}(5, 10, Inclusivity(true, true))
+```
+
+### Inclusivity
+
+```julia
+julia> a = Interval(1, 10)
+Interval{Int64}(1, 10, Inclusivity(true, true))
+
+julia> b = Interval(5, 15, false, false)
+Interval{Int64}(5, 15, Inclusivity(false, false))
+
+julia> in(5, a)
+true
+
+julia> in(5, b)
+false
+
+julia> intersect(a, b)
+Interval{Int64}(5, 10, Inclusivity(false, true))
+
+julia> c = Interval(15, 20)
+Interval{Int64}(15, 20, Inclusivity(true, true))
+
+julia> isempty(intersect(b, c))
+true
+```
+
+### Display
+
+```julia
+julia> a = Interval('a', 'z')
+Interval{Char}('a', 'z', Inclusivity(true, true))
+
+julia> string(a)
+"[a..z]"
+
+julia> b = Interval(Date(2013), Date(2016), true, false)
+Interval{Date}(2013-01-01, 2016-01-01, Inclusivity(true, false))
+
+julia> string(b)
+"[2013-01-01..2016-01-01)"
+
+julia> c = HourEnding(DateTime(2016, 8, 11))
+HourEnding{DateTime}(2016-08-11T00:00:00, Inclusivity(false, true))
+
+julia> string(c)
+"(2016-08-10 HE24]"
+```
+
+### `HourEnding`
+
+```julia
+julia> using TimeZones
+
+julia> he = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+HourEnding{TimeZones.ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))
+
+julia> he + Base.Dates.Hour(1)
+HourEnding{TimeZones.ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))
+
+julia> for h in he:he + Base.Dates.Day(1)
+           println(he)
+       end
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE01-06:00]
+
+julia> ZonedDateTime(he)
+2013-02-13T01:00:00-06:00
 ```
 
 ## API

@@ -48,8 +48,8 @@ struct AnchoredInterval{P, T} <: AbstractInterval{T}
     anchor::T
     inclusivity::Inclusivity
 
-    function AnchoredInterval{P, T}(anchor::T, inc::Inclusivity) where {P, T}
-        if P isa Period && P != zero(P)
+    function AnchoredInterval{P, T}(anchor::T, inc::Inclusivity; round::Bool=false) where {P, T}
+        if round && P isa Period && P != zero(P)
             anchor = P < zero(P) ? ceil(anchor, abs(P)) : floor(anchor, P)
         end
         return new(anchor, inc)
@@ -58,30 +58,23 @@ end
 
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
-function AnchoredInterval{P, T}(i::T) where {P, T}
-    return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
+function AnchoredInterval{P, T}(i::T; kwargs...) where {P, T}
+    return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)); kwargs...)
 end
 
-AnchoredInterval{P}(i::T, inc::Inclusivity) where {P, T} = AnchoredInterval{P, T}(i, inc)
-AnchoredInterval{P}(i::T) where {P, T} = AnchoredInterval{P, T}(i)
-
-function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool; kwargs...) where {P, T}
+    return AnchoredInterval{P, T}(i, Inclusivity(x, y); kwargs...)
 end
 
-function AnchoredInterval{P}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+function AnchoredInterval{P}(i::T, args...; kwargs...) where {P, T}
+    AnchoredInterval{P, T}(i, args...; kwargs...)
 end
 
 const HourEnding{T} = AnchoredInterval{Hour(-1), T}
-HourEnding(i::T) where T = HourEnding{T}(i)
-HourEnding(i::T, inc::Inclusivity) where T = HourEnding{T}(i, inc)
-HourEnding(i::T, x::Bool, y::Bool) where T = HourEnding{T}(i, x, y)
+HourEnding(i::T, args...; kwargs...) where T = HourEnding{T}(i, args...; kwargs...)
 
 const HourBeginning{T} = AnchoredInterval{Hour(1), T}
-HourBeginning(i::T) where T = HourBeginning{T}(i)
-HourBeginning(i::T, inc::Inclusivity) where T = HourBeginning{T}(i, inc)
-HourBeginning(i::T, x::Bool, y::Bool) where T = HourBeginning{T}(i, x, y)
+HourBeginning(i::T, args...; kwargs...) where T = HourBeginning{T}(i, args...; kwargs...)
 
 function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
     return AnchoredInterval{P, T}(anchor(x), inclusivity(x))

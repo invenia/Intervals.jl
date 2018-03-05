@@ -125,6 +125,31 @@ function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P, T}) whe
     return Interval{T}(first(interval), last(interval), inclusivity(interval))
 end
 
+# Conversion methods which currently aren't needed but could prove useful. Commented out
+# since these are untested.
+
+#=
+function Base.convert(::Type{AnchoredInterval{P, T}}, interval::Interval{T}) where {P, T}
+    @assert abs(P) == span(interval)
+    anchor = P < zero(P) ? last(interval) : first(interval)
+    AnchoredInterval{P, T}(last(interval), inclusivity(interval))
+end
+
+function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where {P, T}
+    @assert abs(P) == span(interval)
+    anchor = P < zero(P) ? last(interval) : first(interval)
+    AnchoredInterval{P, T}(anchor, inclusivity(interval))
+end
+=#
+
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
+    AnchoredInterval{-span(interval), T}(last(interval), inclusivity(interval))
+end
+
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
+    AnchoredInterval{span(interval), T}(first(interval), inclusivity(interval))
+end
+
 Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)

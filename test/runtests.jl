@@ -8,4 +8,5 @@ using Base.Dates
     include("endpoint.jl")
     include("interval.jl")
     include("anchoredinterval.jl")
+    include("comparisons.jl")
 end

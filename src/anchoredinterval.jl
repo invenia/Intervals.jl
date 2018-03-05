@@ -141,25 +141,10 @@ end
 
 ##### ARITHMETIC #####
 
-function Base.:+(a::AnchoredInterval{P, T}, b::T) where {P, T}
-    return AnchoredInterval{P, T}(anchor(a) + b, inclusivity(a))
-end
+Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b, inclusivity(a))
 
-function Base.:+(a::AnchoredInterval{P, Char}, b::Integer) where P
-    return AnchoredInterval{P, Char}(anchor(a) + b, inclusivity(a))
-end
-
-function Base.:+(a::AnchoredInterval{P, T}, b::Period) where {P, T <: TimeType}
-    return AnchoredInterval{P, T}(anchor(a) + b, inclusivity(a))
-end
-
-Base.:+(a::T, b::AnchoredInterval{P, T}) where {P, T} = b + a
-Base.:+(a::Integer, b::AnchoredInterval{P, Char}) where P = b + a
-Base.:+(a::Period, b::AnchoredInterval{P, <:TimeType}) where P = b + a
-
-Base.:-(a::AnchoredInterval{P, T}, b::T) where {P, T} = a + -b
-Base.:-(a::AnchoredInterval{P, Char}, b::Integer) where P = a + -b
-Base.:-(a::AnchoredInterval{P, <:TimeType}, b::Period) where P = a + -b
+Base.:+(a, b::AnchoredInterval) = b + a
+Base.:-(a::AnchoredInterval, b) = a + -b
 
 # Required for StepRange{<:AnchoredInterval}
 Base.:-(a::AnchoredInterval, b::AnchoredInterval) = anchor(a) - anchor(b)
@@ -167,7 +152,7 @@ Base.:-(a::AnchoredInterval, b::AnchoredInterval) = anchor(a) - anchor(b)
 ##### RANGE #####
 
 # Required for StepRange{<:AnchoredInterval}
-function Base.steprem(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}, c) where {P, T}
+function Base.steprem(a::T, b::T, c) where {T <: AnchoredInterval}
     return Base.steprem(anchor(a), anchor(b), c)
 end
 

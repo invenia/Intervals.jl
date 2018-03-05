@@ -136,25 +136,10 @@ end
 
 ##### ARITHMETIC #####
 
-function Base.:+(a::Interval{T}, b::T) where T
-    return Interval{T}(first(a) + b, last(a) + b, inclusivity(a))
-end
+Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, inclusivity(a))
 
-function Base.:+(a::Interval{Char}, b::Integer)
-    return Interval{Char}(first(a) + b, last(a) + b, inclusivity(a))
-end
-
-function Base.:+(a::Interval{T}, b::Period) where T <: TimeType
-    return Interval{T}(first(a) + b, last(a) + b, inclusivity(a))
-end
-
-Base.:+(a::T, b::Interval{T}) where T = b + a
-Base.:+(a::Integer, b::Interval{Char}) = b + a
-Base.:+(a::Period, b::Interval{T}) where T <: TimeType = b + a
-
-Base.:-(a::Interval{T}, b::T) where T = a + -b
-Base.:-(a::Interval{Char}, b::Integer) = a + -b
-Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
+Base.:+(a, b::Interval) = b + a
+Base.:-(a::Interval, b) = a + -b
 
 Base.:-(a::T, b::Interval{T}) where T = a + -b
 

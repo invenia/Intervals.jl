@@ -4,23 +4,23 @@
     @testset "constructor" begin
         expected = AnchoredInterval{Hour(-1), DateTime}(dt, Inclusivity(false, true))
         @test AnchoredInterval{Hour(-1), DateTime}(dt) == expected
-        @test AnchoredInterval{Hour(-1), DateTime}(dt - Minute(59)) == expected
+        @test AnchoredInterval{Hour(-1), DateTime}(dt - Minute(59), round=true) == expected
         @test AnchoredInterval{Hour(-1)}(dt) == expected
-        @test AnchoredInterval{Hour(-1)}(dt - Minute(59)) == expected
+        @test AnchoredInterval{Hour(-1)}(dt - Minute(59), round=true) == expected
         @test HourEnding{DateTime}(dt) == expected
-        @test HourEnding{DateTime}(dt - Minute(59)) == expected
+        @test HourEnding{DateTime}(dt - Minute(59), round=true) == expected
         @test HourEnding(dt) == expected
-        @test HourEnding(dt - Minute(59)) == expected
+        @test HourEnding(dt - Minute(59), round=true) == expected
 
         expected = AnchoredInterval{Hour(1), DateTime}(dt, Inclusivity(true, false))
         @test AnchoredInterval{Hour(1), DateTime}(dt) == expected
-        @test AnchoredInterval{Hour(1), DateTime}(dt + Minute(59)) == expected
+        @test AnchoredInterval{Hour(1), DateTime}(dt + Minute(59), round=true) == expected
         @test AnchoredInterval{Hour(1)}(dt) == expected
-        @test AnchoredInterval{Hour(1)}(dt + Minute(59)) == expected
+        @test AnchoredInterval{Hour(1)}(dt + Minute(59), round=true) == expected
         @test HourBeginning{DateTime}(dt) == expected
-        @test HourBeginning{DateTime}(dt + Minute(59)) == expected
+        @test HourBeginning{DateTime}(dt + Minute(59), round=true) == expected
         @test HourBeginning(dt) == expected
-        @test HourBeginning(dt + Minute(59)) == expected
+        @test HourBeginning(dt + Minute(59), round=true) == expected
 
         # Lazy inclusivity constructor
         @test HourEnding{DateTime}(dt, true, false) ==
@@ -57,7 +57,7 @@
 
         inc = Inclusivity(false, false)
         P = Day(1)
-        interval = AnchoredInterval{P}(dt, inc)
+        interval = AnchoredInterval{P}(dt, inc, round=true)
 
         @test first(interval) == DateTime(2016, 8, 11)
         @test last(interval) == DateTime(2016, 8, 12)
@@ -151,13 +151,13 @@
             "Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Year(-1)}(Date(dt))
+        interval = AnchoredInterval{Year(-1)}(Date(dt), round=true)
         @test string(interval) == "(YE2017]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "AnchoredInterval{-1 year, Date}(2017-01-01, Inclusivity(false, true))"
 
-        interval = AnchoredInterval{Month(-1)}(dt)
+        interval = AnchoredInterval{Month(-1)}(dt, round=true)
         @test string(interval) == "(2016 MoE09]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
@@ -165,7 +165,7 @@
             "Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Day(-1)}(DateTime(dt))
+        interval = AnchoredInterval{Day(-1)}(DateTime(dt), round=true)
         @test string(interval) == "(2016-08 DE12]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==

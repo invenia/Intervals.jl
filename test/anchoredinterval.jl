@@ -4,6 +4,7 @@
     @testset "constructor" begin
         expected = AnchoredInterval{Hour(-1), DateTime}(dt, Inclusivity(false, true))
         @test AnchoredInterval{Hour(-1), DateTime}(dt) == expected
+        @test AnchoredInterval{Hour(-1), DateTime}(dt - Minute(59)) == expected - Minute(59)
         @test AnchoredInterval{Hour(-1), DateTime}(dt - Minute(59), round=true) == expected
         @test AnchoredInterval{Hour(-1)}(dt) == expected
         @test AnchoredInterval{Hour(-1)}(dt - Minute(59), round=true) == expected
@@ -14,6 +15,7 @@
 
         expected = AnchoredInterval{Hour(1), DateTime}(dt, Inclusivity(true, false))
         @test AnchoredInterval{Hour(1), DateTime}(dt) == expected
+        @test AnchoredInterval{Hour(1), DateTime}(dt + Minute(59)) == expected + Minute(59)
         @test AnchoredInterval{Hour(1), DateTime}(dt + Minute(59), round=true) == expected
         @test AnchoredInterval{Hour(1)}(dt) == expected
         @test AnchoredInterval{Hour(1)}(dt + Minute(59), round=true) == expected

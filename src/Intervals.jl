@@ -8,6 +8,7 @@ using TimeZones
 abstract type AbstractInterval{T} end
 
 include("inclusivity.jl")
+include("endpoint.jl")
 include("interval.jl")
 include("anchoredinterval.jl")
 include("summary.jl")

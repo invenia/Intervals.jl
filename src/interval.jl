@@ -159,18 +159,11 @@ Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 ##### EQUALITY #####
 
 function Base.isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    isempty(intersect(a, b)) && isless(first(a), first(b))
+    return RightEndpoint(a) < LeftEndpoint(b)
 end
 
-function Base.isless(a::AbstractInterval{T}, b::T) where T
-    check = last(inclusivity(a)) ? (<) : (<=)
-    return check(last(a), b)
-end
-
-function Base.isless(a::T, b::AbstractInterval{T}) where T
-    check = first(inclusivity(b)) ? (<) : (<=)
-    return check(a, first(b))
-end
+Base.isless(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
+Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 
 ##### SET OPERATIONS #####
 
@@ -181,46 +174,17 @@ function Base.isempty(i::Interval)
     )
 end
 
-Base.in(a::T, b::AbstractInterval{T}) where T = !isless(a, b) && !isless(b, a)
+Base.in(a::T, b::AbstractInterval{T}) where T = !(a > b || a < b)
+
+function Base.in(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    return LeftEndpoint(a) >= LeftEndpoint(b) && RightEndpoint(a) <= RightEndpoint(b)
+end
 
 # TODO: Should probably define union, too. There is power in a union.
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    firstpoint = first(a) > first(b) ? first(a) : first(b)
-    endpoint = last(a) < last(b) ? last(a) : last(b)
-
-    # If first > last, there's no intersection, so we explicitly return an empty interval.
-    # We can't just return Interval(first, last, inclusivity) because the constructor
-    # would rearrange first and last in this case to make a non-empty interval.
-    firstpoint > endpoint && return Interval{T}()
-
-    # These two consecutive ifs could be cleaned up with a fancy loop (but don't forget to
-    # change > to < when comparing a.last to b.last!
-    if inclusivity(a).first == inclusivity(b).first
-        # If a and b have the same inclusivity, the inclusivity of the intersection is easy.
-        i_first = inclusivity(a).first
-    else
-        if first(a) == first(b)
-            i_first = false
-        elseif first(a) > first(b)
-            i_first = inclusivity(a).first
-        else
-            i_first = inclusivity(b).first
-        end
-    end
-
-    if inclusivity(a).last == inclusivity(b).last
-        # If a and b have the same inclusivity, the inclusivity of the intersection is easy.
-        i_last = inclusivity(a).last
-    else
-        if last(a) == last(b)
-            i_last = false
-        elseif last(a) < last(b)
-            i_last = inclusivity(a).last
-        else
-            i_last = inclusivity(b).last
-        end
-    end
-
-    return Interval{T}(firstpoint, endpoint, Inclusivity(i_first, i_last))
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+    left > right && return Interval{T}()
+    return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
 end

@@ -274,6 +274,15 @@
             @test in(b - unit, interval)
             @test !in(b + unit, interval)
         end
+
+        @test in(0..10, 0..10)
+        @test in(Interval(0, 10, false, false), 0..10)
+        @test !in(0..10, Interval(0, 10, false, false))
+        @test in(1..9, 0..10)
+        @test !in(0..10, 1..9)
+        @test !in(1..11, 0..10)
+        @test !in(-1..9, 0..10)
+        @test !in(20..30, 0..10)
     end
 
     @testset "intersect" begin

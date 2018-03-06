@@ -24,27 +24,24 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 
 ### Rounding
 
-# TODO UPDATE THIS
-
 While the user may expect an `HourEnding` or `HourBeginning` value to be anchored to a
 specific hour, the constructor makes no guarantees that the anchor provided is rounded:
 
 ```julia
-INSERT EXAMPLE NOT ROUNDED HERE
+julia> HourEnding(DateTime(2016, 8, 11, 2, 30))
+HourEnding{DateTime}(2016-08-11T02:30:00, Inclusivity(false, true))
 ```
 
 The `HE` and `HB` pseudoconstructors round the input up or down to the nearest hour, as
 appropriate:
 
 ```julia
-INSERT EXAMPLE OF HE AND HB HERE
+julia> HE(DateTime(2016, 8, 11, 2, 30))
+HourEnding{DateTime}(2016-08-11T03:00:00, Inclusivity(false, true))
+
+julia> HB(DateTime(2016, 8, 11, 2, 30))
+HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))
 ```
-
-# END TODO UPDATE THIS
-
-
-
-
 
 ### Example
 
@@ -89,9 +86,20 @@ HourEnding(a::T, args...) where T = HourEnding{T}(a, args...)
 const HourBeginning{T} = AnchoredInterval{Hour(1), T} where T <: TimeType
 HourBeginning(a::T, args...) where T = HourBeginning{T}(a, args...)
 
-# TODO docstrings
-# TODO add/update documentation in docs
+"""
+    HE(anchor, args...) -> HourEnding
+
+`HE` is a pseudoconstructor for `HourEnding` that rounds the anchor provided up to the
+nearest hour.
+"""
 HE(a, args...) = HourEnding(ceil(a, Hour), args...)
+
+"""
+    HB(anchor, args...) -> HourBeginning
+
+`HB` is a pseudoconstructor for `HourBeginning` that rounds the anchor provided down to the
+nearest hour.
+"""
 HB(a, args...) = HourBeginning(floor(a, Hour), args...)
 
 function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
@@ -204,7 +212,8 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
         new_P = span(interval)
     end
 
-    # TODO: P is almost always going to be milliseconds... :(
+    # TODO: P is always going to be milliseconds... :(
+    # Update this once P is replaced by a span element
 
     return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
 end

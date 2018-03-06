@@ -7,6 +7,8 @@ This package defines:
     value `anchor::T` and the value type `P` which represents the size of the range
     * `HourEnding`, a type alias for `AnchoredInterval{Hour(-1), T}`
     * `HourBeginning`, a type alias for `AnchoredInterval{Hour(1), T}`
+    * `HE` and `HB`, pseudoconstructors for `HourEnding` and `HourBeginning` that round the
+      anchor up (`HE`) or down (`HB`) to the nearest hour
 * `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
   closed
 
@@ -74,12 +76,15 @@ julia> string(c)
 "(2016-08-10 HE24]"
 ```
 
-### `HourEnding`
+### `HourEnding` and `HE`
 
 ```julia
 julia> using TimeZones
 
-julia> he = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+HourEnding{TimeZones.ZonedDateTime}(2013-02-13T00:30:00-06:00, Inclusivity(false, true))
+
+julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
 HourEnding{TimeZones.ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))
 
 julia> he + Base.Dates.Hour(1)

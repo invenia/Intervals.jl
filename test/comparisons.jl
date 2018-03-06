@@ -21,6 +21,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 2, true, true))
         later = convert(B, Interval(4, 5, true, true))
 
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
+
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
 
@@ -42,6 +46,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching open/open" begin
         earlier = convert(A, Interval(1, 3, false, false))
         later = convert(B, Interval(3, 5, false, false))
+
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
 
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
@@ -65,6 +73,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, false, false))
         later = convert(B, Interval(3, 5, true, true))
 
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
+
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
 
@@ -86,6 +98,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching closed/open" begin
         earlier = convert(A, Interval(1, 3, true, true))
         later = convert(B, Interval(3, 5, false, false))
+
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
 
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
@@ -109,6 +125,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, true, true))
         later = convert(B, Interval(3, 5, true, true))
 
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
+
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
 
@@ -131,6 +151,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 4, true, true))
         later = convert(B, Interval(2, 5, true, true))
 
+        @test earlier != later
+        @test !isequal(earlier, later)
+        @test hash(earlier) != hash(later)
+
         # @test isless(earlier, later)
         # @test !isless(later, earlier)
 
@@ -147,6 +171,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal ()/()" begin
         a = convert(A, Interval(1, 5, false, false))
         b = convert(B, Interval(1, 5, false, false))
+
+        @test a == b
+        @test A != B || isequal(a, b)
+        @test A != B || hash(a) == hash(b)
 
         # @test !isless(a, b)
         # @test !isless(a, b)
@@ -165,6 +193,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         a = convert(A, Interval(1, 5, true, false))
         b = convert(B, Interval(1, 5, false, false))
 
+        @test a != b
+        @test !isequal(a, b)
+        @test hash(a) != hash(b)
+
         # @test isless(a, b)
         # @test !isless(b, a)
 
@@ -181,6 +213,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal (]/()" begin
         a = convert(A, Interval(1, 5, false, true))
         b = convert(B, Interval(1, 5, false, false))
+
+        @test a != b
+        @test !isequal(a, b)
+        @test hash(a) != hash(b)
 
         # @test !isless(a, b)
         # @test !isless(b, a)
@@ -199,6 +235,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         a = convert(A, Interval(1, 5, true, true))
         b = convert(B, Interval(1, 5, false, false))
 
+        @test a != b
+        @test !isequal(a, b)
+        @test hash(a) != hash(b)
+
         # @test isless(a, b)
         # @test !isless(b, a)
 
@@ -215,6 +255,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal [)/[]" begin
         a = convert(A, Interval(1, 5, true, false))
         b = convert(B, Interval(1, 5, true, true))
+
+        @test a != b
+        @test !isequal(a, b)
+        @test hash(a) != hash(b)
 
         # @test !isless(a, b)
         # @test !isless(b, a)
@@ -233,6 +277,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         a = convert(A, Interval(1, 5, false, true))
         b = convert(B, Interval(1, 5, true, true))
 
+        @test a != b
+        @test !isequal(a, b)
+        @test hash(a) != hash(b)
+
         # @test !isless(a, b)
         # @test isless(b, a)
 
@@ -249,6 +297,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal []/[]" begin
         a = convert(A, Interval(1, 5, true, true))
         b = convert(B, Interval(1, 5, true, true))
+
+        @test a == b
+        @test A != B || isequal(a, b)
+        @test A != B || hash(a) == hash(b)
 
         # @test !isless(a, b)
         # @test !isless(b, a)
@@ -271,6 +323,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "containing" begin
         smaller = convert(A, Interval(2, 4, true, true))
         larger = convert(B, Interval(1, 5, true, true))
+
+        @test smaller != larger
+        @test !isequal(smaller, larger)
+        @test hash(smaller) != hash(larger)
 
         # @test !isless(smaller, larger)
         # @test isless(larger, smaller)

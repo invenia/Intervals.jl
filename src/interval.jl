@@ -150,6 +150,10 @@ end
 
 ##### EQUALITY #####
 
+function Base.:(==)(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    return LeftEndpoint(a) == LeftEndpoint(b) && RightEndpoint(a) == RightEndpoint(b)
+end
+
 Base.:<(a::AbstractInterval{T}, b::T) where T = LeftEndpoint(a) < b
 Base.:<(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 

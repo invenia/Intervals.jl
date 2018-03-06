@@ -156,6 +156,13 @@ Base.:-(a::Interval{T}, b::T) where T = a + -b
 Base.:-(a::Interval{Char}, b::Integer) = a + -b
 Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 
+Base.:-(a::T, b::Interval{T}) where T <: Number = a + -b
+
+function Base.:-(a::Interval{T}) where T <: Number
+    inc = inclusivity(a)
+    Interval{T}(-last(a), -first(a), Inclusivity(last(inc), first(inc)))
+end
+
 ##### EQUALITY #####
 
 function Base.isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
@@ -168,10 +175,7 @@ Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 ##### SET OPERATIONS #####
 
 function Base.isempty(i::Interval)
-    return (
-        first(i) > last(i) ||   # Shouldn't be possible, but check anyway.
-        (first(i) == last(i) && inclusivity(i) != Inclusivity(true, true))
-    )
+    return first(i) == last(i) && inclusivity(i) != Inclusivity(true, true)
 end
 
 Base.in(a::T, b::AbstractInterval{T}) where T = !(a > b || a < b)
@@ -180,7 +184,7 @@ function Base.in(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return LeftEndpoint(a) >= LeftEndpoint(b) && RightEndpoint(a) <= RightEndpoint(b)
 end
 
-# TODO: Should probably define union, too. There is power in a union.
+# Should probably define union, too. There is power in a union.
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     left = max(LeftEndpoint(a), LeftEndpoint(b))

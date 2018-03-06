@@ -185,11 +185,19 @@
     @testset "arithmetic" begin
         for (a, b, unit) in test_values
             for i in 0:3
-                interval = Interval(a, b, Inclusivity(i))
-                @test interval + unit == Interval(a + unit, b + unit, Inclusivity(i))
-                @test unit + interval == Interval(a + unit, b + unit, Inclusivity(i))
-                @test interval - unit == Interval(a - unit, b - unit, Inclusivity(i))
-                @test_throws MethodError unit - interval
+                inc = Inclusivity(i)
+                interval = Interval(a, b, inc)
+                @test interval + unit == Interval(a + unit, b + unit, inc)
+                @test unit + interval == Interval(a + unit, b + unit, inc)
+                @test interval - unit == Interval(a - unit, b - unit, inc)
+
+                if a isa Number
+                    @test -interval == Interval(-b, -a, last(inc), first(inc))
+                    @test unit - interval == Interval(unit-b, unit-a, last(inc), first(inc))
+                else
+                    @test_throws MethodError -interval
+                    @test_throws MethodError unit - interval
+                end
             end
         end
 

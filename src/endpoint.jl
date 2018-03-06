@@ -21,6 +21,14 @@ RightEndpoint(ep::T, included::Bool) where T = RightEndpoint{T}(ep, included)
 LeftEndpoint(i::AbstractInterval{T}) where T = LeftEndpoint{T}(first(i), first(inclusivity(i)))
 RightEndpoint(i::AbstractInterval{T}) where T = RightEndpoint{T}(last(i), last(inclusivity(i)))
 
+function Base.:(==)(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T
+    a.endpoint == b.endpoint && a.included && b.included
+end
+
+function Base.:(==)(a::RightEndpoint{T}, b::LeftEndpoint{T}) where T
+    a.endpoint == b.endpoint && a.included && b.included
+end
+
 function Base.isless(a::LeftEndpoint{T}, b::LeftEndpoint{T}) where T
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && a.included && !b.included)
 end

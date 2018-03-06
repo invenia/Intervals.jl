@@ -158,4 +158,52 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test !(2 < Endpoint(1, false))
         @test !(2 < Endpoint(1, true))
     end
+
+    @testset "LeftEndpoint == LeftEndpoint" begin
+        @test LeftEndpoint(1, false) != LeftEndpoint(2, false)
+        @test LeftEndpoint(1, true) != LeftEndpoint(2, false)
+        @test LeftEndpoint(1, false) != LeftEndpoint(2, true)
+        @test LeftEndpoint(1, true) != LeftEndpoint(2, true)
+
+        @test LeftEndpoint(1, false) == LeftEndpoint(1, false)
+        @test LeftEndpoint(1, true) != LeftEndpoint(1, false)
+        @test LeftEndpoint(1, false) != LeftEndpoint(1, true)
+        @test LeftEndpoint(1, true) == LeftEndpoint(1, true)
+    end
+
+    @testset "RightEndpoint == RightEndpoint" begin
+        @test RightEndpoint(1, false) != RightEndpoint(2, false)
+        @test RightEndpoint(1, true) != RightEndpoint(2, false)
+        @test RightEndpoint(1, false) != RightEndpoint(2, true)
+        @test RightEndpoint(1, true) != RightEndpoint(2, true)
+
+        @test RightEndpoint(1, false) == RightEndpoint(1, false)
+        @test RightEndpoint(1, true) != RightEndpoint(1, false)
+        @test RightEndpoint(1, false) != RightEndpoint(1, true)
+        @test RightEndpoint(1, true) == RightEndpoint(1, true)
+    end
+
+    @testset "LeftEndpoint == RightEndpoint" begin
+        @test LeftEndpoint(1, false) != RightEndpoint(2, false)
+        @test LeftEndpoint(1, true) != RightEndpoint(2, false)
+        @test LeftEndpoint(1, false) != RightEndpoint(2, true)
+        @test LeftEndpoint(1, true) != RightEndpoint(2, true)
+
+        @test LeftEndpoint(1, false) != RightEndpoint(1, false)
+        @test LeftEndpoint(1, true) != RightEndpoint(1, false)
+        @test LeftEndpoint(1, false) != RightEndpoint(1, true)
+        @test LeftEndpoint(1, true) == RightEndpoint(1, true)
+    end
+
+    @testset "RightEndpoint == LeftEndpoint" begin
+        @test RightEndpoint(1, false) != LeftEndpoint(2, false)
+        @test RightEndpoint(1, true) != LeftEndpoint(2, false)
+        @test RightEndpoint(1, false) != LeftEndpoint(2, true)
+        @test RightEndpoint(1, true) != LeftEndpoint(2, true)
+
+        @test RightEndpoint(1, false) != LeftEndpoint(1, false)
+        @test RightEndpoint(1, true) != LeftEndpoint(1, false)
+        @test RightEndpoint(1, false) != LeftEndpoint(1, true)
+        @test RightEndpoint(1, true) == LeftEndpoint(1, true)
+    end
 end

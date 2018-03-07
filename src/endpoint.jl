@@ -21,6 +21,26 @@ RightEndpoint(ep::T, included::Bool) where T = RightEndpoint{T}(ep, included)
 LeftEndpoint(i::AbstractInterval{T}) where T = LeftEndpoint{T}(first(i), first(inclusivity(i)))
 RightEndpoint(i::AbstractInterval{T}) where T = RightEndpoint{T}(last(i), last(inclusivity(i)))
 
+
+"""
+    ==(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T -> Bool
+    ==(a::RightEndpoint{T}, b::LeftEndpoint{T}) where T -> Bool
+
+A left-endpoint and a right-endpoint are only equal when they use the same point and are
+both included. Note that left/right endpoints which are both not included are not equal
+as the left-endpoint contains values below that point while the right-endpoint only contains
+values that are above that point.
+
+Visualizing two touching intervals can assist in understanding this logic:
+
+    [x..y][y..z] -> RightEndpoint == LeftEndpoint
+    [x..y)[y..z] -> RightEndpoint != LeftEndpoint
+    [x..y](y..z] -> RightEndpoint != LeftEndpoint
+    [x..y)(y..z] -> RightEndpoint != LeftEndpoint
+"""
+Base.:(==)(a::Endpoint, b::Endpoint)
+
+
 function Base.:(==)(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T
     a.endpoint == b.endpoint && a.included && b.included
 end

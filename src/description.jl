@@ -1,8 +1,10 @@
 using Base.Dates: value, coarserperiod
 
-description(interval::AnchoredInterval{P}) where P = description(interval, P > zero(P) ? "B" : "E")
+function description(interval::AnchoredInterval{T, P}) where {T, P}
+    description(interval, P > zero(P) ? "B" : "E")
+end
 
-function description(interval::AnchoredInterval{P, T}, s::String) where {P, T}
+function description(interval::AnchoredInterval{T, P}, s::String) where {T, P}
     return string(
         first(inclusivity(interval)) ? '[' : '(',
         description(anchor(interval), abs(P), s),
@@ -10,7 +12,7 @@ function description(interval::AnchoredInterval{P, T}, s::String) where {P, T}
     )
 end
 
-function description(interval::AnchoredInterval{P, ZonedDateTime}, s::String) where P
+function description(interval::AnchoredInterval{ZonedDateTime, P}, s::String) where P
     return string(
         first(inclusivity(interval)) ? '[' : '(',
         description(anchor(interval), abs(P), s),

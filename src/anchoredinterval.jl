@@ -208,10 +208,10 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
 
     if P ≤ zero(P)
         anchor = last(interval)
-        new_P = promote_period(-span(interval), typeof(P))
+        new_P = canonicalize(typeof(P), -span(interval))
     else
         anchor = first(interval)
-        new_P = promote_period(span(interval), typeof(P))
+        new_P = canonicalize(typeof(P), span(interval))
     end
 
     return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
@@ -219,12 +219,12 @@ end
 
 ##### UTILITIES #####
 
-function promote_period(p::Period, target_type::Type{<:Period}=Day)
-    if !isa(p, target_type)
-        P, max_val = coarserperiod(typeof(p))
-        if (value(p) % max_val == 0) && (max_val > 1)
-            p = promote_period(convert(P, p), target_type)
-        end
+function canonicalize(target_type::Type{<:Period}, p::P) where P <: Period
+    Q, max_val = coarserperiod(P)
+    if (value(p) % max_val == 0) && (max_val > 1)
+        p = canonicalize(target_type, convert(Q, p))
     end
     return p
 end
+
+canonicalize(target_type::Type{P}, p::P) where P <: Period = p

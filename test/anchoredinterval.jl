@@ -1,4 +1,4 @@
-using Intervals: promote_period
+using Intervals: canonicalize
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -481,20 +481,21 @@ using Intervals: promote_period
             AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
     end
 
-    @testset "promote_period" begin
+    @testset "canonicalize" begin
         for s in (1, -1)
-            @test promote_period(Millisecond(s * 3600000)) == Hour(s * 1)
-            @test promote_period(Millisecond(s * 3600000), Hour) == Hour(s * 1)
-            @test promote_period(Millisecond(s * 3600000), Minute) == Minute(s * 60)
-            @test promote_period(Millisecond(s * 3600000), Second) == Second(s * 3600)
-            @test promote_period(Millisecond(s * 3600000), Millisecond) ==
+            @test canonicalize(Day, Millisecond(s * 3600000)) == Hour(s * 1)
+            @test canonicalize(Hour, Millisecond(s * 3600000)) == Hour(s * 1)
+            @test canonicalize(Minute, Millisecond(s * 3600000)) == Minute(s * 60)
+            @test canonicalize(Second, Millisecond(s * 3600000)) == Second(s * 3600)
+            @test canonicalize(Millisecond, Millisecond(s * 3600000)) ==
                 Millisecond(s * 3600000)
-            @test promote_period(Millisecond(s * 3601000)) == Second(s * 3601)
-            @test promote_period(Millisecond(s * 3600001)) == Millisecond(s * 3600001)
+            @test canonicalize(Second, Millisecond(s * 3601000)) == Second(s * 3601)
+            @test canonicalize(Millisecond, Millisecond(s * 3600001)) ==
+                Millisecond(s * 3600001)
         end
 
         # Can't promote past 1 week, because who knows how many days/weeks are in a month?
-        @test promote_period(Millisecond(2419200000)) == Week(4)
-        @test promote_period(Millisecond(4233600000)) == Week(7)
+        @test canonicalize(Year, Millisecond(2419200000)) == Week(4)
+        @test canonicalize(Year, Millisecond(4233600000)) == Week(7)
     end
 end

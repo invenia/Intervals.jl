@@ -206,12 +206,13 @@ end
 function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
 
+    sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
     if P ≤ zero(P)
         anchor = last(interval)
-        new_P = canonicalize(typeof(P), -span(interval))
+        new_P = -sp
     else
         anchor = first(interval)
-        new_P = canonicalize(typeof(P), span(interval))
+        new_P = sp
     end
 
     return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))

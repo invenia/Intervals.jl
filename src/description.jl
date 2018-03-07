@@ -1,4 +1,4 @@
-using Base.Dates: value
+using Base.Dates: value, coarserperiod
 
 description(interval::AnchoredInterval{P}) where P = description(interval, P > zero(P) ? "B" : "E")
 
@@ -29,9 +29,9 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
 
     # If we would display only HE00, display HE24 for the previous day instead
     if ts == "00" && suffix == "E"
-        Pc, f = Dates.coarserperiod(typeof(p))
-        dt -= oneunit(Pc)
-        ts = string(f)
+        P, max_val = coarserperiod(typeof(p))
+        dt -= oneunit(P)
+        ts = string(max_val)
     end
 
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))

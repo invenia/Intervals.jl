@@ -1,3 +1,5 @@
+using Intervals: promote_period
+
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
 
@@ -449,34 +451,50 @@
         # Adjacent
         @test isempty(intersect(HourEnding(dt), HourEnding(dt + Hour(1))))
 
-        # TODO: These tests should work once the value type is replaced by a type and a
-        # span value.
-
         # Single point overlap
         expected = AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
-        @test_broken intersect(
+        @test intersect(
             HourEnding(dt, Inclusivity(true, true)),
             HourEnding(dt + Hour(1), Inclusivity(true, true)),
         ) == expected
 
         # Hour overlap
         he = HourEnding(dt)
-        @test_broken intersect(he, AnchoredInterval{Hour(-2)}(dt)) == he
-        @test_broken intersect(AnchoredInterval{Hour(-3)}(dt + Hour(1)), he) == he
+        @test intersect(he, AnchoredInterval{Hour(-2)}(dt)) == he
+        @test intersect(AnchoredInterval{Hour(-3)}(dt + Hour(1)), he) == he
+        @test intersect(HourBeginning(dt - Hour(1)), he) ==
+            HourBeginning(dt - Hour(1), Inclusivity(false, false))
 
         # Identical save for inclusivity
         expected = HourEnding(dt, Inclusivity(false, false))
-        @test_broken intersect(
+        @test intersect(
             HourEnding(dt, Inclusivity(false, false)),
             HourEnding(dt, Inclusivity(true, true)),
         ) == expected
-        @test_broken intersect(
+        @test intersect(
             HourEnding(dt, Inclusivity(false, true)),
             HourEnding(dt, Inclusivity(true, false)),
         ) == expected
 
         # This should probably be an AnchoredInterval{Hour(0)}, but it's not important
-        @test_broken intersect(HourEnding(dt), HourBeginning(dt)) ==
+        @test intersect(HourEnding(dt), HourBeginning(dt)) ==
             AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
+    end
+
+    @testset "promote_period" begin
+        for s in (1, -1)
+            @test promote_period(Millisecond(s * 3600000)) == Hour(s * 1)
+            @test promote_period(Millisecond(s * 3600000), Hour) == Hour(s * 1)
+            @test promote_period(Millisecond(s * 3600000), Minute) == Minute(s * 60)
+            @test promote_period(Millisecond(s * 3600000), Second) == Second(s * 3600)
+            @test promote_period(Millisecond(s * 3600000), Millisecond) ==
+                Millisecond(s * 3600000)
+            @test promote_period(Millisecond(s * 3601000)) == Second(s * 3601)
+            @test promote_period(Millisecond(s * 3600001)) == Millisecond(s * 3600001)
+        end
+
+        # Can't promote past 1 week, because who knows how many days/weeks are in a month?
+        @test promote_period(Millisecond(2419200000)) == Week(4)
+        @test promote_period(Millisecond(4233600000)) == Week(7)
     end
 end

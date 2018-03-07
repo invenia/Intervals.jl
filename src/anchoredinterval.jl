@@ -1,3 +1,5 @@
+using Base.Dates: value, coarserperiod
+
 """
     AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -> AnchoredInterval{P, T}
     AnchoredInterval{P, T}(anchor::T, [closed_left::Bool, closed_right::Bool]) where {P, T} -> AnchoredInterval{P, T}
@@ -206,14 +208,23 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
 
     if P ≤ zero(P)
         anchor = last(interval)
-        new_P = -span(interval)
+        new_P = promote_period(-span(interval), typeof(P))
     else
         anchor = first(interval)
-        new_P = span(interval)
+        new_P = promote_period(span(interval), typeof(P))
     end
 
-    # TODO: P is always going to be milliseconds... :(
-    # Update this once P is replaced by a span element
-
     return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
+end
+
+##### UTILITIES #####
+
+function promote_period(p::Period, target_type::Type{<:Period}=Day)
+    if !isa(p, target_type)
+        P, max_val = coarserperiod(typeof(p))
+        if (value(p) % max_val == 0) && (max_val > 1)
+            p = promote_period(convert(P, p), target_type)
+        end
+    end
+    return p
 end

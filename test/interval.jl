@@ -185,11 +185,19 @@
     @testset "arithmetic" begin
         for (a, b, unit) in test_values
             for i in 0:3
-                interval = Interval(a, b, Inclusivity(i))
-                @test interval + unit == Interval(a + unit, b + unit, Inclusivity(i))
-                @test unit + interval == Interval(a + unit, b + unit, Inclusivity(i))
-                @test interval - unit == Interval(a - unit, b - unit, Inclusivity(i))
-                @test_throws MethodError unit - interval
+                inc = Inclusivity(i)
+                interval = Interval(a, b, inc)
+                @test interval + unit == Interval(a + unit, b + unit, inc)
+                @test unit + interval == Interval(a + unit, b + unit, inc)
+                @test interval - unit == Interval(a - unit, b - unit, inc)
+
+                if a isa Number
+                    @test -interval == Interval(-b, -a, last(inc), first(inc))
+                    @test unit - interval == Interval(unit-b, unit-a, last(inc), first(inc))
+                else
+                    @test_throws MethodError -interval
+                    @test_throws MethodError unit - interval
+                end
             end
         end
 
@@ -266,6 +274,15 @@
             @test in(b - unit, interval)
             @test !in(b + unit, interval)
         end
+
+        @test in(0..10, 0..10)
+        @test in(Interval(0, 10, false, false), 0..10)
+        @test !in(0..10, Interval(0, 10, false, false))
+        @test in(1..9, 0..10)
+        @test !in(0..10, 1..9)
+        @test !in(1..11, 0..10)
+        @test !in(-1..9, 0..10)
+        @test !in(20..30, 0..10)
     end
 
     @testset "intersect" begin

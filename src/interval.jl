@@ -174,10 +174,7 @@ Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 
 ##### SET OPERATIONS #####
 
-function Base.isempty(i::Interval)
-    return first(i) == last(i) && inclusivity(i) != Inclusivity(true, true)
-end
-
+Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
 Base.in(a::T, b::AbstractInterval{T}) where T = !(a > b || a < b)
 
 function Base.in(a::AbstractInterval{T}, b::AbstractInterval{T}) where T

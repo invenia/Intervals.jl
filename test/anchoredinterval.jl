@@ -479,6 +479,10 @@ using Intervals: canonicalize
         # This should probably be an AnchoredInterval{Hour(0)}, but it's not important
         @test intersect(HourEnding(dt), HourBeginning(dt)) ==
             AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
+
+        # Non-period AnchoredIntervals
+        @test intersect(AnchoredInterval{-2}(3), AnchoredInterval{-2}(4)) ==
+            AnchoredInterval{-1}(3)
     end
 
     @testset "canonicalize" begin

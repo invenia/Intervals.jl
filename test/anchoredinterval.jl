@@ -148,7 +148,7 @@
             "HourEnding{DateTime}(2016-08-11T02:00:00.002, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false))
-        @test string(interval) == "[2013-02-13 HE00:01)"
+        @test string(interval) == "[2013-02-13 HE00:01:00)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "HourEnding{DateTime}(2013-02-13T00:01:00, Inclusivity(true, false))"
@@ -186,7 +186,7 @@
             "AnchoredInterval{-1 year, Date}(2017-01-01, Inclusivity(false, true))"
 
         interval = AnchoredInterval{Month(-1)}(dt)
-        @test string(interval) == "(MoE 2016-08-11 02]"
+        @test string(interval) == "(MoE 2016-08-11 02:00:00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "AnchoredInterval{-1 month, DateTime}(2016-08-11T02:00:00, ",
@@ -202,16 +202,20 @@
         )
 
         interval = AnchoredInterval{Day(-1)}(DateTime(dt))
-        @test string(interval) == "(DE 2016-08-11 02]"
+        @test string(interval) == "(DE 2016-08-11 02:00:00]"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) ==
-            "AnchoredInterval{-1 day, DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{-1 day, DateTime}(2016-08-11T02:00:00, ",
+            "Inclusivity(false, true))"
+        )
 
         interval = AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day))
         @test string(interval) == "(DE 2016-08-12]"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) ==
-            "AnchoredInterval{-1 day, DateTime}(2016-08-12T00:00:00, Inclusivity(false, true))"
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{-1 day, DateTime}(2016-08-12T00:00:00, ",
+            "Inclusivity(false, true))"
+        )
 
         # Date(dt) will truncate the DateTime to the nearest day
         interval = AnchoredInterval{Day(-1)}(Date(dt))
@@ -233,6 +237,14 @@
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
             "AnchoredInterval{-30 seconds, DateTime}(2016-08-11T02:00:00, ",
+            "Inclusivity(false, true))",
+        )
+
+        interval = AnchoredInterval{Millisecond(-10)}(dt)
+        @test string(interval) == "(2016-08-11 10msE02:00:00.000]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{-10 milliseconds, DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
         )
 

@@ -156,9 +156,9 @@ Base.:-(a::Interval{T}, b::T) where T = a + -b
 Base.:-(a::Interval{Char}, b::Integer) = a + -b
 Base.:-(a::Interval{T}, b::Period) where T <: TimeType = a + -b
 
-Base.:-(a::T, b::Interval{T}) where T <: Number = a + -b
+Base.:-(a::T, b::Interval{T}) where T = a + -b
 
-function Base.:-(a::Interval{T}) where T <: Number
+function Base.:-(a::Interval{T}) where T
     inc = inclusivity(a)
     Interval{T}(-last(a), -first(a), Inclusivity(last(inc), first(inc)))
 end

@@ -181,6 +181,13 @@ function Base.:-(a::AnchoredInterval{P, T}) where {P, T <: Number}
     AnchoredInterval{-P, T}(-anchor(a), Inclusivity(last(inc), first(inc)))
 end
 
+##### EQUALITY #####
+
+# Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is ambiguous
+function Base.isless(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
+    return isless(anchor(a), anchor(b))
+end
+
 ##### RANGE #####
 
 # Required for StepRange{<:AnchoredInterval}

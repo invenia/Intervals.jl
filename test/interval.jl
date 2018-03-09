@@ -163,35 +163,70 @@
 
         # Comparisons between Interval{T} and T
         @test 5 < Interval(10, 20)
+        @test 5 ≪ Interval(10, 20)
+        @test !(5 > Interval(10, 20))
+        @test !(5 ≫ Interval(10, 20))
+
         @test 10 < Interval(10, 20, Inclusivity(false, false))
+        @test 10 ≪ Interval(10, 20, Inclusivity(false, false))
+        @test !(10 > Interval(10, 20, Inclusivity(false, false)))
+        @test !(10 ≫ Interval(10, 20, Inclusivity(false, false)))
+
         @test !(10 < Interval(10, 20))
+        @test !(10 ≪ Interval(10, 20))
+        @test !(10 > Interval(10, 20))
+        @test !(10 ≫ Interval(10, 20))
+
         @test !(15 < Interval(10, 20))
+        @test !(15 ≪ Interval(10, 20))
+        @test 15 > Interval(10, 20)
+        @test !(15 ≫ Interval(10, 20))
+
         @test !(20 < Interval(10, 20))
+        @test !(20 ≪ Interval(10, 20))
+        @test 20 > Interval(10, 20)
+        @test !(20 ≫ Interval(10, 20))
+
         @test !(20 < Interval(10, 20, Inclusivity(false, false)))
+        @test !(20 ≪ Interval(10, 20, Inclusivity(false, false)))
+        @test 20 > Interval(10, 20, Inclusivity(false, false))
+        @test 20 ≫ Interval(10, 20, Inclusivity(false, false))
+
         @test !(25 < Interval(10, 20))
+        @test !(25 ≪ Interval(10, 20))
+        @test 25 > Interval(10, 20)
+        @test 25 ≫ Interval(10, 20)
 
         @test !(Interval(10, 20) < 5)
         @test !(Interval(10, 20, Inclusivity(false, false)) < 10)
         @test !(Interval(10, 20) < 10)
-        @test !(Interval(10, 20) < 15)
-        @test !(Interval(10, 20) < 20)
+        @test !(Interval(10, 20) ≪ 10)
+        @test Interval(10, 20) < 15
+        @test !(Interval(10, 20) ≪ 15)
+        @test Interval(10, 20) < 20
+        @test !(Interval(10, 20) ≪ 20)
         @test Interval(10, 20, Inclusivity(false, false)) < 20
         @test Interval(10, 20) < 25
 
         @test Date(2013) < Interval(Date(2014), Date(2016))
-        @test Date(2014) < Interval(Date(2014), Date(2016), Inclusivity(0))
+        @test Date(2014) < Interval(Date(2014), Date(2016), false, false)
+        @test !(Date(2014) < Interval(Date(2014), Date(2016)))
         @test !(Date(2014) < Interval(Date(2014), Date(2016)))
         @test !(Date(2015) < Interval(Date(2014), Date(2016)))
         @test !(Date(2016) < Interval(Date(2014), Date(2016)))
-        @test !(Date(2016) < Interval(Date(2014), Date(2016), Inclusivity(0)))
+        @test !(Date(2016) < Interval(Date(2014), Date(2016), false, false))
         @test !(Date(2017) < Interval(Date(2014), Date(2016)))
 
         @test !(Interval(Date(2014), Date(2016)) < Date(2013))
-        @test !(Interval(Date(2014), Date(2016), Inclusivity(0)) < Date(2014))
+        @test !(Interval(Date(2014), Date(2016), false, false) < Date(2014))
         @test !(Interval(Date(2014), Date(2016)) < Date(2014))
-        @test !(Interval(Date(2014), Date(2016)) < Date(2015))
-        @test !(Interval(Date(2014), Date(2016)) < Date(2016))
-        @test Interval(Date(2014), Date(2016), Inclusivity(0)) < Date(2016)
+        @test !(Interval(Date(2014), Date(2016)) ≪ Date(2014))
+        @test Interval(Date(2014), Date(2016)) < Date(2015)
+        @test !(Interval(Date(2014), Date(2016)) ≪ Date(2015))
+        @test Interval(Date(2014), Date(2016)) < Date(2016)
+        @test !(Interval(Date(2014), Date(2016)) ≪ Date(2016))
+        @test Interval(Date(2014), Date(2016), false, false) < Date(2016)
+        @test Interval(Date(2014), Date(2016), false, false) ≪ Date(2016)
         @test Interval(Date(2014), Date(2016)) < Date(2017)
     end
 

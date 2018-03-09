@@ -141,7 +141,7 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test Endpoint(1, false) < 2
         @test Endpoint(1, true) < 2
 
-        @test Endpoint(1, false) < 1
+        @test (Endpoint(1, false) < 1) == (Endpoint === RightEndpoint)
         @test !(Endpoint(1, true) < 1)
 
         @test !(Endpoint(1, false) < 0)
@@ -152,7 +152,7 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test 0 < Endpoint(1, false)
         @test 0 < Endpoint(1, true)
 
-        @test 1 < Endpoint(1, false)
+        @test (1 < Endpoint(1, false)) == (Endpoint === LeftEndpoint)
         @test !(1 < Endpoint(1, true))
 
         @test !(2 < Endpoint(1, false))

@@ -185,7 +185,10 @@ end
 
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
 function Base.:<(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
-    return anchor(a) < anchor(b)
+    return (
+        anchor(a) < anchor(b) ||
+        (anchor(a) == anchor(b) && first(inclusivity(a)) && !first(inclusivity(b)))
+    )
 end
 
 ##### RANGE #####

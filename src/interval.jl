@@ -150,12 +150,50 @@ end
 
 ##### EQUALITY #####
 
-function Base.isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+Base.:<(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
+Base.:<(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+
+function Base.:<(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    return LeftEndpoint(a) < LeftEndpoint(b)
+end
+
+function disjoint_less_than(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return RightEndpoint(a) < LeftEndpoint(b)
 end
 
-Base.isless(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
-Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+disjoint_greater_than(a, b) = disjoint_less_than(b, a)
+
+"""
+    ≪(a::AbstractInterval, b::AbstractInterval) -> Bool
+    disjoint_less_than(a::AbstractInterval, b::AbstractInterval) -> Bool
+
+Less-than-and-disjoint comparison operator.
+
+```
+julia> 0..10 ≪ 10..20
+false
+
+julia> 0..10 ≪ 11..20
+true
+```
+"""
+≪(a, b) = disjoint_less_than(a, b)
+
+"""
+    ≫(a::AbstractInterval, b::AbstractInterval) -> Bool
+    disjoint_greater_than(a::AbstractInterval, b::AbstractInterval) -> Bool
+
+Greater-than-and-disjoint comparison operator.
+
+```
+julia> 10..20 ≫ 0..10
+false
+
+julia> 11..20 ≫ 0..10
+true
+```
+"""
+≫(a, b) = disjoint_greater_than(a, b)
 
 ##### SET OPERATIONS #####
 

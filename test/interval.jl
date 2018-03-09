@@ -106,80 +106,93 @@
             for i in 0:3
                 interval = Interval(a, b, Inclusivity(i))
                 cp = copy(interval)
-                diff_val = Interval(a - unit, b + unit, Inclusivity(i))
+                lesser_val = Interval(a - unit, b + unit, Inclusivity(i))
                 greater_val = Interval(a + unit, b + unit, Inclusivity(i))
                 diff_inc = Interval(a, b, Inclusivity(mod(i + 1, 4)))
 
                 @test interval == cp
-                @test interval != diff_val
+                @test interval != lesser_val
                 @test interval != diff_inc
 
                 @test isequal(interval, cp)
-                @test !isequal(interval, diff_val)
+                @test !isequal(interval, lesser_val)
                 @test !isequal(interval, diff_inc)
 
                 @test hash(interval) == hash(cp)
-                @test hash(interval) != hash(diff_val)
+                @test hash(interval) != hash(lesser_val)
                 @test hash(interval) != hash(diff_inc)
 
-                @test !isless(interval, cp)
-                @test !isless(interval, greater_val)    # Still overlap, so not fully less
-                @test !isless(greater_val, interval)
-                @test !isless(diff_val, interval)
-                @test !isless(interval, diff_val)
+                @test !(interval < cp)
+                @test !(interval ≪ cp)
+                @test !(interval > cp)
+                @test !(interval ≫ cp)
+                @test interval < greater_val
+                @test !(interval ≪ greater_val)     # Still overlap, so not disjoint
+                @test !(interval > greater_val)
+                @test !(interval ≫ greater_val)
+                @test !(greater_val < interval)
+                @test !(greater_val ≪ interval)     # Still overlap, so not disjoint
+                @test greater_val > interval
+                @test !(greater_val ≫ interval)     # Still overlap, so not disjoint
+                @test lesser_val < interval
+                @test !(lesser_val ≪ interval)
+                @test !(lesser_val > interval)
+                @test !(lesser_val ≫ interval)
+                @test !(interval < lesser_val)
+                @test !(interval ≪ lesser_val)
+                @test interval > lesser_val
+                @test !(interval ≫ lesser_val)      # Still overlap, so not disjoint
             end
         end
 
-        @test isless(Interval(2010, 2011), Interval(2012, 2013))
-        @test !isless(Interval(2012, 2013), Interval(2010, 2011))
+        @test Interval(2010, 2011) ≪ Interval(2012, 2013)
+        @test !(Interval(2012, 2013) ≪ Interval(2010, 2011))
 
-        @test isless(Interval(Date(2010), Date(2011)), Interval(Date(2012), Date(2013)))
-        @test !isless(Interval(Date(2012), Date(2013)), Interval(Date(2010), Date(2011)))
+        @test Interval(Date(2010), Date(2011)) ≪ Interval(Date(2012), Date(2013))
+        @test !(Interval(Date(2012), Date(2013)) ≪ Interval(Date(2010), Date(2011)))
 
-        @test !isless(Interval(0, 10), Interval(10, 20))
-        @test !isless(Interval(10, 20), Interval(0, 10))
+        @test !(Interval(0, 10) ≪ Interval(10, 20))
+        @test !(Interval(10, 20) ≪ Interval(0, 10))
 
-        @test isless(
-            Interval(0, 10, Inclusivity(true, false)),
-            Interval(10, 20, Inclusivity(false, true)),
-        )
-        @test !isless(
-            Interval(10, 20, Inclusivity(true, false)),
-            Interval(0, 10, Inclusivity(false, true)),
+        @test Interval(0, 10, Inclusivity(true, false)) ≪
+            Interval(10, 20, Inclusivity(false, true))
+        @test !(
+            Interval(10, 20, Inclusivity(true, false)) ≪
+            Interval(0, 10, Inclusivity(false, true))
         )
 
         # Comparisons between Interval{T} and T
-        @test isless(5, Interval(10, 20))
-        @test isless(10, Interval(10, 20, Inclusivity(false, false)))
-        @test !isless(10, Interval(10, 20))
-        @test !isless(15, Interval(10, 20))
-        @test !isless(20, Interval(10, 20))
-        @test !isless(20, Interval(10, 20, Inclusivity(false, false)))
-        @test !isless(25, Interval(10, 20))
+        @test 5 < Interval(10, 20)
+        @test 10 < Interval(10, 20, Inclusivity(false, false))
+        @test !(10 < Interval(10, 20))
+        @test !(15 < Interval(10, 20))
+        @test !(20 < Interval(10, 20))
+        @test !(20 < Interval(10, 20, Inclusivity(false, false)))
+        @test !(25 < Interval(10, 20))
 
-        @test !isless(Interval(10, 20), 5)
-        @test !isless(Interval(10, 20, Inclusivity(false, false)), 10)
-        @test !isless(Interval(10, 20), 10)
-        @test !isless(Interval(10, 20), 15)
-        @test !isless(Interval(10, 20), 20)
-        @test isless(Interval(10, 20, Inclusivity(false, false)), 20)
-        @test isless(Interval(10, 20), 25)
+        @test !(Interval(10, 20) < 5)
+        @test !(Interval(10, 20, Inclusivity(false, false)) < 10)
+        @test !(Interval(10, 20) < 10)
+        @test !(Interval(10, 20) < 15)
+        @test !(Interval(10, 20) < 20)
+        @test Interval(10, 20, Inclusivity(false, false)) < 20
+        @test Interval(10, 20) < 25
 
-        @test isless(Date(2013), Interval(Date(2014), Date(2016)))
-        @test isless(Date(2014), Interval(Date(2014), Date(2016), Inclusivity(0)))
-        @test !isless(Date(2014), Interval(Date(2014), Date(2016)))
-        @test !isless(Date(2015), Interval(Date(2014), Date(2016)))
-        @test !isless(Date(2016), Interval(Date(2014), Date(2016)))
-        @test !isless(Date(2016), Interval(Date(2014), Date(2016), Inclusivity(0)))
-        @test !isless(Date(2017), Interval(Date(2014), Date(2016)))
+        @test Date(2013) < Interval(Date(2014), Date(2016))
+        @test Date(2014) < Interval(Date(2014), Date(2016), Inclusivity(0))
+        @test !(Date(2014) < Interval(Date(2014), Date(2016)))
+        @test !(Date(2015) < Interval(Date(2014), Date(2016)))
+        @test !(Date(2016) < Interval(Date(2014), Date(2016)))
+        @test !(Date(2016) < Interval(Date(2014), Date(2016), Inclusivity(0)))
+        @test !(Date(2017) < Interval(Date(2014), Date(2016)))
 
-        @test !isless(Interval(Date(2014), Date(2016)), Date(2013))
-        @test !isless(Interval(Date(2014), Date(2016), Inclusivity(0)), Date(2014))
-        @test !isless(Interval(Date(2014), Date(2016)), Date(2014))
-        @test !isless(Interval(Date(2014), Date(2016)), Date(2015))
-        @test !isless(Interval(Date(2014), Date(2016)), Date(2016))
-        @test isless(Interval(Date(2014), Date(2016), Inclusivity(0)), Date(2016))
-        @test isless(Interval(Date(2014), Date(2016)), Date(2017))
+        @test !(Interval(Date(2014), Date(2016)) < Date(2013))
+        @test !(Interval(Date(2014), Date(2016), Inclusivity(0)) < Date(2014))
+        @test !(Interval(Date(2014), Date(2016)) < Date(2014))
+        @test !(Interval(Date(2014), Date(2016)) < Date(2015))
+        @test !(Interval(Date(2014), Date(2016)) < Date(2016))
+        @test Interval(Date(2014), Date(2016), Inclusivity(0)) < Date(2016)
+        @test Interval(Date(2014), Date(2016)) < Date(2017)
     end
 
     @testset "arithmetic" begin

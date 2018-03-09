@@ -31,6 +31,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test earlier < later
         @test !(later < earlier)
 
+        @test earlier ≪ later
+        @test !(later ≪ earlier)
+
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
@@ -56,6 +59,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test earlier < later
         @test !(later < earlier)
+
+        @test earlier ≪ later
+        @test !(later ≪ earlier)
 
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
@@ -83,6 +89,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test earlier < later
         @test !(later < earlier)
 
+        @test earlier ≪ later
+        @test !(later ≪ earlier)
+
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
@@ -108,6 +117,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test earlier < later
         @test !(later < earlier)
+
+        @test earlier ≪ later
+        @test !(later ≪ earlier)
 
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
@@ -135,6 +147,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test earlier < later
         @test !(later < earlier)
 
+        @test !(earlier ≪ later)
+        @test !(later ≪ earlier)
+
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
@@ -161,6 +176,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test earlier < later
         @test !(later < earlier)
 
+        @test !(earlier ≪ later)
+        @test !(later ≪ earlier)
+
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
@@ -181,6 +199,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test !(a < b)
         @test !(b < a)
+
+        @test !(a ≪ b)
+        @test !(b ≪ a)
 
         @test issubset(a, b)
         @test issubset(b, a)
@@ -203,6 +224,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test a < b
         @test !(b < a)
 
+        @test !(a ≪ b)
+        @test !(b ≪ a)
+
         @test !issubset(a, b)
         @test issubset(b, a)
 
@@ -223,6 +247,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test !(a < b)
         @test !(b < a)
+
+        @test !(a ≪ b)
+        @test !(b ≪ a)
 
         @test !issubset(a, b)
         @test issubset(b, a)
@@ -245,6 +272,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test a < b
         @test !(b < a)
 
+        @test !(a ≪ b)
+        @test !(b ≪ a)
+
         @test !issubset(a, b)
         @test issubset(b, a)
 
@@ -265,6 +295,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test !(a < b)
         @test !(b < a)
+
+        @test !(a ≪ b)
+        @test !(b ≪ a)
 
         @test issubset(a, b)
         @test !issubset(b, a)
@@ -287,6 +320,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !(a < b)
         @test b < a
 
+        @test !(a ≪ b)
+        @test !(b ≪ a)
+
         @test issubset(a, b)
         @test !issubset(b, a)
 
@@ -307,6 +343,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test !(a < b)
         @test !(b < a)
+
+        @test !(a ≪ b)
+        @test !(b ≪ a)
 
         @test issubset(a, b)
         @test issubset(b, a)
@@ -333,6 +372,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 
         @test !(smaller < larger)
         @test larger < smaller
+
+        @test !(smaller ≪ larger)
+        @test !(larger ≪ smaller)
 
         @test issubset(smaller, larger)
         @test !issubset(larger, smaller)

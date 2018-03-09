@@ -327,9 +327,11 @@ using Intervals: canonicalize
         @test !(HourEnding(dt) < dt - Hour(2))
         @test !(HourEnding(dt, Inclusivity(false, false)) < dt - Hour(1))
         @test !(HourEnding(dt, Inclusivity(true, true)) < dt - Hour(1))
-        @test !(HourEnding(dt) < dt - Minute(30))
+        @test HourEnding(dt) < dt - Minute(30)
+        @test !(HourEnding(dt) ≪ dt - Minute(30))
         @test HourEnding(dt, Inclusivity(false, false)) < dt
-        @test !(HourEnding(dt, Inclusivity(true, true)) < dt)
+        @test HourEnding(dt, Inclusivity(true, true)) < dt
+        @test !(HourEnding(dt, Inclusivity(true, true)) ≪ dt)
         @test HourEnding(dt) < dt + Hour(1)
     end
 

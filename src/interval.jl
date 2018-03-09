@@ -150,24 +150,28 @@ end
 
 ##### EQUALITY #####
 
-Base.:<(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
+Base.:<(a::AbstractInterval{T}, b::T) where T = LeftEndpoint(a) < b
 Base.:<(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+
+less_than_disjoint(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
+less_than_disjoint(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 
 function Base.:<(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return LeftEndpoint(a) < LeftEndpoint(b)
 end
 
-function disjoint_less_than(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function less_than_disjoint(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return RightEndpoint(a) < LeftEndpoint(b)
 end
 
-disjoint_greater_than(a, b) = disjoint_less_than(b, a)
+greater_than_disjoint(a, b) = less_than_disjoint(b, a)
 
 """
     ≪(a::AbstractInterval, b::AbstractInterval) -> Bool
-    disjoint_less_than(a::AbstractInterval, b::AbstractInterval) -> Bool
+    less_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool
 
-Less-than-and-disjoint comparison operator.
+Less-than-and-disjoint comparison operator. Returns `true` if `a` is less than `b` and they
+are disjoint (they do not overlap).
 
 ```
 julia> 0..10 ≪ 10..20
@@ -177,13 +181,14 @@ julia> 0..10 ≪ 11..20
 true
 ```
 """
-≪(a, b) = disjoint_less_than(a, b)
+≪(a, b) = less_than_disjoint(a, b)
 
 """
     ≫(a::AbstractInterval, b::AbstractInterval) -> Bool
-    disjoint_greater_than(a::AbstractInterval, b::AbstractInterval) -> Bool
+    greater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool
 
-Greater-than-and-disjoint comparison operator.
+Greater-than-and-disjoint comparison operator. Returns `true` if `a` is greater than `b` and
+they are disjoint (they do not overlap).
 
 ```
 julia> 10..20 ≫ 0..10
@@ -193,15 +198,15 @@ julia> 11..20 ≫ 0..10
 true
 ```
 """
-≫(a, b) = disjoint_greater_than(a, b)
+≫(a, b) = greater_than_disjoint(a, b)
 
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
-Base.in(a::T, b::AbstractInterval{T}) where T = !(a > b || a < b)
+Base.in(a::T, b::AbstractInterval{T}) where T = !(a ≫ b || a ≪ b)
 
 function Base.in(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    return LeftEndpoint(a) >= LeftEndpoint(b) && RightEndpoint(a) <= RightEndpoint(b)
+    return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)
 end
 
 # Should probably define union, too. There is power in a union.

@@ -182,6 +182,7 @@ true
 ```
 """
 ≪(a, b) = less_than_disjoint(a, b)
+# ≪̸(a, b) = !≪(a, b)
 
 """
     ≫(a::AbstractInterval, b::AbstractInterval) -> Bool
@@ -199,15 +200,19 @@ true
 ```
 """
 ≫(a, b) = greater_than_disjoint(a, b)
+# ≫̸(a, b) = !≫(a, b)
 
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
 Base.in(a::T, b::AbstractInterval{T}) where T = !(a ≫ b || a ≪ b)
 
-function Base.in(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function Base.issubset(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)
 end
+
+Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a, b)
+Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
 
 # Should probably define union, too. There is power in a union.
 

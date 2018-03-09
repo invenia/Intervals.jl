@@ -6,6 +6,8 @@ using Base.Dates
 using TimeZones
 using Compat: AbstractDateTime
 
+import Base: ⊆, ⊇, ⊈, ⊉
+
 abstract type AbstractInterval{T} end
 
 include("inclusivity.jl")
@@ -30,8 +32,7 @@ export AbstractInterval,
        span,
        less_than_disjoint,
        greater_than_disjoint,
-       ..,
-       ≪,
-       ≫
+       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
+
 
 end

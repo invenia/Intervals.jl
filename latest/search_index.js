@@ -57,6 +57,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Comparisons-1",
+    "page": "Home",
+    "title": "Comparisons",
+    "category": "section",
+    "text": "When determining whether one AbstractInterval is less than (or greater than) another, two sets of comparison operators are available: </> and ≪/≫.The standard < and > operators simply compare the leftmost endpoint of the intervals, and are used for things like sort, min, max, etc.The ≪ and ≫ operators (the Unicode symbols for \"much less than\" and \"much greater than\", accessible from the REPL with \\ll and \\gg, respectively) are used in this context to mean \"less/greater than and disjoint\"; they will verify that there is no overlap between the intervals.julia> 0..10 < 10..20\ntrue\n\njulia> 0..10 ≪ 10..20\nfalse\n\njulia> 0..10 ≪ 11..20\ntrue"
+},
+
+{
     "location": "index.html#Intervals.Inclusivity",
     "page": "Home",
     "title": "Intervals.Inclusivity",
@@ -89,11 +97,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Intervals.:≪",
+    "page": "Home",
+    "title": "Intervals.:≪",
+    "category": "function",
+    "text": "≪(a::AbstractInterval, b::AbstractInterval) -> Bool\nless_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nLess-than-and-disjoint comparison operator. Returns true if a is less than b and they are disjoint (they do not overlap).\n\njulia> 0..10 ≪ 10..20\nfalse\n\njulia> 0..10 ≪ 11..20\ntrue\n\n\n\n"
+},
+
+{
+    "location": "index.html#Intervals.:≫",
+    "page": "Home",
+    "title": "Intervals.:≫",
+    "category": "function",
+    "text": "≫(a::AbstractInterval, b::AbstractInterval) -> Bool\ngreater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nGreater-than-and-disjoint comparison operator. Returns true if a is greater than b and they are disjoint (they do not overlap).\n\njulia> 10..20 ≫ 0..10\nfalse\n\njulia> 11..20 ≫ 0..10\ntrue\n\n\n\n"
+},
+
+{
     "location": "index.html#API-1",
     "page": "Home",
     "title": "API",
     "category": "section",
-    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval"
+    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\n≪\n≫"
 },
 
 ]}

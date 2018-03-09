@@ -28,6 +28,10 @@ export AbstractInterval,
        isclosed,
        anchor,
        span,
-       ..
+       disjoint_less_than,
+       disjoint_greater_than,
+       ..,
+       ≪,
+       ≫
 
 end

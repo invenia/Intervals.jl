@@ -289,14 +289,23 @@ using Intervals: canonicalize
         @test !isequal(he, diff_inc)
         @test hash(he) != hash(diff_inc)
 
-        @test !isless(he, hb)
-        @test !isless(hb, he)
+        # Overlap for an instant, so not disjoint
+        @test he < hb
+        @test !(hb < he)
+        @test !(he > hb)
+        @test hb > he
+        @test !(he ≪ hb)
+        @test !(hb ≪ he)
+        @test !(he ≫ hb)
+        @test !(hb ≫ he)
 
-        @test isless(he, he + Hour(1))
-        @test isless(hb, hb + Hour(1))
+        @test he ≪ he + Hour(1)
+        @test hb ≪ hb + Hour(1)
 
-        @test isless(diff_inc, diff_inc + Hour(2))
-        @test !isless(diff_inc, diff_inc + Hour(1))     # Overlap for an instant
+        @test diff_inc < diff_inc + Hour(2)
+        @test diff_inc ≪ diff_inc + Hour(2)
+        @test diff_inc < diff_inc + Hour(1)
+        @test !(diff_inc ≪ diff_inc + Hour(1))  # Overlap for an instant
 
         # DST transition
         hour1 = HourEnding(ZonedDateTime(2018, 11, 4, 1, tz"America/Winnipeg", 1))
@@ -304,24 +313,24 @@ using Intervals: canonicalize
         @test hour1 != hour2
         @test !isequal(hour1, hour2)
         @test hash(hour1) != hash(hour2)
-        @test isless(hour1, hour2)
+        @test hour1 ≪ hour2
 
         # Comparisons between AnchoredInterval{P, T} and T
-        @test isless(dt - Hour(2), HourEnding(dt))
-        @test isless(dt - Hour(1), HourEnding(dt, Inclusivity(false, false)))
-        @test !isless(dt - Hour(1), HourEnding(dt, Inclusivity(true, true)))
-        @test !isless(dt - Minute(30), HourEnding(dt))
-        @test !isless(dt, HourEnding(dt, Inclusivity(false, false)))
-        @test !isless(dt, HourEnding(dt, Inclusivity(true, true)))
-        @test !isless(dt + Hour(1), HourEnding(dt))
+        @test dt - Hour(2) < HourEnding(dt)
+        @test dt - Hour(1) < HourEnding(dt, Inclusivity(false, false))
+        @test !(dt - Hour(1) < HourEnding(dt, Inclusivity(true, true)))
+        @test !(dt - Minute(30) < HourEnding(dt))
+        @test !(dt < HourEnding(dt, Inclusivity(false, false)))
+        @test !(dt < HourEnding(dt, Inclusivity(true, true)))
+        @test !(dt + Hour(1) < HourEnding(dt))
 
-        @test !isless(HourEnding(dt), dt - Hour(2))
-        @test !isless(HourEnding(dt, Inclusivity(false, false)), dt - Hour(1))
-        @test !isless(HourEnding(dt, Inclusivity(true, true)), dt - Hour(1))
-        @test !isless(HourEnding(dt), dt - Minute(30))
-        @test isless(HourEnding(dt, Inclusivity(false, false)), dt)
-        @test !isless(HourEnding(dt, Inclusivity(true, true)), dt)
-        @test isless(HourEnding(dt), dt + Hour(1))
+        @test !(HourEnding(dt) < dt - Hour(2))
+        @test !(HourEnding(dt, Inclusivity(false, false)) < dt - Hour(1))
+        @test !(HourEnding(dt, Inclusivity(true, true)) < dt - Hour(1))
+        @test !(HourEnding(dt) < dt - Minute(30))
+        @test HourEnding(dt, Inclusivity(false, false)) < dt
+        @test !(HourEnding(dt, Inclusivity(true, true)) < dt)
+        @test HourEnding(dt) < dt + Hour(1)
     end
 
     @testset "arithmetic" begin

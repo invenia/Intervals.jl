@@ -37,16 +37,26 @@ using Intervals: canonicalize
     end
 
     @testset "conversion" begin
-        he = HourEnding(dt)
-        hb = HourBeginning(dt)
-        @test DateTime(he) == dt
-        @test DateTime(hb) == dt
-        @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @testset "Date" begin
+            d = Date(dt)
+            de = AnchoredInterval{Day(-1)}(d)
+            db = AnchoredInterval{Day(1)}(d)
+            @test Date(de) == d
+            @test Date(db) == d
+        end
+
+        @testset "DateTime" begin
+            he = HourEnding(dt)
+            hb = HourBeginning(dt)
+            @test DateTime(he) == dt
+            @test DateTime(hb) == dt
+            @test convert(Interval, he) == Interval(dt - Hour(1), dt, false, true)
+            @test convert(Interval, hb) == Interval(dt, dt + Hour(1), true, false)
+            @test Interval(he) == Interval(dt - Hour(1), dt, false, true)
+            @test Interval(hb) == Interval(dt, dt + Hour(1), true, false)
+            @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, false, true)
+            @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), true, false)
+        end
     end
 
     @testset "accessors" begin

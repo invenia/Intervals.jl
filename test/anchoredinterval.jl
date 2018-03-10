@@ -1,102 +1,118 @@
-using Intervals: canonicalize
+using Intervals: Beginning, Ending, canonicalize
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
 
     @testset "constructor" begin
-        expected = AnchoredInterval{Hour(-1), DateTime}(dt, Inclusivity(false, true))
-        @test AnchoredInterval{Hour(-1), DateTime}(dt) == expected
-        @test AnchoredInterval{Hour(-1)}(dt) == expected
+        expected = AnchoredInterval{DateTime, Hour, Ending}(dt, Hour(1), Inclusivity(false, true))
+        @test AnchoredInterval{DateTime, Hour, Ending}(dt, Hour(1)) == expected
+        @test AnchoredInterval{DateTime, Hour, Ending}(dt) == expected
+        @test IntervalEnding{DateTime, Hour}(dt) == expected
+        @test IntervalEnding{DateTime}(dt, Hour(1)) == expected
         @test HourEnding{DateTime}(dt) == expected
         @test HourEnding(dt) == expected
         @test HE(dt) == expected
         @test HE(dt - Minute(59)) == expected
 
-        expected = AnchoredInterval{Hour(1), DateTime}(dt, Inclusivity(true, false))
-        @test AnchoredInterval{Hour(1), DateTime}(dt) == expected
-        @test AnchoredInterval{Hour(1)}(dt) == expected
-        @test HourBeginning{DateTime}(dt) == expected
+        expected = AnchoredInterval{DateTime, Hour, Beginning}(dt, Hour(1), Inclusivity(true, false))
+        @test AnchoredInterval{DateTime, Hour, Beginning}(dt, Hour(1)) == expected
+        @test AnchoredInterval{DateTime, Hour, Beginning}(dt) == expected
+        @test IntervalBeginning{DateTime, Hour}(dt) == expected
+        @test IntervalBeginning{DateTime}(dt, Hour(1)) == expected
         @test HourBeginning(dt) == expected
         @test HB(dt) == expected
         @test HB(dt + Minute(59)) == expected
+
+        @test_throws MethodError AnchoredInterval{Hour(-1)}(dt)
+        @test_throws MethodError AnchoredInterval{Hour(1)}(dt)
 
         # Lazy inclusivity constructor
         @test HourEnding{DateTime}(dt, true, false) ==
             HourEnding{DateTime}(dt, Inclusivity(true, false))
         @test HourEnding(dt, true, false) == HourEnding(dt, Inclusivity(true, false))
-        @test AnchoredInterval{Day(1), DateTime}(dt, false, false) ==
-            AnchoredInterval{Day(1), DateTime}(dt, Inclusivity(false, false))
-        @test AnchoredInterval{Day(1)}(dt, false, false) ==
-            AnchoredInterval{Day(1)}(dt, Inclusivity(false, false))
+        @test IntervalEnding{DateTime}(dt, Day(1), false, false) ==
+            IntervalEnding{DateTime}(dt, Day(1), Inclusivity(false, false))
+        @test IntervalEnding(dt, Day(1), false, false) ==
+            IntervalEnding(dt, Day(1), Inclusivity(false, false))
         @test HE(dt, true, true) == HourEnding(dt, Inclusivity(true, true))
         @test HB(dt, true, true) == HourBeginning(dt, Inclusivity(true, true))
 
         # Non-period AnchoredIntervals
-        @test AnchoredInterval{-10}(10) isa AnchoredInterval
-        @test AnchoredInterval{25}('a') isa AnchoredInterval
+        @test IntervalEnding(10, 10) isa AnchoredInterval
+        @test IntervalBeginning('a', 25) isa AnchoredInterval
     end
 
     @testset "conversion" begin
-        he = HourEnding(dt)
-        hb = HourBeginning(dt)
-        @test DateTime(he) == dt
-        @test DateTime(hb) == dt
-        @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @testset "Date" begin
+            d = Date(dt)
+            de = IntervalEnding(d, Day(1))
+            db = IntervalBeginning(d, Day(1))
+            @test Date(de) == d
+            @test Date(db) == d
+        end
+
+        @testset "DateTime" begin
+            he = HourEnding(dt)
+            hb = HourBeginning(dt)
+            @test DateTime(he) == dt
+            @test DateTime(hb) == dt
+            @test convert(Interval, he) == Interval(dt - Hour(1), dt, false, true)
+            @test convert(Interval, hb) == Interval(dt, dt + Hour(1), true, false)
+            @test Interval(he) == Interval(dt - Hour(1), dt, false, true)
+            @test Interval(hb) == Interval(dt, dt + Hour(1), true, false)
+            @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, false, true)
+            @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), true, false)
+        end
     end
 
     @testset "accessors" begin
         inc = Inclusivity(true, true)
-        P = Minute(-15)
-        interval = AnchoredInterval{P}(dt, inc)
+        p = Minute(15)
+        interval = IntervalEnding(dt, p, inc)
 
         @test first(interval) == DateTime(2016, 8, 11, 1, 45)
         @test last(interval) == dt
-        @test span(interval) == -P
+        @test span(interval) == p
         @test inclusivity(interval) == inc
 
         inc = Inclusivity(false, false)
-        P = Day(1)
-        interval = AnchoredInterval{P}(Date(dt), inc)
+        p = Day(1)
+        interval = IntervalBeginning(Date(dt), p, inc)
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
-        @test span(interval) == P
+        @test span(interval) == p
         @test inclusivity(interval) == inc
 
         # DST transition
         endpoint = ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
-        interval = AnchoredInterval{Hour(-2)}(endpoint)
+        interval = IntervalEnding(endpoint, Hour(2))
         @test span(interval) == Hour(2)
 
         startpoint = ZonedDateTime(2018, 3, 11, tz"America/Winnipeg")
-        interval = AnchoredInterval{Day(1)}(startpoint)
+        interval = IntervalBeginning(startpoint, Day(1))
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 3, 12, tz"America/Winnipeg")
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
-        interval = AnchoredInterval{Hour(-2)}(endpoint)
+        interval = IntervalEnding(endpoint, Hour(2))
         @test span(interval) == Hour(2)
 
         startpoint = ZonedDateTime(2018, 11, 4, tz"America/Winnipeg")
-        interval = AnchoredInterval{Day(1)}(startpoint)
+        interval = IntervalBeginning(startpoint, Day(1))
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
         @test span(interval) == Day(1)
 
         # Non-period AnchoredIntervals
-        interval = AnchoredInterval{-10}(10)
+        interval = IntervalEnding(10, 10)
         @test first(interval) == 0
         @test last(interval) == 10
         @test inclusivity(interval) == Inclusivity(false, true)
         @test span(interval) == 10
 
-        interval = AnchoredInterval{25}('a')
+        interval = IntervalBeginning('a', 25)
         @test first(interval) == 'a'
         @test last(interval) == 'z'
         @test inclusivity(interval) == Inclusivity(true, false)
@@ -106,168 +122,176 @@ using Intervals: canonicalize
     @testset "display" begin
         @test sprint(show, HourEnding) == "HourEnding{T}"
         @test sprint(show, HourBeginning) == "HourBeginning{T}"
-        @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-            "Intervals.AnchoredInterval{-1 hour,T} where T"
-        @test sprint(show, AnchoredInterval{Hour(1)}) ==
-            "Intervals.AnchoredInterval{1 hour,T} where T"
+        @test sprint(show, AnchoredInterval{T, Hour, Ending} where T) ==
+            "Intervals.AnchoredInterval{T,$Hour,$Ending} where T"
+        @test sprint(show, AnchoredInterval{T, Hour, Beginning} where T) ==
+            "Intervals.AnchoredInterval{T,$Hour,$Beginning} where T"
 
         @test sprint(show, HourEnding{DateTime}) == "HourEnding{DateTime}"
         @test sprint(show, HourBeginning{DateTime}) == "HourBeginning{DateTime}"
-        @test sprint(show, AnchoredInterval{Hour(-1), DateTime}) == "HourEnding{DateTime}"
-        @test sprint(show, AnchoredInterval{Hour(1), DateTime}) == "HourBeginning{DateTime}"
+        @test sprint(show, AnchoredInterval{DateTime, Hour, Ending}) ==
+            "HourEnding{DateTime}"
+        @test sprint(show, AnchoredInterval{DateTime, Hour, Beginning}) ==
+            "HourBeginning{DateTime}"
 
-        @test sprint(show, AnchoredInterval{Day(-1)}) ==
-            "Intervals.AnchoredInterval{-1 day,T} where T"
-        @test sprint(show, AnchoredInterval{Day(1)}) ==
-            "Intervals.AnchoredInterval{1 day,T} where T"
-        @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-            "AnchoredInterval{-1 day, DateTime}"
-        @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-            "AnchoredInterval{1 day, DateTime}"
+        @test sprint(show, AnchoredInterval{T, Day, Ending} where T) ==
+            "Intervals.AnchoredInterval{T,$Day,$Ending} where T"
+        @test sprint(show, AnchoredInterval{T, Day, Beginning} where T) ==
+            "Intervals.AnchoredInterval{T,$Day,$Beginning} where T"
+        @test sprint(show, AnchoredInterval{DateTime, Day, Ending}) ==
+            "AnchoredInterval{DateTime, $Day, Ending}"
+        @test sprint(show, AnchoredInterval{DateTime, Day, Beginning}) ==
+            "AnchoredInterval{DateTime, $Day, Beginning}"
 
         interval = HourEnding(dt)
         @test string(interval) == "(2016-08-11 HE02]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
+            "HourEnding{DateTime}(2016-08-11T02:00:00, 1 hour, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false))
         @test string(interval) == "[2013-02-12 HE24)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
+            "HourEnding{DateTime}(2013-02-13T00:00:00, 1 hour, Inclusivity(true, false))"
 
         interval = HourEnding(dt + Minute(15) + Second(30))
         @test string(interval) == "(2016-08-11 HE02:15:30]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:15:30, Inclusivity(false, true))"
+            "HourEnding{DateTime}(2016-08-11T02:15:30, 1 hour, Inclusivity(false, true))"
 
         interval = HourEnding(dt + Millisecond(2))
         @test string(interval) == "(2016-08-11 HE02:00:00.002]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:00:00.002, Inclusivity(false, true))"
+            "HourEnding{DateTime}(2016-08-11T02:00:00.002, 1 hour, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false))
         @test string(interval) == "[2013-02-13 HE00:01:00)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2013-02-13T00:01:00, Inclusivity(true, false))"
+            "HourEnding{DateTime}(2013-02-13T00:01:00, 1 hour, Inclusivity(true, false))"
 
         interval = HourBeginning(dt)
         @test string(interval) == "[2016-08-11 HB02)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))"
+            "HourBeginning{DateTime}(2016-08-11T02:00:00, 1 hour, Inclusivity(true, false))"
 
         interval = HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true))
         @test string(interval) == "(2013-02-13 HB00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "HourBeginning{DateTime}(2013-02-13T00:00:00, Inclusivity(false, true))"
+            "HourBeginning{DateTime}(2013-02-13T00:00:00, 1 hour, Inclusivity(false, true))"
 
         interval = HourEnding(ZonedDateTime(dt, tz"America/Winnipeg"))
         @test string(interval) == "(2016-08-11 HE02-05:00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "HourEnding{$ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
+            "HourEnding{$ZonedDateTime}(2016-08-11T02:00:00-05:00, 1 hour, ",
             "Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Year(-1)}(Date(dt))
+        interval = IntervalEnding(Date(dt), Year(1))
         @test string(interval) == "(YE 2016-08-11]"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) ==
-            "AnchoredInterval{-1 year, Date}(2016-08-11, Inclusivity(false, true))"
-
-        interval = AnchoredInterval{Year(-1)}(ceil(Date(dt), Year))
-        @test string(interval) == "(YE 2017-01-01]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) ==
-            "AnchoredInterval{-1 year, Date}(2017-01-01, Inclusivity(false, true))"
-
-        interval = AnchoredInterval{Month(-1)}(dt)
-        @test string(interval) == "(MoE 2016-08-11 02:00:00]"
-        @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 month, DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Month(-1)}(ceil(dt, Month))
-        @test string(interval) == "(MoE 2016-09-01]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 month, DateTime}(2016-09-01T00:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Day(-1)}(DateTime(dt))
-        @test string(interval) == "(DE 2016-08-11 02:00:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 day, DateTime}(2016-08-11T02:00:00, ",
+            "AnchoredInterval{Date, $Year, Ending}(2016-08-11, 1 year, ",
             "Inclusivity(false, true))"
         )
 
-        interval = AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day))
+        interval = IntervalEnding(ceil(Date(dt), Year), Year(1))
+        @test string(interval) == "(YE 2017-01-01]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{Date, $Year, Ending}(2017-01-01, 1 year, ",
+            "Inclusivity(false, true))"
+        )
+
+        interval = IntervalEnding(dt, Month(1))
+        @test string(interval) == "(MoE 2016-08-11 02:00:00]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{DateTime, $Month, Ending}(2016-08-11T02:00:00, 1 month, ",
+            "Inclusivity(false, true))"
+        )
+
+        interval = IntervalEnding(ceil(dt, Month), Month(1))
+        @test string(interval) == "(MoE 2016-09-01]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{DateTime, $Month, Ending}(2016-09-01T00:00:00, 1 month, ",
+            "Inclusivity(false, true))"
+        )
+
+        interval = IntervalEnding(DateTime(dt), Day(1))
+        @test string(interval) == "(DE 2016-08-11 02:00:00]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{DateTime, $Day, Ending}(2016-08-11T02:00:00, 1 day, ",
+            "Inclusivity(false, true))"
+        )
+
+        interval = IntervalEnding(ceil(DateTime(dt), Day), Day(1))
         @test string(interval) == "(DE 2016-08-12]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 day, DateTime}(2016-08-12T00:00:00, ",
+            "AnchoredInterval{DateTime, $Day, Ending}(2016-08-12T00:00:00, 1 day, ",
             "Inclusivity(false, true))"
         )
 
         # Date(dt) will truncate the DateTime to the nearest day
-        interval = AnchoredInterval{Day(-1)}(Date(dt))
+        interval = IntervalEnding(Date(dt), Day(1))
         @test string(interval) == "(DE 2016-08-11]"
         @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) ==
-            "AnchoredInterval{-1 day, Date}(2016-08-11, Inclusivity(false, true))"
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{Date, $Day, Ending}(2016-08-11, 1 day, ",
+            "Inclusivity(false, true))"
+        )
 
-        interval = AnchoredInterval{Minute(-5)}(dt)
+        interval = IntervalEnding(dt, Minute(5))
         @test string(interval) == "(2016-08-11 5ME02:00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "AnchoredInterval{-5 minutes, DateTime}(2016-08-11T02:00:00, ",
+            "AnchoredInterval{DateTime, $Minute, Ending}(2016-08-11T02:00:00, 5 minutes, ",
             "Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Second(-30)}(dt)
+        interval = IntervalEnding(dt, Second(30))
         @test string(interval) == "(2016-08-11 30SE02:00:00]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "AnchoredInterval{-30 seconds, DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
+            "AnchoredInterval{DateTime, $Second, Ending}(2016-08-11T02:00:00, ",
+            "30 seconds, Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Millisecond(-10)}(dt)
+        interval = IntervalEnding(dt, Millisecond(10))
         @test string(interval) == "(2016-08-11 10msE02:00:00.000]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) == string(
-            "AnchoredInterval{-10 milliseconds, DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
+            "AnchoredInterval{DateTime, $Millisecond, Ending}(2016-08-11T02:00:00, ",
+            "10 milliseconds, Inclusivity(false, true))",
         )
 
         # Non-period AnchoredIntervals
-        interval = AnchoredInterval{-10}(10)
+        interval = IntervalEnding(10, 10)
         @test string(interval) == "(0..10]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-10, $Int}(10, Inclusivity(false, true))"
+            "AnchoredInterval{$Int, $Int, Ending}(10, 10, Inclusivity(false, true))"
 
-        interval = AnchoredInterval{25}('a')
+        interval = IntervalBeginning('a', 25)
         @test string(interval) == "[a..z)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{25, Char}('a', Inclusivity(true, false))"
+            "AnchoredInterval{Char, $Int, Beginning}('a', 25, Inclusivity(true, false))"
     end
 
     @testset "equality" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-        me = AnchoredInterval{Minute(-1)}(dt)
+        me = IntervalEnding(dt, Minute(1))
         cpe = copy(he)
         cpb = copy(hb)
 
@@ -351,9 +375,9 @@ using Intervals: canonicalize
         @test he + Minute(30) == HourEnding(dt + Minute(30))
         @test he - Minute(30) == HourEnding(dt - Minute(30))
 
-        ai = AnchoredInterval{Minute(-60)}(dt)
-        @test ai + Minute(30) == AnchoredInterval{Minute(-60)}(dt + Minute(30))
-        @test ai - Minute(30) == AnchoredInterval{Minute(-60)}(dt - Minute(30))
+        ai = IntervalEnding(dt, Minute(60))
+        @test ai + Minute(30) == IntervalEnding(dt + Minute(30), Minute(60))
+        @test ai - Minute(30) == IntervalEnding(dt - Minute(30), Minute(60))
 
         # Subtracting AnchoredInterval{P, T} from T doesn't make sense if T is a TimeType
         @test_throws MethodError Hour(1) - he
@@ -361,31 +385,31 @@ using Intervals: canonicalize
 
         # DST transition
         endpoint = ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
-        interval = AnchoredInterval{Hour(-2)}(endpoint)
+        interval = IntervalEnding(endpoint, Hour(2))
         @test span(interval) == Hour(2)
 
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
-        interval = AnchoredInterval{Hour(-2)}(endpoint)
+        interval = IntervalEnding(endpoint, Hour(2))
         @test span(interval) == Hour(2)
 
         # Non-period AnchoredIntervals
-        @test AnchoredInterval{10}('a') + 2 == AnchoredInterval{10}('c')
-        @test AnchoredInterval{10}('d') - 2 == AnchoredInterval{10}('b')
+        @test IntervalBeginning('a', 10) + 2 == IntervalBeginning('c', 10)
+        @test IntervalBeginning('d', 10) - 2 == IntervalBeginning('b', 10)
 
-        @test AnchoredInterval{-1}(20) + 2 == AnchoredInterval{-1}(22)
-        @test AnchoredInterval{-1}(20) - 2 == AnchoredInterval{-1}(18)
+        @test IntervalEnding(20, 1) + 2 == IntervalEnding(22, 1)
+        @test IntervalEnding(20, 1) - 2 == IntervalEnding(18, 1)
 
-        @test -AnchoredInterval{2}(10) == AnchoredInterval{-2}(-10) # -[10,12)==(-12,-10]
-        @test -AnchoredInterval{-2}(10) == AnchoredInterval{2}(-10) # -(8,10]==[-10,-8)
+        @test -IntervalBeginning(10, 2) == IntervalEnding(-10, 2) # -[10,12)==(-12,-10]
+        @test -IntervalEnding(10, 2) == IntervalBeginning(-10, 2) # -(8,10]==[-10,-8)
 
-        @test 15 - AnchoredInterval{-2}(10) == AnchoredInterval{2}(5)   # 15-(8,10]==[5,8)
-        @test 15 - AnchoredInterval{2}(10) == AnchoredInterval{-2}(5)   # 15-[10,12)==(3,5]
+        @test 15 - IntervalEnding(10, 2) == IntervalBeginning(5, 2)   # 15-(8,10]==[5,8)
+        @test 15 - IntervalBeginning(10, 2) == IntervalEnding(5, 2)   # 15-[10,12)==(3,5]
 
-        @test_throws MethodError -AnchoredInterval{10}('a')
-        @test_throws MethodError -AnchoredInterval{-10}('z')
+        @test_throws MethodError -IntervalBeginning('a', 10)
+        @test_throws MethodError -IntervalEnding('z', 10)
 
-        @test_throws MethodError 10 - AnchoredInterval{10}('a')
-        @test_throws MethodError 10 - AnchoredInterval{-10}('z')
+        @test_throws MethodError 10 - IntervalBeginning('a', 10)
+        @test_throws MethodError 10 - IntervalEnding('z', 10)
     end
 
     @testset "range" begin
@@ -416,20 +440,26 @@ using Intervals: canonicalize
     end
 
     @testset "isempty" begin
-        for P in [Year(1), Month(1), Day(1), Hour(1), Minute(1), Second(1)]
-            for sign in [+, -]
-                @test !isempty(AnchoredInterval{sign(P)}(dt, Inclusivity(false, false)))
-                @test !isempty(AnchoredInterval{sign(P)}(dt, Inclusivity(false, true)))
-                @test !isempty(AnchoredInterval{sign(P)}(dt, Inclusivity(true, false)))
-                @test !isempty(AnchoredInterval{sign(P)}(dt, Inclusivity(true, true)))
+        for P in [Year, Month, Day, Hour, Minute, Second]
+            span = oneunit(P)
+
+            for T in [IntervalEnding, IntervalBeginning]
+                @test !isempty(T(dt, span, Inclusivity(false, false)))
+                @test !isempty(T(dt, span, Inclusivity(false, true)))
+                @test !isempty(T(dt, span, Inclusivity(true, false)))
+                @test !isempty(T(dt, span, Inclusivity(true, true)))
             end
         end
 
-        for P in [Year(0), Month(0), Day(0), Hour(0), Minute(0), Second(0)]
-            @test isempty(AnchoredInterval{P}(dt, Inclusivity(false, false)))
-            @test isempty(AnchoredInterval{P}(dt, Inclusivity(false, true)))
-            @test isempty(AnchoredInterval{P}(dt, Inclusivity(true, false)))
-            @test !isempty(AnchoredInterval{P}(dt, Inclusivity(true, true)))
+        for P in [Year, Month, Day, Hour, Minute, Second]
+            span = zero(P)
+
+            for T in [IntervalEnding, IntervalBeginning]
+                @test isempty(T(dt, span, Inclusivity(false, false)))
+                @test isempty(T(dt, span, Inclusivity(false, true)))
+                @test isempty(T(dt, span, Inclusivity(true, false)))
+                @test !isempty(T(dt, span, Inclusivity(true, true)))
+            end
         end
     end
 
@@ -461,9 +491,10 @@ using Intervals: canonicalize
     @testset "intersect" begin
         # Adjacent
         @test isempty(intersect(HourEnding(dt), HourEnding(dt + Hour(1))))
+        @test isempty(intersect(HourBeginning(dt), HourBeginning(dt + Hour(1))))
 
         # Single point overlap
-        expected = AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
+        expected = HourEnding(dt, Hour(0), Inclusivity(true, true))
         @test intersect(
             HourEnding(dt, Inclusivity(true, true)),
             HourEnding(dt + Hour(1), Inclusivity(true, true)),
@@ -471,10 +502,10 @@ using Intervals: canonicalize
 
         # Hour overlap
         he = HourEnding(dt)
-        @test intersect(he, AnchoredInterval{Hour(-2)}(dt)) == he
-        @test intersect(AnchoredInterval{Hour(-3)}(dt + Hour(1)), he) == he
+        @test intersect(he, IntervalEnding(dt, Hour(2))) == he
+        @test intersect(IntervalEnding(dt + Hour(1), Hour(3)), he) == he
         @test intersect(HourBeginning(dt - Hour(1)), he) ==
-            HourBeginning(dt - Hour(1), Inclusivity(false, false))
+            Interval(dt - Hour(1), dt, Inclusivity(false, false))
 
         # Identical save for inclusivity
         expected = HourEnding(dt, Inclusivity(false, false))
@@ -487,13 +518,21 @@ using Intervals: canonicalize
             HourEnding(dt, Inclusivity(true, false)),
         ) == expected
 
-        # This should probably be an AnchoredInterval{Hour(0)}, but it's not important
-        @test intersect(HourEnding(dt), HourBeginning(dt)) ==
-            AnchoredInterval{Hour(0)}(dt, Inclusivity(true, true))
+        expected = HourBeginning(dt, Inclusivity(false, false))
+        @test intersect(
+            HourBeginning(dt, Inclusivity(false, false)),
+            HourBeginning(dt, Inclusivity(true, true)),
+        ) == expected
+        @test intersect(
+            HourBeginning(dt, Inclusivity(false, true)),
+            HourBeginning(dt, Inclusivity(true, false)),
+        ) == expected
+
+        # Intersection of HourEnding and HourBeginning
+        @test intersect(HourEnding(dt), HourBeginning(dt)) == Interval(dt, dt)
 
         # Non-period AnchoredIntervals
-        @test intersect(AnchoredInterval{-2}(3), AnchoredInterval{-2}(4)) ==
-            AnchoredInterval{-1}(3)
+        @test intersect(IntervalEnding(3, 2), IntervalEnding(4, 2)) == IntervalEnding(3, 1)
     end
 
     @testset "canonicalize" begin

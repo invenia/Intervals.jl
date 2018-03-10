@@ -2,6 +2,9 @@ struct Direction{T} end
 const Left = Direction{:Left}()
 const Right = Direction{:Right}()
 
+const Beginning = Left
+const Ending = Right
+
 struct Endpoint{T, D}
     endpoint::T
     included::Bool

@@ -19,6 +19,8 @@ include("description.jl")
 export AbstractInterval,
        Interval,
        AnchoredInterval,
+       IntervalEnding,
+       IntervalBeginning,
        HourEnding,
        HourBeginning,
        HE,

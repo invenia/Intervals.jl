@@ -128,7 +128,7 @@ function Base.print(io::IO, interval::AbstractInterval)
         io,
         first(inclusivity(interval)) ? "[" : "(",
         first(interval),
-        "..",
+        " .. ",
         last(interval),
         last(inclusivity(interval)) ? "]" : ")",
     )

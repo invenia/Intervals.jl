@@ -1,6 +1,6 @@
 using Base.Dates: value, coarserperiod
 
-description(interval::AnchoredInterval{P}) where P = description(interval, P > zero(P) ? "B" : "E")
+description(i::AnchoredInterval{P}) where P = description(i, P > zero(P) ? "B" : "E")
 
 function description(interval::AnchoredInterval{P, T}, s::String) where {P, T}
     return string(

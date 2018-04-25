@@ -252,13 +252,13 @@ using Intervals: canonicalize
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
-        @test string(interval) == "(0..10]"
+        @test string(interval) == "(0 .. 10]"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "AnchoredInterval{-10, $Int}(10, Inclusivity(false, true))"
 
         interval = AnchoredInterval{25}('a')
-        @test string(interval) == "[a..z)"
+        @test string(interval) == "[a .. z)"
         @test sprint(showcompact, interval) == string(interval)
         @test sprint(show, interval) ==
             "AnchoredInterval{25, Char}('a', Inclusivity(true, false))"

@@ -39,7 +39,8 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
     if p isa TimePeriod
         return "$ds $(prefix(p))$suffix$ts"
     else
-        return "$(prefix(p))$suffix $ds$(ts == "00:00:00" ? "" : " $ts")"
+        ts = (ts == "00:00:00" && !isa(dt, ZonedDateTime)) ? "" : " $ts"
+        return "$(prefix(p))$suffix $ds$ts"
     end
 end
 

@@ -513,4 +513,22 @@ using Intervals: canonicalize
         @test canonicalize(Year, Millisecond(2419200000)) == Week(4)
         @test canonicalize(Year, Millisecond(4233600000)) == Week(7)
     end
+
+    @testset "astimezone" begin
+        zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+
+        for inclusivity in Inclusivity.(0:3)
+            for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
+                @test isequal(
+                    astimezone(HE(zdt, inclusivity), tz),
+                    HE(astimezone(zdt, tz), inclusivity),
+                )
+
+                @test isequal(
+                    astimezone(AnchoredInterval{Day(1)}(zdt, inclusivity), tz),
+                    AnchoredInterval{Day(1)}(astimezone(zdt, tz), inclusivity),
+                )
+            end
+        end
+    end
 end

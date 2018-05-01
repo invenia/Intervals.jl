@@ -1,3 +1,4 @@
+import TimeZones: astimezone
 using Base.Dates: value, coarserperiod
 
 """
@@ -264,3 +265,9 @@ function canonicalize(target_type::Type{<:Period}, p::P) where P <: Period
 end
 
 canonicalize(target_type::Type{P}, p::P) where P <: Period = p
+
+##### TIME ZONES #####
+
+function astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
+    return AnchoredInterval{P, ZonedDateTime}(astimezone(anchor(i), tz), inclusivity(i))
+end

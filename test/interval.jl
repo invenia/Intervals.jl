@@ -419,4 +419,18 @@
             end
         end
     end
+
+    @testset "astimezone" begin
+        zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+        zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
+
+        for inclusivity in Inclusivity.(0:3)
+            for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
+                @test isequal(
+                    astimezone(Interval(zdt1, zdt2, inclusivity), tz),
+                    Interval(astimezone(zdt1, tz), astimezone(zdt2, tz), inclusivity),
+                )
+            end
+        end
+    end
 end

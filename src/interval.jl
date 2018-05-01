@@ -1,3 +1,5 @@
+import TimeZones: astimezone
+
 """
     Interval(first, last, [inclusivity::Inclusivity]) -> Interval
     Interval(first, last, [closed_left::Bool, closed_right::Bool]) -> Interval
@@ -225,4 +227,10 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     right = min(RightEndpoint(a), RightEndpoint(b))
     left > right && return Interval{T}()
     return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+end
+
+##### TIME ZONES #####
+
+function astimezone(i::Interval{ZonedDateTime}, tz::TimeZone)
+    return Interval(astimezone(first(i), tz), astimezone(last(i), tz), inclusivity(i))
 end

@@ -226,6 +226,17 @@ using Intervals: canonicalize
         @test sprint(show, interval) ==
             "AnchoredInterval{-1 day, Date}(2016-08-11, Inclusivity(false, true))"
 
+        # Prevent confusion when dealing with time zones by ensuring that the full date and
+        # time are displayed
+        zdt = ceil(ZonedDateTime(dt, tz"America/Winnipeg"), Day)
+        interval = AnchoredInterval{Day(-1)}(zdt)
+        @test string(interval) == "(DE 2016-08-12 00:00:00-05:00]"
+        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval) == string(
+            "AnchoredInterval{-1 day, TimeZones.ZonedDateTime}(2016-08-12T00:00:00-05:00, ",
+            "Inclusivity(false, true))"
+        )
+
         interval = AnchoredInterval{Minute(-5)}(dt)
         @test string(interval) == "(2016-08-11 5ME02:00]"
         @test sprint(showcompact, interval) == string(interval)

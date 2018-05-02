@@ -301,6 +301,8 @@ using Intervals: canonicalize
         @test hash(he) != hash(diff_inc)
 
         # Overlap for an instant, so not disjoint
+        @test isless(he, hb)
+        @test !isless(hb, he)
         @test he < hb
         @test !(hb < he)
         @test !(he > hb)
@@ -313,9 +315,11 @@ using Intervals: canonicalize
         @test he ≪ he + Hour(1)
         @test hb ≪ hb + Hour(1)
 
+        @test isless(diff_inc, diff_inc + Hour(2))
+        @test isless(diff_inc, diff_inc + Hour(1))
         @test diff_inc < diff_inc + Hour(2)
-        @test diff_inc ≪ diff_inc + Hour(2)
         @test diff_inc < diff_inc + Hour(1)
+        @test diff_inc ≪ diff_inc + Hour(2)
         @test !(diff_inc ≪ diff_inc + Hour(1))  # Overlap for an instant
 
         # DST transition
@@ -344,6 +348,16 @@ using Intervals: canonicalize
         @test HourEnding(dt, Inclusivity(true, true)) < dt
         @test !(HourEnding(dt, Inclusivity(true, true)) ≪ dt)
         @test HourEnding(dt) < dt + Hour(1)
+    end
+
+    @testset "sort" begin
+        hb1 = HourBeginning(dt)
+        he1 = HourEnding(dt)
+        he2 = HourEnding(dt + Hour(1))
+        he3 = HourEnding(dt + Hour(2))
+
+        @test sort([hb1, he1, he2, he3]) == [he1, hb1, he2, he3]
+        @test sort([hb1, he1, he2, he3]; rev=true) == [he3, he2, hb1, he1]
     end
 
     @testset "arithmetic" begin

@@ -210,7 +210,7 @@ end
 ##### EQUALITY #####
 
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
-function Base.:<(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
+function Base.isless(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
     return (
         anchor(a) < anchor(b) ||
         (anchor(a) == anchor(b) && first(inclusivity(a)) && !first(inclusivity(b)))

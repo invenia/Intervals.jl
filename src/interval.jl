@@ -156,13 +156,15 @@ function Base.:(==)(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return LeftEndpoint(a) == LeftEndpoint(b) && RightEndpoint(a) == RightEndpoint(b)
 end
 
-Base.:<(a::AbstractInterval{T}, b::T) where T = LeftEndpoint(a) < b
-Base.:<(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+# While it might be convincingly argued that this should define < instead of isless (see
+# https://github.com/invenia/Intervals.jl/issues/14), this breaks sort.
+Base.isless(a::AbstractInterval{T}, b::T) where T = LeftEndpoint(a) < b
+Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 
 less_than_disjoint(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
 less_than_disjoint(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
 
-function Base.:<(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function Base.:isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return LeftEndpoint(a) < LeftEndpoint(b)
 end
 

@@ -128,8 +128,9 @@ julia> ZonedDateTime(he)
 When determining whether one `AbstractInterval` is less than (or greater than) another, two
 sets of comparison operators are available: `<`/`>` and `≪`/`≫`.
 
-The standard `<` and `>` operators simply compare the leftmost endpoint of the intervals,
-and are used for things like `sort`, `min`, `max`, etc.
+The standard `<` and `>` operators (which are not explicitly defined, but are derived from
+`isless`) simply compare the leftmost endpoint of the intervals, and are used for things
+like `sort`, `min`, `max`, etc.
 
 The `≪` and `≫` operators (the Unicode symbols for "much less than" and "much greater than",
 accessible from the REPL with `\ll` and `\gg`, respectively) are used in this context to

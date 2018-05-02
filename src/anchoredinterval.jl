@@ -83,16 +83,28 @@ function AnchoredInterval{P}(i::T, x::Bool, y::Bool) where {P, T}
     return AnchoredInterval{P, T}(i, Inclusivity(x, y))
 end
 
+"""
+    HourEnding{T<:TimeType} <: AbstractInterval{T}
+
+A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
+time which ends at a time instant (of type `T`).
+"""
 const HourEnding{T} = AnchoredInterval{Hour(-1), T} where T <: TimeType
 HourEnding(a::T, args...) where T = HourEnding{T}(a, args...)
 
+"""
+    HourBeginning{T<:TimeType} <: AbstractInterval{T}
+
+A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
+time which begins at a time instant (of type `T`).
+"""
 const HourBeginning{T} = AnchoredInterval{Hour(1), T} where T <: TimeType
 HourBeginning(a::T, args...) where T = HourBeginning{T}(a, args...)
 
 """
     HE(anchor, args...) -> HourEnding
 
-`HE` is a pseudoconstructor for `HourEnding` that rounds the anchor provided up to the
+`HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
 HE(a, args...) = HourEnding(ceil(a, Hour), args...)
@@ -100,7 +112,7 @@ HE(a, args...) = HourEnding(ceil(a, Hour), args...)
 """
     HB(anchor, args...) -> HourBeginning
 
-`HB` is a pseudoconstructor for `HourBeginning` that rounds the anchor provided down to the
+`HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
 HB(a, args...) = HourBeginning(floor(a, Hour), args...)

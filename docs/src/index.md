@@ -2,14 +2,14 @@
 
 This package defines:
 * `AbstractInterval`, along with its subtypes:
-  * `Interval{T}`, which represents a non-iterable range between two endpoints of type `T`
-  * `AnchoredInterval{P, T}`, which represents a non-iterable range defined by a single
+  * [`Interval{T}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
+  * [`AnchoredInterval{P, T}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
     value `anchor::T` and the value type `P` which represents the size of the range
-    * `HourEnding`, a type alias for `AnchoredInterval{Hour(-1), T}`
-    * `HourBeginning`, a type alias for `AnchoredInterval{Hour(1), T}`
-    * `HE` and `HB`, pseudoconstructors for `HourEnding` and `HourBeginning` that round the
+    * [`HourEnding`](@ref), a type alias for `AnchoredInterval{Hour(-1), T}`
+    * [`HourBeginning`](@ref), a type alias for `AnchoredInterval{Hour(1), T}`
+    * [`HE`](@ref) and [`HB`](@ref), pseudoconstructors for `HourEnding` and `HourBeginning` that round the
       anchor up (`HE`) or down (`HB`) to the nearest hour
-* `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
+* [`Inclusivity`](@ref), which represents whether an `AbstractInterval` is open, half-open, or
   closed
 
 ## Example Usage
@@ -38,10 +38,10 @@ Interval{Int64}(1, 10, Inclusivity(true, true))
 julia> b = Interval(5, 15, false, false)
 Interval{Int64}(5, 15, Inclusivity(false, false))
 
-julia> in(5, a)
+julia> 5 in a
 true
 
-julia> in(5, b)
+julia> 5 in b
 false
 
 julia> intersect(a, b)
@@ -90,34 +90,32 @@ HourEnding{TimeZones.ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false
 julia> he + Base.Dates.Hour(1)
 HourEnding{TimeZones.ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))
 
-julia> for h in he:he + Base.Dates.Day(1)
-           println(he)
-       end
+julia> foreach(println, he:he + Base.Dates.Day(1))
 (2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
-(2013-02-13 HE01-06:00]
+(2013-02-13 HE02-06:00]
+(2013-02-13 HE03-06:00]
+(2013-02-13 HE04-06:00]
+(2013-02-13 HE05-06:00]
+(2013-02-13 HE06-06:00]
+(2013-02-13 HE07-06:00]
+(2013-02-13 HE08-06:00]
+(2013-02-13 HE09-06:00]
+(2013-02-13 HE10-06:00]
+(2013-02-13 HE11-06:00]
+(2013-02-13 HE12-06:00]
+(2013-02-13 HE13-06:00]
+(2013-02-13 HE14-06:00]
+(2013-02-13 HE15-06:00]
+(2013-02-13 HE16-06:00]
+(2013-02-13 HE17-06:00]
+(2013-02-13 HE18-06:00]
+(2013-02-13 HE19-06:00]
+(2013-02-13 HE20-06:00]
+(2013-02-13 HE21-06:00]
+(2013-02-13 HE22-06:00]
+(2013-02-13 HE23-06:00]
+(2013-02-13 HE24-06:00]
+(2013-02-14 HE01-06:00]
 
 julia> ZonedDateTime(he)
 2013-02-13T01:00:00-06:00
@@ -157,4 +155,8 @@ Interval
 AnchoredInterval
 ≪
 ≫
+HourEnding
+HourBeginning
+HE
+HB
 ```

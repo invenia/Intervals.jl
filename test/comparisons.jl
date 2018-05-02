@@ -25,8 +25,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -54,8 +54,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -83,8 +83,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -112,8 +112,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -141,8 +141,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -170,8 +170,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
 
-        # @test isless(earlier, later)
-        # @test !isless(later, earlier)
+        @test isless(earlier, later)
+        @test !isless(later, earlier)
 
         @test earlier < later
         @test !(later < earlier)
@@ -194,8 +194,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test A != B || isequal(a, b)
         @test A != B || hash(a) == hash(b)
 
-        # @test !isless(a, b)
-        # @test !isless(a, b)
+        @test !isless(a, b)
+        @test !isless(a, b)
 
         @test !(a < b)
         @test !(b < a)
@@ -218,8 +218,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(a, b)
         @test hash(a) != hash(b)
 
-        # @test isless(a, b)
-        # @test !isless(b, a)
+        @test isless(a, b)
+        @test !isless(b, a)
 
         @test a < b
         @test !(b < a)
@@ -242,8 +242,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(a, b)
         @test hash(a) != hash(b)
 
-        # @test !isless(a, b)
-        # @test !isless(b, a)
+        @test !isless(a, b)
+        @test !isless(b, a)
 
         @test !(a < b)
         @test !(b < a)
@@ -266,8 +266,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(a, b)
         @test hash(a) != hash(b)
 
-        # @test isless(a, b)
-        # @test !isless(b, a)
+        @test isless(a, b)
+        @test !isless(b, a)
 
         @test a < b
         @test !(b < a)
@@ -290,8 +290,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(a, b)
         @test hash(a) != hash(b)
 
-        # @test !isless(a, b)
-        # @test !isless(b, a)
+        @test !isless(a, b)
+        @test !isless(b, a)
 
         @test !(a < b)
         @test !(b < a)
@@ -314,8 +314,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(a, b)
         @test hash(a) != hash(b)
 
-        # @test !isless(a, b)
-        # @test isless(b, a)
+        @test !isless(a, b)
+        @test isless(b, a)
 
         @test !(a < b)
         @test b < a
@@ -338,8 +338,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test A != B || isequal(a, b)
         @test A != B || hash(a) == hash(b)
 
-        # @test !isless(a, b)
-        # @test !isless(b, a)
+        @test !isless(a, b)
+        @test !isless(b, a)
 
         @test !(a < b)
         @test !(b < a)
@@ -367,8 +367,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !isequal(smaller, larger)
         @test hash(smaller) != hash(larger)
 
-        # @test !isless(smaller, larger)
-        # @test isless(larger, smaller)
+        @test !isless(smaller, larger)
+        @test isless(larger, smaller)
 
         @test !(smaller < larger)
         @test larger < smaller

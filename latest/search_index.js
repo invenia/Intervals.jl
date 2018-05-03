@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Inclusivity",
     "category": "section",
-    "text": "julia> a = Interval(1, 10)\nInterval{Int64}(1, 10, Inclusivity(true, true))\n\njulia> b = Interval(5, 15, false, false)\nInterval{Int64}(5, 15, Inclusivity(false, false))\n\njulia> in(5, a)\ntrue\n\njulia> in(5, b)\nfalse\n\njulia> intersect(a, b)\nInterval{Int64}(5, 10, Inclusivity(false, true))\n\njulia> c = Interval(15, 20)\nInterval{Int64}(15, 20, Inclusivity(true, true))\n\njulia> isempty(intersect(b, c))\ntrue"
+    "text": "julia> a = Interval(1, 10)\nInterval{Int64}(1, 10, Inclusivity(true, true))\n\njulia> b = Interval(5, 15, false, false)\nInterval{Int64}(5, 15, Inclusivity(false, false))\n\njulia> 5 in a\ntrue\n\njulia> 5 in b\nfalse\n\njulia> intersect(a, b)\nInterval{Int64}(5, 10, Inclusivity(false, true))\n\njulia> c = Interval(15, 20)\nInterval{Int64}(15, 20, Inclusivity(true, true))\n\njulia> isempty(intersect(b, c))\ntrue"
 },
 
 {
@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "HourEnding and HE",
     "category": "section",
-    "text": "julia> using TimeZones\n\njulia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz\"America/Winnipeg\"))\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T00:30:00-06:00, Inclusivity(false, true))\n\njulia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz\"America/Winnipeg\"))\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))\n\njulia> he + Base.Dates.Hour(1)\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))\n\njulia> for h in he:he + Base.Dates.Day(1)\n           println(he)\n       end\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE01-06:00]\n\njulia> ZonedDateTime(he)\n2013-02-13T01:00:00-06:00"
+    "text": "julia> using TimeZones\n\njulia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz\"America/Winnipeg\"))\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T00:30:00-06:00, Inclusivity(false, true))\n\njulia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz\"America/Winnipeg\"))\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))\n\njulia> he + Base.Dates.Hour(1)\nHourEnding{TimeZones.ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))\n\njulia> foreach(println, he:he + Base.Dates.Day(1))\n(2013-02-13 HE01-06:00]\n(2013-02-13 HE02-06:00]\n(2013-02-13 HE03-06:00]\n(2013-02-13 HE04-06:00]\n(2013-02-13 HE05-06:00]\n(2013-02-13 HE06-06:00]\n(2013-02-13 HE07-06:00]\n(2013-02-13 HE08-06:00]\n(2013-02-13 HE09-06:00]\n(2013-02-13 HE10-06:00]\n(2013-02-13 HE11-06:00]\n(2013-02-13 HE12-06:00]\n(2013-02-13 HE13-06:00]\n(2013-02-13 HE14-06:00]\n(2013-02-13 HE15-06:00]\n(2013-02-13 HE16-06:00]\n(2013-02-13 HE17-06:00]\n(2013-02-13 HE18-06:00]\n(2013-02-13 HE19-06:00]\n(2013-02-13 HE20-06:00]\n(2013-02-13 HE21-06:00]\n(2013-02-13 HE22-06:00]\n(2013-02-13 HE23-06:00]\n(2013-02-13 HE24-06:00]\n(2013-02-14 HE01-06:00]\n\njulia> ZonedDateTime(he)\n2013-02-13T01:00:00-06:00"
 },
 
 {
@@ -113,11 +113,43 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Intervals.HourEnding",
+    "page": "Home",
+    "title": "Intervals.HourEnding",
+    "category": "type",
+    "text": "HourEnding{T<:TimeType} <: AbstractInterval{T}\n\nA type alias for AnchoredInterval{Hour(-1), T} which is used to denote a 1-hour period of time which ends at a time instant (of type T).\n\n\n\n"
+},
+
+{
+    "location": "index.html#Intervals.HourBeginning",
+    "page": "Home",
+    "title": "Intervals.HourBeginning",
+    "category": "type",
+    "text": "HourBeginning{T<:TimeType} <: AbstractInterval{T}\n\nA type alias for AnchoredInterval{Hour(1), T} which is used to denote a 1-hour period of time which begins at a time instant (of type T).\n\n\n\n"
+},
+
+{
+    "location": "index.html#Intervals.HE",
+    "page": "Home",
+    "title": "Intervals.HE",
+    "category": "function",
+    "text": "HE(anchor, args...) -> HourEnding\n\nHE is a pseudoconstructor for HourEnding that rounds the anchor provided up to the nearest hour.\n\n\n\n"
+},
+
+{
+    "location": "index.html#Intervals.HB",
+    "page": "Home",
+    "title": "Intervals.HB",
+    "category": "function",
+    "text": "HB(anchor, args...) -> HourBeginning\n\nHB is a pseudoconstructor for HourBeginning that rounds the anchor provided down to the nearest hour.\n\n\n\n"
+},
+
+{
     "location": "index.html#API-1",
     "page": "Home",
     "title": "API",
     "category": "section",
-    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\n≪\n≫"
+    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\n≪\n≫\nHourEnding\nHourBeginning\nHE\nHB"
 },
 
 ]}

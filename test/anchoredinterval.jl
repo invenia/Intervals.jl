@@ -104,175 +104,168 @@ using Intervals: canonicalize
     end
 
     @testset "display" begin
-        @test sprint(show, HourEnding) == "HourEnding{T}"
-        @test sprint(show, HourBeginning) == "HourBeginning{T}"
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-            "Intervals.AnchoredInterval{-1 hour,T} where T"
+            mod_prefix * "AnchoredInterval{-1 hour,T} where T"
         @test sprint(show, AnchoredInterval{Hour(1)}) ==
-            "Intervals.AnchoredInterval{1 hour,T} where T"
-
-        @test sprint(show, HourEnding{DateTime}) == "HourEnding{DateTime}"
-        @test sprint(show, HourBeginning{DateTime}) == "HourBeginning{DateTime}"
-        @test sprint(show, AnchoredInterval{Hour(-1), DateTime}) == "HourEnding{DateTime}"
-        @test sprint(show, AnchoredInterval{Hour(1), DateTime}) == "HourBeginning{DateTime}"
+            mod_prefix * "AnchoredInterval{1 hour,T} where T"
 
         @test sprint(show, AnchoredInterval{Day(-1)}) ==
-            "Intervals.AnchoredInterval{-1 day,T} where T"
+            mod_prefix * "AnchoredInterval{-1 day,T} where T"
         @test sprint(show, AnchoredInterval{Day(1)}) ==
-            "Intervals.AnchoredInterval{1 day,T} where T"
+            mod_prefix * "AnchoredInterval{1 day,T} where T"
         @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-            "AnchoredInterval{-1 day, DateTime}"
+            mod_prefix * "AnchoredInterval{-1 day,DateTime}"
         @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-            "AnchoredInterval{1 day, DateTime}"
+            mod_prefix * "AnchoredInterval{1 day,DateTime}"
 
         interval = HourEnding(dt)
         @test string(interval) == "(2016-08-11 HE02]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false))
         @test string(interval) == "[2013-02-12 HE24)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
+            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
 
         interval = HourEnding(dt + Minute(15) + Second(30))
         @test string(interval) == "(2016-08-11 HE02:15:30]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:15:30, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:15:30, Inclusivity(false, true))"
 
         interval = HourEnding(dt + Millisecond(2))
         @test string(interval) == "(2016-08-11 HE02:00:00.002]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2016-08-11T02:00:00.002, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:00:00.002, Inclusivity(false, true))"
 
         interval = HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false))
         @test string(interval) == "[2013-02-13 HE00:01:00)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourEnding{DateTime}(2013-02-13T00:01:00, Inclusivity(true, false))"
+            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2013-02-13T00:01:00, Inclusivity(true, false))"
 
         interval = HourBeginning(dt)
         @test string(interval) == "[2016-08-11 HB02)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))"
+            mod_prefix * "AnchoredInterval{1 hour,DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))"
 
         interval = HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true))
         @test string(interval) == "(2013-02-13 HB00]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "HourBeginning{DateTime}(2013-02-13T00:00:00, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{1 hour,DateTime}(2013-02-13T00:00:00, Inclusivity(false, true))"
 
         interval = HourEnding(ZonedDateTime(dt, tz"America/Winnipeg"))
         @test string(interval) == "(2016-08-11 HE02-05:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "HourEnding{$ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 hour,$ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
             "Inclusivity(false, true))",
         )
 
         interval = AnchoredInterval{Year(-1)}(Date(dt))
         @test string(interval) == "(YE 2016-08-11]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-1 year, Date}(2016-08-11, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 year,Date}(2016-08-11, Inclusivity(false, true))"
 
         interval = AnchoredInterval{Year(-1)}(ceil(Date(dt), Year))
         @test string(interval) == "(YE 2017-01-01]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-1 year, Date}(2017-01-01, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 year,Date}(2017-01-01, Inclusivity(false, true))"
 
         interval = AnchoredInterval{Month(-1)}(dt)
         @test string(interval) == "(MoE 2016-08-11 02:00:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 month, DateTime}(2016-08-11T02:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 month,DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
         )
 
         interval = AnchoredInterval{Month(-1)}(ceil(dt, Month))
         @test string(interval) == "(MoE 2016-09-01]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 month, DateTime}(2016-09-01T00:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 month,DateTime}(2016-09-01T00:00:00, ",
             "Inclusivity(false, true))",
         )
 
         interval = AnchoredInterval{Day(-1)}(DateTime(dt))
         @test string(interval) == "(DE 2016-08-11 02:00:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 day, DateTime}(2016-08-11T02:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 day,DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))"
         )
 
         interval = AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day))
         @test string(interval) == "(DE 2016-08-12]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 day, DateTime}(2016-08-12T00:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 day,DateTime}(2016-08-12T00:00:00, ",
             "Inclusivity(false, true))"
         )
 
         # Date(dt) will truncate the DateTime to the nearest day
         interval = AnchoredInterval{Day(-1)}(Date(dt))
         @test string(interval) == "(DE 2016-08-11]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-1 day, Date}(2016-08-11, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-1 day,Date}(2016-08-11, Inclusivity(false, true))"
 
         # Prevent confusion when dealing with time zones by ensuring that the full date and
         # time are displayed
         zdt = ceil(ZonedDateTime(dt, tz"America/Winnipeg"), Day)
         interval = AnchoredInterval{Day(-1)}(zdt)
         @test string(interval) == "(DE 2016-08-12 00:00:00-05:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-1 day, TimeZones.ZonedDateTime}(2016-08-12T00:00:00-05:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-1 day,$(tz_prefix)ZonedDateTime}(2016-08-12T00:00:00-05:00, ",
             "Inclusivity(false, true))"
         )
 
         interval = AnchoredInterval{Minute(-5)}(dt)
         @test string(interval) == "(2016-08-11 5ME02:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-5 minutes, DateTime}(2016-08-11T02:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-5 minutes,DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
         )
 
         interval = AnchoredInterval{Second(-30)}(dt)
         @test string(interval) == "(2016-08-11 30SE02:00:00]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-30 seconds, DateTime}(2016-08-11T02:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-30 seconds,DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
         )
 
         interval = AnchoredInterval{Millisecond(-10)}(dt)
         @test string(interval) == "(2016-08-11 10msE02:00:00.000]"
-        @test sprint(showcompact, interval) == string(interval)
-        @test sprint(show, interval) == string(
-            "AnchoredInterval{-10 milliseconds, DateTime}(2016-08-11T02:00:00, ",
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == mod_prefix * string(
+            "AnchoredInterval{-10 milliseconds,DateTime}(2016-08-11T02:00:00, ",
             "Inclusivity(false, true))",
         )
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
         @test string(interval) == "(0 .. 10]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-10, $Int}(10, Inclusivity(false, true))"
+            mod_prefix * "AnchoredInterval{-10,$Int}(10, Inclusivity(false, true))"
 
         interval = AnchoredInterval{25}('a')
         @test string(interval) == "[a .. z)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{25, Char}('a', Inclusivity(true, false))"
+            mod_prefix * "AnchoredInterval{25,Char}('a', Inclusivity(true, false))"
     end
 
     @testset "equality" begin

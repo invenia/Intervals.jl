@@ -61,7 +61,31 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Comparisons",
     "category": "section",
+    "text": ""
+},
+
+{
+    "location": "index.html#Equality-1",
+    "page": "Home",
+    "title": "Equality",
+    "category": "section",
+    "text": "Two AbstractIntervals are considered equal if they have identical left and right endpoints (taking Inclusivity into account):julia> a = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), true, false)\nInterval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(true, false))\n\njulia> b = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), false, true)\nInterval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(false, true))\n\njulia> c = HourEnding(DateTime(2013, 2, 13, 1))\nHourEnding{DateTime}(2013-02-13T01:00:00, Inclusivity(false, true))\n\njulia> a == b\nfalse\n\njulia> b == c\ntrue"
+},
+
+{
+    "location": "index.html#Less-Than-1",
+    "page": "Home",
+    "title": "Less Than",
+    "category": "section",
     "text": "When determining whether one AbstractInterval is less than (or greater than) another, two sets of comparison operators are available: </> and ≪/≫.The standard < and > operators (which are not explicitly defined, but are derived from isless) simply compare the leftmost endpoint of the intervals, and are used for things like sort, min, max, etc.The ≪ and ≫ operators (the Unicode symbols for \"much less than\" and \"much greater than\", accessible from the REPL with \\ll and \\gg, respectively) are used in this context to mean \"less/greater than and disjoint\"; they will verify that there is no overlap between the intervals.julia> 0..10 < 10..20\ntrue\n\njulia> 0..10 ≪ 10..20\nfalse\n\njulia> 0..10 ≪ 11..20\ntrue"
+},
+
+{
+    "location": "index.html#DataFrame-Considerations-1",
+    "page": "Home",
+    "title": "DataFrame Considerations",
+    "category": "section",
+    "text": "Even in DataFrames, equality comparisons between AbstractIntervals perform as expected:julia> using DataFrames\n\njulia> he = HourEnding(DateTime(2016, 11, 16, 1)):HourEnding(DateTime(2016, 11, 16, 12))\nHourEnding{DateTime}(2016-11-16T01:00:00, Inclusivity(false, true)):1 hour:HourEnding{DateTime}(2016-11-16T12:00:00, Inclusivity(false, true))\n\njulia> df1 = DataFrame(; time=he, data=1:12)\n12×2 DataFrames.DataFrame\n│ Row │ time              │ data │\n├─────┼───────────────────┼──────┤\n│ 1   │ (2016-11-16 HE01] │ 1    │\n│ 2   │ (2016-11-16 HE02] │ 2    │\n│ 3   │ (2016-11-16 HE03] │ 3    │\n│ 4   │ (2016-11-16 HE04] │ 4    │\n│ 5   │ (2016-11-16 HE05] │ 5    │\n│ 6   │ (2016-11-16 HE06] │ 6    │\n│ 7   │ (2016-11-16 HE07] │ 7    │\n│ 8   │ (2016-11-16 HE08] │ 8    │\n│ 9   │ (2016-11-16 HE09] │ 9    │\n│ 10  │ (2016-11-16 HE10] │ 10   │\n│ 11  │ (2016-11-16 HE11] │ 11   │\n│ 12  │ (2016-11-16 HE12] │ 12   │\n\njulia> df2 = DataFrame(; time=Interval.(he), data=1:12)\n12×2 DataFrames.DataFrame\n│ Row │ time                                         │ data │\n├─────┼──────────────────────────────────────────────┼──────┤\n│ 1   │ (2016-11-16T00:00:00 .. 2016-11-16T01:00:00] │ 1    │\n│ 2   │ (2016-11-16T01:00:00 .. 2016-11-16T02:00:00] │ 2    │\n│ 3   │ (2016-11-16T02:00:00 .. 2016-11-16T03:00:00] │ 3    │\n│ 4   │ (2016-11-16T03:00:00 .. 2016-11-16T04:00:00] │ 4    │\n│ 5   │ (2016-11-16T04:00:00 .. 2016-11-16T05:00:00] │ 5    │\n│ 6   │ (2016-11-16T05:00:00 .. 2016-11-16T06:00:00] │ 6    │\n│ 7   │ (2016-11-16T06:00:00 .. 2016-11-16T07:00:00] │ 7    │\n│ 8   │ (2016-11-16T07:00:00 .. 2016-11-16T08:00:00] │ 8    │\n│ 9   │ (2016-11-16T08:00:00 .. 2016-11-16T09:00:00] │ 9    │\n│ 10  │ (2016-11-16T09:00:00 .. 2016-11-16T10:00:00] │ 10   │\n│ 11  │ (2016-11-16T10:00:00 .. 2016-11-16T11:00:00] │ 11   │\n│ 12  │ (2016-11-16T11:00:00 .. 2016-11-16T12:00:00] │ 12   │\n\njulia> df1 == df2\ntrueHowever, the fact that join uses hashing to determine equality can cause problems:julia> df3 = DataFrame(; time=he, tag=\'a\':\'l\')\n12×2 DataFrames.DataFrame\n│ Row │ time              │ tag │\n├─────┼───────────────────┼─────┤\n│ 1   │ (2016-11-16 HE01] │ \'a\' │\n│ 2   │ (2016-11-16 HE02] │ \'b\' │\n│ 3   │ (2016-11-16 HE03] │ \'c\' │\n│ 4   │ (2016-11-16 HE04] │ \'d\' │\n│ 5   │ (2016-11-16 HE05] │ \'e\' │\n│ 6   │ (2016-11-16 HE06] │ \'f\' │\n│ 7   │ (2016-11-16 HE07] │ \'g\' │\n│ 8   │ (2016-11-16 HE08] │ \'h\' │\n│ 9   │ (2016-11-16 HE09] │ \'i\' │\n│ 10  │ (2016-11-16 HE10] │ \'j\' │\n│ 11  │ (2016-11-16 HE11] │ \'k\' │\n│ 12  │ (2016-11-16 HE12] │ \'l\' │\n\njulia> join(df1, df3; on=:time)\n12×3 DataFrames.DataFrame\n│ Row │ time              │ data │ tag │\n├─────┼───────────────────┼──────┼─────┤\n│ 1   │ (2016-11-16 HE01] │ 1    │ \'a\' │\n│ 2   │ (2016-11-16 HE02] │ 2    │ \'b\' │\n│ 3   │ (2016-11-16 HE03] │ 3    │ \'c\' │\n│ 4   │ (2016-11-16 HE04] │ 4    │ \'d\' │\n│ 5   │ (2016-11-16 HE05] │ 5    │ \'e\' │\n│ 6   │ (2016-11-16 HE06] │ 6    │ \'f\' │\n│ 7   │ (2016-11-16 HE07] │ 7    │ \'g\' │\n│ 8   │ (2016-11-16 HE08] │ 8    │ \'h\' │\n│ 9   │ (2016-11-16 HE09] │ 9    │ \'i\' │\n│ 10  │ (2016-11-16 HE10] │ 10   │ \'j\' │\n│ 11  │ (2016-11-16 HE11] │ 11   │ \'k\' │\n│ 12  │ (2016-11-16 HE12] │ 12   │ \'l\' │\n\njulia> join(df2, df3; on=:time)\n0×3 DataFrames.DataFrame\nWhen joining two DataFrames on a column that contains a mix of AbstractInterval types, it is best to explicitly convert AnchoredIntervals to Intervals:julia> df3[:time] = Interval.(df3[:time])\n12-element Array{Intervals.Interval{DateTime},1}:\n (2016-11-16T00:00:00 .. 2016-11-16T01:00:00]\n (2016-11-16T01:00:00 .. 2016-11-16T02:00:00]\n (2016-11-16T02:00:00 .. 2016-11-16T03:00:00]\n (2016-11-16T03:00:00 .. 2016-11-16T04:00:00]\n (2016-11-16T04:00:00 .. 2016-11-16T05:00:00]\n (2016-11-16T05:00:00 .. 2016-11-16T06:00:00]\n (2016-11-16T06:00:00 .. 2016-11-16T07:00:00]\n (2016-11-16T07:00:00 .. 2016-11-16T08:00:00]\n (2016-11-16T08:00:00 .. 2016-11-16T09:00:00]\n (2016-11-16T09:00:00 .. 2016-11-16T10:00:00]\n (2016-11-16T10:00:00 .. 2016-11-16T11:00:00]\n (2016-11-16T11:00:00 .. 2016-11-16T12:00:00]\n\njulia> join(df2, df3; on=:time)\n12×3 DataFrames.DataFrame\n│ Row │ time                                         │ data │ tag │\n├─────┼──────────────────────────────────────────────┼──────┼─────┤\n│ 1   │ (2016-11-16T00:00:00 .. 2016-11-16T01:00:00] │ 1    │ \'a\' │\n│ 2   │ (2016-11-16T01:00:00 .. 2016-11-16T02:00:00] │ 2    │ \'b\' │\n│ 3   │ (2016-11-16T02:00:00 .. 2016-11-16T03:00:00] │ 3    │ \'c\' │\n│ 4   │ (2016-11-16T03:00:00 .. 2016-11-16T04:00:00] │ 4    │ \'d\' │\n│ 5   │ (2016-11-16T04:00:00 .. 2016-11-16T05:00:00] │ 5    │ \'e\' │\n│ 6   │ (2016-11-16T05:00:00 .. 2016-11-16T06:00:00] │ 6    │ \'f\' │\n│ 7   │ (2016-11-16T06:00:00 .. 2016-11-16T07:00:00] │ 7    │ \'g\' │\n│ 8   │ (2016-11-16T07:00:00 .. 2016-11-16T08:00:00] │ 8    │ \'h\' │\n│ 9   │ (2016-11-16T08:00:00 .. 2016-11-16T09:00:00] │ 9    │ \'i\' │\n│ 10  │ (2016-11-16T09:00:00 .. 2016-11-16T10:00:00] │ 10   │ \'j\' │\n│ 11  │ (2016-11-16T10:00:00 .. 2016-11-16T11:00:00] │ 11   │ \'k\' │\n│ 12  │ (2016-11-16T11:00:00 .. 2016-11-16T12:00:00] │ 12   │ \'l\' │"
 },
 
 {
@@ -97,22 +121,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Intervals.:≪",
-    "page": "Home",
-    "title": "Intervals.:≪",
-    "category": "function",
-    "text": "≪(a::AbstractInterval, b::AbstractInterval) -> Bool\nless_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nLess-than-and-disjoint comparison operator. Returns true if a is less than b and they are disjoint (they do not overlap).\n\njulia> 0..10 ≪ 10..20\nfalse\n\njulia> 0..10 ≪ 11..20\ntrue\n\n\n\n"
-},
-
-{
-    "location": "index.html#Intervals.:≫",
-    "page": "Home",
-    "title": "Intervals.:≫",
-    "category": "function",
-    "text": "≫(a::AbstractInterval, b::AbstractInterval) -> Bool\ngreater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nGreater-than-and-disjoint comparison operator. Returns true if a is greater than b and they are disjoint (they do not overlap).\n\njulia> 10..20 ≫ 0..10\nfalse\n\njulia> 11..20 ≫ 0..10\ntrue\n\n\n\n"
-},
-
-{
     "location": "index.html#Intervals.HourEnding",
     "page": "Home",
     "title": "Intervals.HourEnding",
@@ -145,11 +153,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "index.html#Intervals.:≪",
+    "page": "Home",
+    "title": "Intervals.:≪",
+    "category": "function",
+    "text": "≪(a::AbstractInterval, b::AbstractInterval) -> Bool\nless_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nLess-than-and-disjoint comparison operator. Returns true if a is less than b and they are disjoint (they do not overlap).\n\njulia> 0..10 ≪ 10..20\nfalse\n\njulia> 0..10 ≪ 11..20\ntrue\n\n\n\n"
+},
+
+{
+    "location": "index.html#Intervals.:≫",
+    "page": "Home",
+    "title": "Intervals.:≫",
+    "category": "function",
+    "text": "≫(a::AbstractInterval, b::AbstractInterval) -> Bool\ngreater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool\n\nGreater-than-and-disjoint comparison operator. Returns true if a is greater than b and they are disjoint (they do not overlap).\n\njulia> 10..20 ≫ 0..10\nfalse\n\njulia> 11..20 ≫ 0..10\ntrue\n\n\n\n"
+},
+
+{
     "location": "index.html#API-1",
     "page": "Home",
     "title": "API",
     "category": "section",
-    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\n≪\n≫\nHourEnding\nHourBeginning\nHE\nHB"
+    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\nHourEnding\nHourBeginning\nHE\nHB\n≪\n≫"
 },
 
 ]}

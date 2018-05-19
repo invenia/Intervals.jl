@@ -43,8 +43,9 @@ Visualizing two touching intervals can assist in understanding this logic:
     [x..y](y..z] -> RightEndpoint != LeftEndpoint
     [x..y)(y..z] -> RightEndpoint != LeftEndpoint
 """
-Base.:(==)(a::Endpoint, b::Endpoint)
-
+function Base.:(==)(a::Endpoint, b::Endpoint)
+    a.endpoint == b.endpoint && a.included == b.included
+end
 
 function Base.:(==)(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T
     a.endpoint == b.endpoint && a.included && b.included

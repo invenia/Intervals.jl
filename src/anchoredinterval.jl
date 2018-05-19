@@ -61,7 +61,7 @@ AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, tru
 
 See also: [`Interval`](@ref), [`Inclusivity`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T} <: AbstractInterval{T}
+@auto_hash_equals struct AnchoredInterval{P, T} <: AbstractInterval{T}
     anchor::T
     inclusivity::Inclusivity
 end

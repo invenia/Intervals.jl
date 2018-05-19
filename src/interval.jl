@@ -54,7 +54,7 @@ Note that the `Inclusivity` value is also reversed in this case.
 
 See also: [`AnchoredInterval`](@ref), [`Inclusivity`](@ref)
 """
-struct Interval{T} <: AbstractInterval{T}
+@auto_hash_equals struct Interval{T} <: AbstractInterval{T}
     first::T
     last::T
     inclusivity::Inclusivity

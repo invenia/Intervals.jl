@@ -2,6 +2,7 @@ __precompile__()
 
 module Intervals
 
+using AutoHashEquals
 using Base.Dates
 using TimeZones
 using Compat: AbstractDateTime

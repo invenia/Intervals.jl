@@ -471,7 +471,7 @@
         end
     end
 
-    @testset "merge" begin
+    @testset "union" begin
         intervals = [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
@@ -482,7 +482,7 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 20, Inclusivity(false, false))
         ]
-        @test merge(intervals) == expected
+        @test union(intervals) == expected
 
         # Ordering
         intervals = [
@@ -491,7 +491,7 @@
             Interval(-10, -1, Inclusivity(false, false)),
             Interval(13, 20, Inclusivity(false, false))
         ]
-        @test merge(intervals) == expected
+        @test union(intervals) == expected
         @test intervals == [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
@@ -499,7 +499,7 @@
             Interval(13, 20, Inclusivity(false, false))
         ]
 
-        @test merge!(intervals) == expected
+        @test union!(intervals) == expected
         @test intervals == expected
 
         # Inclusivity
@@ -507,6 +507,6 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(true, true))
         ]
-        @test merge(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
+        @test union(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
     end
 end

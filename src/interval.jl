@@ -74,51 +74,6 @@ Interval(f, l, x::Bool, y::Bool) = Interval(f, l, Inclusivity(x, y))
 Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 (..)(f::T, l::T) where T = Interval(f, l)
 
-"""
-    merge(intervals::T) where T <: AbstractVector{<:AbstractInterval}
-
-Flattens a vector of overlapping intervals into a new, smaller vector containing only
-non-overlapping intervals.
-"""
-function Base.merge(intervals::AbstractVector{<:AbstractInterval{T}}) where T
-    return merge!(copy(intervals))
-end
-
-"""
-    merge!(intervals::T) where T <: AbstractVector{<:AbstractInterval}
-
-Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
-non-overlapping intervals.
-"""
-function Base.merge!(intervals::AbstractVector{<:AbstractInterval{T}}) where T
-    sort!(intervals)
-
-    i = 2
-    while i <= length(intervals)
-        prev = intervals[i - 1]
-        curr = intervals[i]
-
-        # If the current and previous intervals don't intersect then move along
-        if isempty(intersect(prev, curr))
-            i = i + 1
-
-        # If the two intervals intersect then we absorb the current interval into
-        # the previous one.
-        else
-            left = min(LeftEndpoint(prev), LeftEndpoint(curr))
-            right = max(RightEndpoint(prev), RightEndpoint(curr))
-            intervals[i - 1] = Interval(
-                left.endpoint,
-                right.endpoint,
-                Inclusivity(left.included, right.included)
-            )
-            deleteat!(intervals, i)
-        end
-    end
-
-    return intervals
-end
-
 # Empty Intervals
 Interval{T}() where T = Interval{T}(zero(T), zero(T), Inclusivity(false, false))
 Interval{T}() where T <: TimeType = Interval{T}(T(0), T(0), Inclusivity(false, false))
@@ -267,13 +222,57 @@ end
 Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a, b)
 Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
 
-# Should probably define union, too. There is power in a union.
-
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
     left > right && return Interval{T}()
     return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+end
+
+# There is power in a union.
+"""
+    union(intervals::AbstractVector{<:AbstractInterval})
+
+Flattens a vector of overlapping intervals into a new, smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union(intervals::AbstractVector{<:AbstractInterval})
+    return union!(copy(intervals))
+end
+
+"""
+    union!(intervals::AbstractVector{<:AbstractInterval})
+
+Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union!(intervals::AbstractVector{<:AbstractInterval})
+    sort!(intervals)
+
+    i = 2
+    while i <= length(intervals)
+        prev = intervals[i - 1]
+        curr = intervals[i]
+
+        # If the current and previous intervals don't intersect then move along
+        if isempty(intersect(prev, curr))
+            i = i + 1
+
+        # If the two intervals intersect then we absorb the current interval into
+        # the previous one.
+        else
+            left = min(LeftEndpoint(prev), LeftEndpoint(curr))
+            right = max(RightEndpoint(prev), RightEndpoint(curr))
+            intervals[i - 1] = Interval(
+                left.endpoint,
+                right.endpoint,
+                Inclusivity(left.included, right.included)
+            )
+            deleteat!(intervals, i)
+        end
+    end
+
+    return intervals
 end
 
 ##### TIME ZONES #####

@@ -492,7 +492,15 @@
             Interval(13, 20, Inclusivity(false, false))
         ]
         @test Intervals.merge(intervals) == expected
+        @test intervals == [
+            Interval(-100, -1, Inclusivity(false, false)),
+            Interval(10, 15, Inclusivity(false, false)),
+            Interval(-10, -1, Inclusivity(false, false)),
+            Interval(13, 20, Inclusivity(false, false))
+        ]
 
+        @test Intervals.merge!(intervals) == expected
+        @test intervals == expected
         # Inclusivity
         intervals = [
             Interval(-100, -1, Inclusivity(false, false)),

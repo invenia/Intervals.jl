@@ -77,39 +77,47 @@ Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 """
     merge(intervals::T) where T <: AbstractVector{<:AbstractInterval}
 
-Flattens a vector of overlapping intervals into smaller vector containing only
+Flattens a vector of overlapping intervals into a new, smaller vector containing only
 non-overlapping intervals.
 """
 function merge(intervals::AbstractVector{<:AbstractInterval{T}}) where T
-    length(intervals) < 2 && return intervals
+    return merge!(copy(intervals))
+end
+
+"""
+    merge!(intervals::T) where T <: AbstractVector{<:AbstractInterval}
+
+Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
+non-overlapping intervals.
+"""
+function merge!(intervals::AbstractVector{<:AbstractInterval{T}}) where T
+    length(intervals) < 1 && return intervals
 
     sort!(intervals)
-    results = Interval[]
-    prev = intervals[1]
+    i = 2
+    while i <= length(intervals)
+        prev = intervals[i-1]
+        curr = intervals[i]
 
-    for curr in intervals[2:end]
-        # If the current and previous intervals don't intersect then
-        # push the previous interval into the results and set the previous to the current
+        # If the current and previous intervals don't intersect then move along
         if isempty(intersect(prev, curr))
-            push!(results, prev)
-            prev = curr
-        # If the two intervals intersect then we expand the previous interval to include the
-        # current one.
+            i = i + 1
+
+        # If the two intervals intersect then we absorb the current interval into
+        # the previous one.
         else
             left = min(LeftEndpoint(prev), LeftEndpoint(curr))
             right = max(RightEndpoint(prev), RightEndpoint(curr))
-            prev = Interval(
+            intervals[i-1] = Interval(
                 left.endpoint,
                 right.endpoint,
                 Inclusivity(left.included, right.included)
             )
+            deleteat!(intervals, i)
         end
     end
 
-    # Push the last interval into our results
-    push!(results, prev)
-
-    return results
+    return intervals
 end
 
 # Empty Intervals

@@ -80,7 +80,7 @@ Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 Flattens a vector of overlapping intervals into a new, smaller vector containing only
 non-overlapping intervals.
 """
-function merge(intervals::AbstractVector{<:AbstractInterval{T}}) where T
+function Base.merge(intervals::AbstractVector{<:AbstractInterval{T}}) where T
     return merge!(copy(intervals))
 end
 
@@ -90,13 +90,12 @@ end
 Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
 non-overlapping intervals.
 """
-function merge!(intervals::AbstractVector{<:AbstractInterval{T}}) where T
-    length(intervals) < 1 && return intervals
-
+function Base.merge!(intervals::AbstractVector{<:AbstractInterval{T}}) where T
     sort!(intervals)
+
     i = 2
     while i <= length(intervals)
-        prev = intervals[i-1]
+        prev = intervals[i - 1]
         curr = intervals[i]
 
         # If the current and previous intervals don't intersect then move along
@@ -108,7 +107,7 @@ function merge!(intervals::AbstractVector{<:AbstractInterval{T}}) where T
         else
             left = min(LeftEndpoint(prev), LeftEndpoint(curr))
             right = max(RightEndpoint(prev), RightEndpoint(curr))
-            intervals[i-1] = Interval(
+            intervals[i - 1] = Interval(
                 left.endpoint,
                 right.endpoint,
                 Inclusivity(left.included, right.included)

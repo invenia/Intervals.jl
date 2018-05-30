@@ -482,7 +482,7 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 20, Inclusivity(false, false))
         ]
-        @test Intervals.merge(intervals) == expected
+        @test merge(intervals) == expected
 
         # Ordering
         intervals = [
@@ -491,7 +491,7 @@
             Interval(-10, -1, Inclusivity(false, false)),
             Interval(13, 20, Inclusivity(false, false))
         ]
-        @test Intervals.merge(intervals) == expected
+        @test merge(intervals) == expected
         @test intervals == [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
@@ -499,13 +499,14 @@
             Interval(13, 20, Inclusivity(false, false))
         ]
 
-        @test Intervals.merge!(intervals) == expected
+        @test merge!(intervals) == expected
         @test intervals == expected
+
         # Inclusivity
         intervals = [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(true, true))
         ]
-        @test Intervals.merge(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
+        @test merge(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
     end
 end

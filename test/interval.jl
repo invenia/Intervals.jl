@@ -470,4 +470,34 @@
             end
         end
     end
+
+    @testset "merge" begin
+        intervals = [
+            Interval(-100, -1, Inclusivity(false, false)),
+            Interval(-10, -1, Inclusivity(false, false)),
+            Interval(10, 15, Inclusivity(false, false)),
+            Interval(13, 20, Inclusivity(false, false))
+        ]
+        expected = [
+            Interval(-100, -1, Inclusivity(false, false)),
+            Interval(10, 20, Inclusivity(false, false))
+        ]
+        @test Intervals.merge(intervals) == expected
+
+        # Ordering
+        intervals = [
+            Interval(-100, -1, Inclusivity(false, false)),
+            Interval(10, 15, Inclusivity(false, false)),
+            Interval(-10, -1, Inclusivity(false, false)),
+            Interval(13, 20, Inclusivity(false, false))
+        ]
+        @test Intervals.merge(intervals) == expected
+
+        # Inclusivity
+        intervals = [
+            Interval(-100, -1, Inclusivity(false, false)),
+            Interval(-10, -1, Inclusivity(true, true))
+        ]
+        @test Intervals.merge(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
+    end
 end

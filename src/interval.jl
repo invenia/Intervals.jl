@@ -74,6 +74,44 @@ Interval(f, l, x::Bool, y::Bool) = Interval(f, l, Inclusivity(x, y))
 Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 (..)(f::T, l::T) where T = Interval(f, l)
 
+"""
+    merge(intervals::T) where T <: AbstractVector{<:AbstractInterval}
+
+Flattens a vector of overlapping intervals into smaller vector containing only
+non-overlapping intervals.
+"""
+function merge(intervals::AbstractVector{<:AbstractInterval{T}}) where T
+    length(intervals) < 2 && return intervals
+
+    sort!(intervals)
+    results = Interval[]
+    prev = intervals[1]
+
+    for curr in intervals[2:end]
+        # If the current and previous intervals don't intersect then
+        # push the previous interval into the results and set the previous to the current
+        if isempty(intersect(prev, curr))
+            push!(results, prev)
+            prev = curr
+        # If the two intervals intersect then we expand the previous interval to include the
+        # current one.
+        else
+            left = min(LeftEndpoint(prev), LeftEndpoint(curr))
+            right = max(RightEndpoint(prev), RightEndpoint(curr))
+            prev = Interval(
+                left.endpoint,
+                right.endpoint,
+                Inclusivity(left.included, right.included)
+            )
+        end
+    end
+
+    # Push the last interval into our results
+    push!(results, prev)
+
+    return results
+end
+
 # Empty Intervals
 Interval{T}() where T = Interval{T}(zero(T), zero(T), Inclusivity(false, false))
 Interval{T}() where T <: TimeType = Interval{T}(T(0), T(0), Inclusivity(false, false))

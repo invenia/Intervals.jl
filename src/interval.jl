@@ -84,6 +84,18 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
+function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    isempty(intersect(a, b)) && throw(ArgumentError("$a and $b do not intersect."))
+
+    left = min(LeftEndpoint(a), LeftEndpoint(b))
+    right = max(RightEndpoint(a), RightEndpoint(b))
+    return Interval(
+        left.endpoint,
+        right.endpoint,
+        Inclusivity(left.included, right.included)
+    )
+end
+
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first
@@ -250,7 +262,8 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
     sort!(intervals)
 
     i = 2
-    while i <= length(intervals)
+    n = length(intervals)
+    while i <= n
         prev = intervals[i - 1]
         curr = intervals[i]
 
@@ -261,14 +274,9 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
         # If the two intervals intersect then we absorb the current interval into
         # the previous one.
         else
-            left = min(LeftEndpoint(prev), LeftEndpoint(curr))
-            right = max(RightEndpoint(prev), RightEndpoint(curr))
-            intervals[i - 1] = Interval(
-                left.endpoint,
-                right.endpoint,
-                Inclusivity(left.included, right.included)
-            )
+            intervals[i - 1] = merge(prev, curr)
             deleteat!(intervals, i)
+            n = n-1
         end
     end
 

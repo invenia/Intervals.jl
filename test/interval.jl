@@ -471,6 +471,24 @@
         end
     end
 
+    @testset "merge" begin
+        a = Interval(-100, -1)
+        b = Interval(-3, 10)
+        @test merge(a, b) == Interval(-100, 10)
+        @test merge(b, a) == Interval(-100, 10)
+
+        b = Interval(1, 10)
+        @test_throws ArgumentError merge(a, b)
+
+        a = Interval(-100, -1, Inclusivity(false, false))
+        b = Interval(-2, 10, Inclusivity(true, true))
+        @test merge(a, b) == Interval(-100, 10, Inclusivity(false, true))
+
+        a = Interval(-100, -1, Inclusivity(true, false))
+        b = Interval(-2, 10, Inclusivity(false, false))
+        @test merge(a, b) == Interval(-100, 10, Inclusivity(true, false))
+    end
+
     @testset "union" begin
         intervals = [
             Interval(-100, -1, Inclusivity(false, false)),

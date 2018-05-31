@@ -249,7 +249,8 @@ Flattens a vector of overlapping intervals into a new, smaller vector containing
 non-overlapping intervals.
 """
 function Base.union(intervals::AbstractVector{<:AbstractInterval})
-    return union!(copy(intervals))
+
+    return union!(convert(Vector{AbstractInterval}, intervals))
 end
 
 """
@@ -276,7 +277,7 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
         else
             intervals[i - 1] = merge(prev, curr)
             deleteat!(intervals, i)
-            n = n-1
+            n = n - 1
         end
     end
 

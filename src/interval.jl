@@ -97,11 +97,21 @@ function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
 end
 
 function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
+    return overlaps(a,b) || contiguous(a,b)
+end
+
+function overlaps(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint > left.endpoint ||
-        (right.endpoint == left.endpoint && (left.included || right.included))
+    return left <= right
+end
+
+function contiguous(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return right.endpoint == left.endpoint && (left.included || right.included)
 end
 
 ##### ACCESSORS #####
@@ -243,9 +253,10 @@ Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a,
 Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    !overlaps(a,b) && return Interval{T}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
-    left > right && return Interval{T}()
+
     return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
 end
 

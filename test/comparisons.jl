@@ -98,8 +98,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(later, earlier)
 
         @test isempty(intersect(earlier, later))
-        @test_throws ArgumentError merge(earlier, later)
-        @test union([earlier, later]) == [earlier, later]
+        @test merge(earlier, later) == Interval(1, 5, false, true)
+        @test union([earlier, later]) == [Interval(1, 5, false, true)]
     end
 
     # Compare two intervals which "touch" and the earlier interval includes that point:
@@ -128,8 +128,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(later, earlier)
 
         @test isempty(intersect(earlier, later))
-        @test_throws ArgumentError merge(earlier, later)
-        @test union([earlier, later]) == [earlier, later]
+        @test merge(earlier, later) == Interval(1, 5, true, false)
+        @test union([earlier, later]) == [Interval(1, 5, true, false)]
     end
 
     # Compare two intervals which "touch" and both intervals include that point:

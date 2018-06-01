@@ -85,7 +85,7 @@ end
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
 function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    isempty(intersect(a, b)) && throw(ArgumentError("$a and $b do not intersect."))
+    !touching(a,b) && throw(ArgumentError("$a and $b are not touching."))
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
@@ -94,6 +94,14 @@ function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
         right.endpoint,
         Inclusivity(left.included, right.included)
     )
+end
+
+function touching(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return right.endpoint > left.endpoint ||
+        (right.endpoint == left.endpoint && (left.included || right.included))
 end
 
 ##### ACCESSORS #####
@@ -254,12 +262,12 @@ function Base.union(intervals::AbstractVector{<:AbstractInterval})
 end
 
 """
-    union!(intervals::AbstractVector{<:AbstractInterval})
+    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
 
 Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
 non-overlapping intervals.
 """
-function Base.union!(intervals::AbstractVector{<:AbstractInterval})
+function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
     sort!(intervals)
 
     i = 2
@@ -268,16 +276,16 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
         prev = intervals[i - 1]
         curr = intervals[i]
 
-        # If the current and previous intervals don't intersect then move along
-        if isempty(intersect(prev, curr))
+        # If the current and previous intervals don't meet then move along
+        if !touching(prev, curr)
             i = i + 1
 
-        # If the two intervals intersect then we absorb the current interval into
+        # If the two intervals meet then we absorb the current interval into
         # the previous one.
         else
             intervals[i - 1] = merge(prev, curr)
             deleteat!(intervals, i)
-            n = n - 1
+            n -= 1
         end
     end
 

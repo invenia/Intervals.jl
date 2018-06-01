@@ -471,9 +471,39 @@
         end
     end
 
+    @testset "touching" begin
+        a = Interval(-100, -1)
+        b = Interval(-5, 10)
+
+        @test Intervals.touching(a,a)
+        @test Intervals.touching(a,b)
+        @test Intervals.touching(b,a)
+
+        b = Interval(5, 10)
+        @test !Intervals.touching(a,b)
+        @test !Intervals.touching(b,a)
+
+        a = Interval(10, 20, Inclusivity(true, false))
+        b = Interval(-5, 10, Inclusivity(false, true))
+        @test Intervals.touching(a,b)
+
+        a = Interval(10, 20, Inclusivity(false, false))
+        b = Interval(-5, 10, Inclusivity(false, true))
+        @test Intervals.touching(a,b)
+
+        a = Interval(10, 20, Inclusivity(true, false))
+        b = Interval(-5, 10, Inclusivity(false, false))
+        @test Intervals.touching(a,b)
+
+        a = Interval(10, 20, Inclusivity(false, false))
+        b = Interval(-5, 10, Inclusivity(false, false))
+        @test !Intervals.touching(a,b)
+    end
+
     @testset "merge" begin
         a = Interval(-100, -1)
         b = Interval(-3, 10)
+
         @test merge(a, b) == Interval(-100, 10)
         @test merge(b, a) == Interval(-100, 10)
 

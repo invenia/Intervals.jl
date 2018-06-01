@@ -85,7 +85,7 @@ end
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
 function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    !touching(a,b) && throw(ArgumentError("$a and $b are not touching."))
+    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
@@ -96,7 +96,7 @@ function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     )
 end
 
-function touching(a::AbstractInterval, b::AbstractInterval)
+function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
@@ -277,7 +277,7 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
         curr = intervals[i]
 
         # If the current and previous intervals don't meet then move along
-        if !touching(prev, curr)
+        if !overlapscontiguous(prev, curr)
             i = i + 1
 
         # If the two intervals meet then we absorb the current interval into

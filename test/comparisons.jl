@@ -169,7 +169,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test merge(earlier, later) == Interval(1, 5, true, true)
         @test union([earlier, later]) == [Interval(1, 5, true, true)]
         @test overlaps(earlier, later)
-        @test contiguous(earlier, later)
+        @test !contiguous(earlier, later)
     end
 
     # Compare two intervals which overlap

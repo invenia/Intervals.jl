@@ -111,7 +111,9 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint == left.endpoint && (left.included || right.included)
+    return right.endpoint == left.endpoint &&
+        (left.included || right.included) &&
+        left.included != right.included
 end
 
 ##### ACCESSORS #####

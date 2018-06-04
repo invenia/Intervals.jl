@@ -28,15 +28,18 @@ RightEndpoint(i::AbstractInterval{T}) where T = RightEndpoint{T}(last(i), last(i
 
 
 """
-    ==(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T -> Bool
-    ==(a::RightEndpoint{T}, b::LeftEndpoint{T}) where T -> Bool
+    ==(a::Endpoint, b::Endpoint) -> Bool
 
-A left-endpoint and a right-endpoint are only equal when they use the same point and are
+Determine if two endpoints are equal. When both endpoints are left or right then the points
+and inclusiveness must be the same.
+
+Checking the equality of left-endpoint and a right-endpoint is slightly more difficult. A
+left-endpoint and a right-endpoint are only equal when they use the same point and are
 both included. Note that left/right endpoints which are both not included are not equal
 as the left-endpoint contains values below that point while the right-endpoint only contains
 values that are above that point.
 
-Visualizing two touching intervals can assist in understanding this logic:
+Visualizing two contiguous intervals can assist in understanding this logic:
 
     [x..y][y..z] -> RightEndpoint == LeftEndpoint
     [x..y)[y..z] -> RightEndpoint != LeftEndpoint
@@ -47,42 +50,42 @@ function Base.:(==)(a::Endpoint, b::Endpoint)
     a.endpoint == b.endpoint && a.included == b.included
 end
 
-function Base.:(==)(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T
+function Base.:(==)(a::LeftEndpoint, b::RightEndpoint)
     a.endpoint == b.endpoint && a.included && b.included
 end
 
-function Base.:(==)(a::RightEndpoint{T}, b::LeftEndpoint{T}) where T
+function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
     a.endpoint == b.endpoint && a.included && b.included
 end
 
-function Base.isless(a::LeftEndpoint{T}, b::LeftEndpoint{T}) where T
+function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && a.included && !b.included)
 end
 
-function Base.isless(a::RightEndpoint{T}, b::RightEndpoint{T}) where T
+function Base.isless(a::RightEndpoint, b::RightEndpoint)
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !a.included && b.included)
 end
 
-function Base.isless(a::RightEndpoint{T}, b::LeftEndpoint{T}) where T
+function Base.isless(a::RightEndpoint, b::LeftEndpoint)
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(a.included && b.included))
 end
 
-function Base.isless(a::LeftEndpoint{T}, b::RightEndpoint{T}) where T
+function Base.isless(a::LeftEndpoint, b::RightEndpoint)
     a.endpoint < b.endpoint
 end
 
-function Base.isless(a::T, b::LeftEndpoint{T}) where T
+function Base.isless(a, b::LeftEndpoint)
     a < b.endpoint || (a == b.endpoint && !b.included)
 end
 
-function Base.isless(a::T, b::RightEndpoint{T}) where T
+function Base.isless(a, b::RightEndpoint)
     a < b.endpoint
 end
 
-function Base.isless(a::LeftEndpoint{T}, b::T) where T
+function Base.isless(a::LeftEndpoint, b)
     a.endpoint < b
 end
 
-function Base.isless(a::RightEndpoint{T}, b::T) where T
+function Base.isless(a::RightEndpoint, b)
     a.endpoint < b || (a.endpoint == b && !a.included)
 end

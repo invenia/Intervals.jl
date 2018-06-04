@@ -41,7 +41,7 @@ Interval{Date}(2018-01-24, 2018-01-31, Inclusivity(true, true))
 
 ### Note on Ordering
 
-The `Interval` constructor will compare `first` and `last`; if it findes that
+The `Interval` constructor will compare `first` and `last`; if it finds that
 `first > last`, they will be reversed to ensure that `first < last`. This simplifies
 calls to `in` and `intersect`:
 
@@ -60,11 +60,14 @@ struct Interval{T} <: AbstractInterval{T}
     inclusivity::Inclusivity
 
     function Interval{T}(f::T, l::T, inc::Inclusivity) where T
-        return new(
-            f ≤ l ? f : l,
-            l ≥ f ? l : f,
-            f ≤ l ? inc : Inclusivity(last(inc), first(inc)),
-        )
+        # Ensure that `first` preceeds `last`.
+        f, l, inc = if f ≤ l
+            f, l, inc
+        else
+            l, f, Inclusivity(last(inc), first(inc))
+        end
+
+        return new(f, l, inc)
     end
 end
 

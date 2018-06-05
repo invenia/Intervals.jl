@@ -87,6 +87,36 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
+function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
+
+    left = min(LeftEndpoint(a), LeftEndpoint(b))
+    right = max(RightEndpoint(a), RightEndpoint(b))
+    return Interval(
+        left.endpoint,
+        right.endpoint,
+        Inclusivity(left.included, right.included)
+    )
+end
+
+function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
+    return overlaps(a,b) || contiguous(a,b)
+end
+
+function overlaps(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return left <= right
+end
+
+function contiguous(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return right.endpoint == left.endpoint && left.included != right.included
+end
+
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first
@@ -225,13 +255,54 @@ end
 Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a, b)
 Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
 
-# Should probably define union, too. There is power in a union.
-
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    !overlaps(a,b) && return Interval{T}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
-    left > right && return Interval{T}()
+
     return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+end
+
+# There is power in a union.
+"""
+    union(intervals::AbstractVector{<:AbstractInterval})
+
+Flattens a vector of overlapping intervals into a new, smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union(intervals::AbstractVector{<:AbstractInterval})
+    return union!(convert(Vector{AbstractInterval}, intervals))
+end
+
+"""
+    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
+
+Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
+    sort!(intervals)
+
+    i = 2
+    n = length(intervals)
+    while i <= n
+        prev = intervals[i - 1]
+        curr = intervals[i]
+
+        # If the current and previous intervals don't meet then move along
+        if !overlapscontiguous(prev, curr)
+            i = i + 1
+
+        # If the two intervals meet then we absorb the current interval into
+        # the previous one.
+        else
+            intervals[i - 1] = merge(prev, curr)
+            deleteat!(intervals, i)
+            n -= 1
+        end
+    end
+
+    return intervals
 end
 
 ##### TIME ZONES #####

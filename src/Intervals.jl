@@ -6,7 +6,7 @@ using Base.Dates
 using TimeZones
 using Compat: AbstractDateTime
 
-import Base: ⊆, ⊇, ⊈, ⊉
+import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
 abstract type AbstractInterval{T} end
 
@@ -30,9 +30,10 @@ export AbstractInterval,
        isclosed,
        anchor,
        span,
+       merge,
+       union,
+       union!,
        less_than_disjoint,
        greater_than_disjoint,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
-
-
 end

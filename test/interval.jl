@@ -284,6 +284,9 @@
                     @test_throws MethodError unit - interval
                 end
             end
+
+            @test_throws MethodError Interval(a, b) + Interval(a, b)
+            @test_throws MethodError Interval(a, b) - Interval(a, b)
         end
 
         # DST transition
@@ -358,6 +361,8 @@
             @test !in(b, interval)
             @test in(b - unit, interval)
             @test !in(b + unit, interval)
+
+            @test_throws MethodError (in(Interval(a, b), Interval(a, b)))
         end
     end
 

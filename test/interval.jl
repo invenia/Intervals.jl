@@ -471,35 +471,6 @@
         end
     end
 
-    @testset "overlapscontiguous" begin
-        a = Interval(-100, -1)
-        b = Interval(-5, 10)
-
-        @test Intervals.overlapscontiguous(a,a)
-        @test Intervals.overlapscontiguous(a,b)
-        @test Intervals.overlapscontiguous(b,a)
-
-        b = Interval(5, 10)
-        @test !Intervals.overlapscontiguous(a,b)
-        @test !Intervals.overlapscontiguous(b,a)
-
-        a = Interval(10, 20, Inclusivity(true, false))
-        b = Interval(-5, 10, Inclusivity(false, true))
-        @test Intervals.overlapscontiguous(a,b)
-
-        a = Interval(10, 20, Inclusivity(false, false))
-        b = Interval(-5, 10, Inclusivity(false, true))
-        @test Intervals.overlapscontiguous(a,b)
-
-        a = Interval(10, 20, Inclusivity(true, false))
-        b = Interval(-5, 10, Inclusivity(false, false))
-        @test Intervals.overlapscontiguous(a,b)
-
-        a = Interval(10, 20, Inclusivity(false, false))
-        b = Interval(-5, 10, Inclusivity(false, false))
-        @test !Intervals.overlapscontiguous(a,b)
-    end
-
     @testset "merge" begin
         a = Interval(-100, -1)
         b = Interval(-3, 10)

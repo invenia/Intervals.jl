@@ -239,10 +239,6 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     return right.endpoint == left.endpoint && left.included != right.included
 end
 
-function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
-    return overlaps(a,b) || contiguous(a,b)
-end
-
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     !overlaps(a,b) && return Interval{T}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
@@ -278,7 +274,7 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
         curr = intervals[i]
 
         # If the current and previous intervals don't meet then move along
-        if !overlapscontiguous(prev, curr)
+        if !overlaps(prev, curr) && !contiguous(prev, curr)
             i = i + 1
 
         # If the two intervals meet then we absorb the current interval into
@@ -294,7 +290,9 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
 end
 
 function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
+    if !overlaps(a, b) && !contiguous(a, b)
+        throw(ArgumentError("$a and $b are neither overlapping or contiguous."))
+    end
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))

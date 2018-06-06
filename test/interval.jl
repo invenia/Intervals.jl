@@ -80,23 +80,23 @@
     @testset "display" begin
         interval = Interval(1, 2, Inclusivity(false, false))
         @test string(interval) == "(1 .. 2)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == "Interval{$Int}(1, 2, Inclusivity(false, false))"
 
         interval = Interval('a', 'b', Inclusivity(false, true))
         @test string(interval) == "(a .. b]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == "Interval{Char}('a', 'b', Inclusivity(false, true))"
 
         interval = Interval(Date(2012), Date(2013), Inclusivity(true, false))
         @test string(interval) == "[2012-01-01 .. 2013-01-01)"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "Interval{Date}(2012-01-01, 2013-01-01, Inclusivity(true, false))"
 
         interval = Interval("a", "b", Inclusivity(true, true))
         @test string(interval) == "[a .. b]"
-        @test sprint(showcompact, interval) == string(interval)
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "Interval{String}(\"a\", \"b\", Inclusivity(true, true))"
     end

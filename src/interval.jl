@@ -130,12 +130,12 @@ Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
 
 function Base.convert(::Type{T}, i::Interval{T}) where T
     first(i) == last(i) && isclosed(i) && return first(i)
-    throw(DomainError())
+    throw(DomainError(i, "The interval is not closed with coinciding endpoints"))
 end
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Base.Date(interval::Interval{Date}) = convert(Date, interval)
-Base.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
+Compat.Dates.Date(interval::Interval{Date}) = convert(Date, interval)
+Compat.Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
 
 ##### DISPLAY #####
 

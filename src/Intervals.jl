@@ -2,8 +2,12 @@ __precompile__()
 
 module Intervals
 
-using Base.Dates
+using Compat
+using Compat.Dates
+using Compat.Printf
 using TimeZones
+
+using Compat.Dates: value, coarserperiod
 using Compat: AbstractDateTime
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge

@@ -52,22 +52,22 @@
     @testset "display" begin
         inc = Inclusivity(false, false)
         @test string(inc) == "Inclusivity (Open)"
-        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc, context=:compact=>true) == string(inc)
         @test sprint(show, inc) == "Inclusivity(false, false)"
 
         inc = Inclusivity(false, true)
         @test string(inc) == "Inclusivity (Right]"
-        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc, context=:compact=>true) == string(inc)
         @test sprint(show, inc) == "Inclusivity(false, true)"
 
         inc = Inclusivity(true, false)
         @test string(inc) == "Inclusivity [Left)"
-        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc, context=:compact=>true) == string(inc)
         @test sprint(show, inc) == "Inclusivity(true, false)"
 
         inc = Inclusivity(true, true)
         @test string(inc) == "Inclusivity [Closed]"
-        @test sprint(showcompact, inc) == string(inc)
+        @test sprint(show, inc, context=:compact=>true) == string(inc)
         @test sprint(show, inc) == "Inclusivity(true, true)"
     end
 

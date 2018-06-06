@@ -1,5 +1,4 @@
 import TimeZones: astimezone
-using Base.Dates: value, coarserperiod
 
 """
     AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -> AnchoredInterval{P, T}
@@ -166,20 +165,10 @@ end
 Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Base.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
-Base.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
+Compat.Dates.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
+Compat.Dates.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
 
 ##### DISPLAY #####
-
-Base.show(io::IO, ::Type{HourEnding}) = print(io, "HourEnding{T}")
-Base.show(io::IO, ::Type{HourBeginning}) = print(io, "HourBeginning{T}")
-
-Base.show(io::IO, ::Type{HourEnding{T}}) where T <: TimeType = print(io, "HourEnding{$T}")
-Base.show(io::IO, ::Type{HourBeginning{T}}) where T <: TimeType = print(io, "HourBeginning{$T}")
-
-function Base.show(io::IO, ::Type{AnchoredInterval{P, T}}) where {P, T}
-    print(io, "AnchoredInterval{$P, $T}")
-end
 
 function Base.show(io::IO, interval::T) where T <: AnchoredInterval
     if get(io, :compact, false)

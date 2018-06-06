@@ -87,36 +87,6 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
-function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
-
-    left = min(LeftEndpoint(a), LeftEndpoint(b))
-    right = max(RightEndpoint(a), RightEndpoint(b))
-    return Interval(
-        left.endpoint,
-        right.endpoint,
-        Inclusivity(left.included, right.included)
-    )
-end
-
-function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
-    return overlaps(a,b) || contiguous(a,b)
-end
-
-function overlaps(a::AbstractInterval, b::AbstractInterval)
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return left <= right
-end
-
-function contiguous(a::AbstractInterval, b::AbstractInterval)
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return right.endpoint == left.endpoint && left.included != right.included
-end
-
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first
@@ -255,6 +225,24 @@ end
 Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a, b)
 Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
 
+function overlaps(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return left <= right
+end
+
+function contiguous(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return right.endpoint == left.endpoint && left.included != right.included
+end
+
+function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
+    return overlaps(a,b) || contiguous(a,b)
+end
+
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     !overlaps(a,b) && return Interval{T}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
@@ -303,6 +291,18 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
     end
 
     return intervals
+end
+
+function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
+
+    left = min(LeftEndpoint(a), LeftEndpoint(b))
+    right = max(RightEndpoint(a), RightEndpoint(b))
+    return Interval(
+        left.endpoint,
+        right.endpoint,
+        Inclusivity(left.included, right.included)
+    )
 end
 
 ##### TIME ZONES #####

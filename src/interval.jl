@@ -87,36 +87,6 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
-function Base.merge(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
-    !overlapscontiguous(a,b) && throw(ArgumentError("$a and $b are not touching."))
-
-    left = min(LeftEndpoint(a), LeftEndpoint(b))
-    right = max(RightEndpoint(a), RightEndpoint(b))
-    return Interval(
-        left.endpoint,
-        right.endpoint,
-        Inclusivity(left.included, right.included)
-    )
-end
-
-function overlapscontiguous(a::AbstractInterval, b::AbstractInterval)
-    return overlaps(a,b) || contiguous(a,b)
-end
-
-function overlaps(a::AbstractInterval, b::AbstractInterval)
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return left <= right
-end
-
-function contiguous(a::AbstractInterval, b::AbstractInterval)
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return right.endpoint == left.endpoint && left.included != right.included
-end
-
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first
@@ -175,8 +145,7 @@ Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, inclusivit
 
 Base.:+(a, b::Interval) = b + a
 Base.:-(a::Interval, b) = a + -b
-
-Base.:-(a::T, b::Interval{T}) where T = a + -b
+Base.:-(a, b::Interval) = a + -b
 
 function Base.:-(a::Interval{T}) where T
     inc = inclusivity(a)
@@ -185,23 +154,23 @@ end
 
 ##### EQUALITY #####
 
-function Base.:(==)(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function Base.:(==)(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) == LeftEndpoint(b) && RightEndpoint(a) == RightEndpoint(b)
 end
 
 # While it might be convincingly argued that this should define < instead of isless (see
 # https://github.com/invenia/Intervals.jl/issues/14), this breaks sort.
-Base.isless(a::AbstractInterval{T}, b::T) where T = LeftEndpoint(a) < b
-Base.isless(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+Base.isless(a::AbstractInterval, b) = LeftEndpoint(a) < b
+Base.isless(a, b::AbstractInterval) = a < LeftEndpoint(b)
 
-less_than_disjoint(a::AbstractInterval{T}, b::T) where T = RightEndpoint(a) < b
-less_than_disjoint(a::T, b::AbstractInterval{T}) where T = a < LeftEndpoint(b)
+less_than_disjoint(a::AbstractInterval, b) = RightEndpoint(a) < b
+less_than_disjoint(a, b::AbstractInterval) = a < LeftEndpoint(b)
 
-function Base.:isless(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function Base.:isless(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) < LeftEndpoint(b)
 end
 
-function less_than_disjoint(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function less_than_disjoint(a::AbstractInterval, b::AbstractInterval)
     return RightEndpoint(a) < LeftEndpoint(b)
 end
 
@@ -248,12 +217,26 @@ true
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
 Base.in(a::T, b::AbstractInterval{T}) where T = !(a ≫ b || a ≪ b)
 
-function Base.issubset(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
+function Base.issubset(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)
 end
 
-Base.:⊈(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(a, b)
-Base.:⊉(a::AbstractInterval{T}, b::AbstractInterval{T}) where T = !issubset(b, a)
+Base.:⊈(a::AbstractInterval, b::AbstractInterval) = !issubset(a, b)
+Base.:⊉(a::AbstractInterval, b::AbstractInterval) = !issubset(b, a)
+
+function overlaps(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return left <= right
+end
+
+function contiguous(a::AbstractInterval, b::AbstractInterval)
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return right.endpoint == left.endpoint && left.included != right.included
+end
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     !overlaps(a,b) && return Interval{T}()
@@ -290,7 +273,7 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
         curr = intervals[i]
 
         # If the current and previous intervals don't meet then move along
-        if !overlapscontiguous(prev, curr)
+        if !overlaps(prev, curr) && !contiguous(prev, curr)
             i = i + 1
 
         # If the two intervals meet then we absorb the current interval into
@@ -303,6 +286,20 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
     end
 
     return intervals
+end
+
+function Base.merge(a::AbstractInterval, b::AbstractInterval)
+    if !overlaps(a, b) && !contiguous(a, b)
+        throw(ArgumentError("$a and $b are neither overlapping or contiguous."))
+    end
+
+    left = min(LeftEndpoint(a), LeftEndpoint(b))
+    right = max(RightEndpoint(a), RightEndpoint(b))
+    return Interval(
+        left.endpoint,
+        right.endpoint,
+        Inclusivity(left.included, right.included)
+    )
 end
 
 ##### TIME ZONES #####

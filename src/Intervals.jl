@@ -21,6 +21,7 @@ include("endpoint.jl")
 include("interval.jl")
 include("anchoredinterval.jl")
 include("description.jl")
+include("deprecated.jl")
 
 export AbstractInterval,
        Interval,
@@ -39,7 +40,5 @@ export AbstractInterval,
        merge,
        union,
        union!,
-       less_than_disjoint,
-       greater_than_disjoint,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
 end

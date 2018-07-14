@@ -170,24 +170,21 @@ end
 Base.isless(a::AbstractInterval, b) = LeftEndpoint(a) < b
 Base.isless(a, b::AbstractInterval) = a < LeftEndpoint(b)
 
-less_than_disjoint(a::AbstractInterval, b) = RightEndpoint(a) < b
-less_than_disjoint(a, b::AbstractInterval) = a < LeftEndpoint(b)
-
-function Base.:isless(a::AbstractInterval, b::AbstractInterval)
+function Base.isless(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) < LeftEndpoint(b)
 end
 
-function less_than_disjoint(a::AbstractInterval, b::AbstractInterval)
+isless_disjoint(a::AbstractInterval, b) = RightEndpoint(a) < b
+isless_disjoint(a, b::AbstractInterval) = a < LeftEndpoint(b)
+
+function isless_disjoint(a::AbstractInterval, b::AbstractInterval)
     return RightEndpoint(a) < LeftEndpoint(b)
 end
 
-greater_than_disjoint(a, b) = less_than_disjoint(b, a)
-
 """
     ≪(a::AbstractInterval, b::AbstractInterval) -> Bool
-    less_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool
 
-Less-than-and-disjoint comparison operator. Returns `true` if `a` is less than `b` and they
+Less than and disjoint comparison operator. Returns `true` if `a` is less than `b` and they
 are disjoint (they do not overlap).
 
 ```
@@ -198,14 +195,13 @@ julia> 0..10 ≪ 11..20
 true
 ```
 """
-≪(a, b) = less_than_disjoint(a, b)
+≪(a, b) = isless_disjoint(a, b)
 # ≪̸(a, b) = !≪(a, b)
 
 """
     ≫(a::AbstractInterval, b::AbstractInterval) -> Bool
-    greater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -> Bool
 
-Greater-than-and-disjoint comparison operator. Returns `true` if `a` is greater than `b` and
+Greater than and disjoint comparison operator. Returns `true` if `a` is greater than `b` and
 they are disjoint (they do not overlap).
 
 ```
@@ -216,7 +212,7 @@ julia> 11..20 ≫ 0..10
 true
 ```
 """
-≫(a, b) = greater_than_disjoint(a, b)
+≫(a, b) = isless_disjoint(b, a)
 # ≫̸(a, b) = !≫(a, b)
 
 ##### SET OPERATIONS #####

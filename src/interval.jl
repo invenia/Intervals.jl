@@ -302,6 +302,18 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
     return intervals
 end
 
+"""
+    superset(intervals::AbstractArray{<:AbstractInterval}) -> Interval
+
+Create the smallest single interval which encompasses all of the provided intervals.
+"""
+function superset(intervals::AbstractArray{<:AbstractInterval})
+    left = minimum(LeftEndpoint.(intervals))
+    right = maximum(RightEndpoint.(intervals))
+
+    return Interval(left, right)
+end
+
 function Base.merge(a::AbstractInterval, b::AbstractInterval)
     if !overlaps(a, b) && !contiguous(a, b)
         throw(ArgumentError("$a and $b are neither overlapping or contiguous."))

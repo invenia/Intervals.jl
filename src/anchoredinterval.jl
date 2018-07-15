@@ -220,9 +220,8 @@ end
 
 ##### RANGE #####
 
-# Required for StepRange{<:AnchoredInterval}
-function Base.steprem(a::T, b::T, c) where {T <: AnchoredInterval}
-    return Base.steprem(anchor(a), anchor(b), c)
+function Base.steprange_last(start::T, step, stop::T) where {T <: AnchoredInterval}
+    T(Base.steprange_last(anchor(start), step, anchor(stop)), inclusivity(start))
 end
 
 # Infer step for two-argument StepRange{<:AnchoredInterval}

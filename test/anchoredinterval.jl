@@ -431,6 +431,14 @@ using Intervals: canonicalize
         @test r4 isa StepRange
         @test length(r4) == 26
         @test collect(r4) == map(HourEnding, fall:Hour(1):fall + Day(1))
+
+        r5 = AnchoredInterval{-1}(3, false, true):2:AnchoredInterval{-1}(7, true, true)
+        @test length(r5) == 3
+        @test collect(r5) == [
+            AnchoredInterval{-1}(3, false, true),
+            AnchoredInterval{-1}(5, false, true),
+            AnchoredInterval{-1}(7, false, true),
+        ]
     end
 
     @testset "isempty" begin

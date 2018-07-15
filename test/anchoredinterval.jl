@@ -49,6 +49,14 @@ using Intervals: canonicalize
         @test convert(Interval{DateTime}, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
     end
 
+    @testset "eltype" begin
+        @test eltype(AnchoredInterval{-10}(10)) == Int
+        @test eltype(AnchoredInterval{25}('a')) == Char
+        @test eltype(AnchoredInterval{Day(1)}(today())) == Date
+        @test eltype(AnchoredInterval{Day(1),DateTime}(today())) == DateTime
+        @test eltype(HourEnding(now())) == DateTime
+    end
+
     @testset "accessors" begin
         inc = Inclusivity(true, true)
         P = Minute(-15)

@@ -50,6 +50,11 @@
         end
     end
 
+    @testset "eltype" begin
+        @test eltype(Interval(1,2)) == Int
+        @test eltype(Interval{Float64}(1,2)) == Float64
+    end
+
     @testset "accessors" begin
         for (a, b, _) in test_values
             for i in 0:3

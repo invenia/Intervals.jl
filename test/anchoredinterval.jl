@@ -39,14 +39,14 @@ using Intervals: canonicalize
     @testset "conversion" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-        @test DateTime(he) == dt
-        @test DateTime(hb) == dt
+        @test convert(DateTime, he) == dt
+        @test convert(DateTime, hb) == dt
         @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
         @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
+        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @test convert(Interval{DateTime}, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
+        @test convert(Interval{DateTime}, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
     end
 
     @testset "accessors" begin

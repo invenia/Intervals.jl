@@ -65,22 +65,21 @@ struct AnchoredInterval{P, T} <: AbstractInterval{T}
     inclusivity::Inclusivity
 end
 
+function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
+    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+end
+
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
 function AnchoredInterval{P, T}(i::T) where {P, T}
     return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
 end
 
-AnchoredInterval{P}(i::T, inc::Inclusivity) where {P, T} = AnchoredInterval{P, T}(i, inc)
-AnchoredInterval{P}(i::T) where {P, T} = AnchoredInterval{P, T}(i)
-
-function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
+function AnchoredInterval{P, T}(i, inc...) where {P, T}
+    return AnchoredInterval{P, T}(convert(T, i), inc...)
 end
 
-function AnchoredInterval{P}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
-end
+AnchoredInterval{P}(i::T, inc...) where {P, T} = AnchoredInterval{P, T}(i, inc...)
 
 """
     HourEnding{T<:TimeType} <: AbstractInterval{T}

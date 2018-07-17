@@ -71,11 +71,14 @@ struct Interval{T} <: AbstractInterval{T}
     end
 end
 
-Interval(f::T, l::T, inclusivity) where T = Interval{T}(f, l, inclusivity)
-Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
-Interval(f, l, x::Bool, y::Bool) = Interval(f, l, Inclusivity(x, y))
-Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
-(..)(f::T, l::T) where T = Interval(f, l)
+Interval{T}(f::T, l::T, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
+Interval{T}(f::T, l::T) where T = Interval{T}(f, l, Inclusivity(true, true))
+Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
+
+Interval{T}(f, l, inc...) where T = Interval{T}(convert(T, f), convert(T, l), inc...)
+Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
+
+(..)(first, last) = Interval(first, last)
 
 # In Julia 0.7 constructors no longer automatically fall back to using `convert`
 Interval(interval::AbstractInterval) = convert(Interval, interval)

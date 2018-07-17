@@ -14,6 +14,8 @@ import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
 abstract type AbstractInterval{T} end
 
+Base.eltype(::AbstractInterval{T}) where {T} = T
+
 include("inclusivity.jl")
 include("endpoint.jl")
 include("interval.jl")

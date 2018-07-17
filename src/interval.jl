@@ -77,6 +77,10 @@ Interval(f, l, x::Bool, y::Bool) = Interval(f, l, Inclusivity(x, y))
 Interval(f::T, l::T) where T = Interval(f, l, Inclusivity(true, true))
 (..)(f::T, l::T) where T = Interval(f, l)
 
+# In Julia 0.7 constructors no longer automatically fall back to using `convert`
+Interval(interval::AbstractInterval) = convert(Interval, interval)
+Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
+
 # Empty Intervals
 Interval{T}() where T = Interval{T}(zero(T), zero(T), Inclusivity(false, false))
 Interval{T}() where T <: TimeType = Interval{T}(T(0), T(0), Inclusivity(false, false))

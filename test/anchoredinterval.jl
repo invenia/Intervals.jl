@@ -39,14 +39,14 @@ using Intervals: canonicalize
     @testset "conversion" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-        @test DateTime(he) == dt
-        @test DateTime(hb) == dt
+        @test convert(DateTime, he) == dt
+        @test convert(DateTime, hb) == dt
         @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
         @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
-        @test Interval{DateTime}(he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
-        @test Interval{DateTime}(hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
+        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
+        @test convert(Interval{DateTime}, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
+        @test convert(Interval{DateTime}, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
     end
 
     @testset "accessors" begin
@@ -431,6 +431,14 @@ using Intervals: canonicalize
         @test r4 isa StepRange
         @test length(r4) == 26
         @test collect(r4) == map(HourEnding, fall:Hour(1):fall + Day(1))
+
+        r5 = AnchoredInterval{-1}(3, false, true):2:AnchoredInterval{-1}(7, true, true)
+        @test length(r5) == 3
+        @test collect(r5) == [
+            AnchoredInterval{-1}(3, false, true),
+            AnchoredInterval{-1}(5, false, true),
+            AnchoredInterval{-1}(7, false, true),
+        ]
     end
 
     @testset "isempty" begin

@@ -34,19 +34,19 @@
     end
 
     @testset "conversion" begin
-        @test_throws DomainError Int(Interval(10, 10, Inclusivity(false, false)))
-        @test_throws DomainError Int(Interval(10, 10, Inclusivity(false, true)))
-        @test_throws DomainError Int(Interval(10, 10, Inclusivity(true, false)))
-        @test Int(Interval(10, 10, Inclusivity(true, true))) == 10
-        @test_throws DomainError Int(Interval(10, 11, Inclusivity(true, true)))
+        @test_throws DomainError convert(Int, Interval(10, 10, Inclusivity(false, false)))
+        @test_throws DomainError convert(Int, Interval(10, 10, Inclusivity(false, true)))
+        @test_throws DomainError convert(Int, Interval(10, 10, Inclusivity(true, false)))
+        @test convert(Int, Interval(10, 10, Inclusivity(true, true))) == 10
+        @test_throws DomainError convert(Int, Interval(10, 11, Inclusivity(true, true)))
 
         for T in (Date, DateTime)
             dt = T(2013, 2, 13)
-            @test_throws DomainError T(Interval(dt, dt, Inclusivity(false, false)))
-            @test_throws DomainError T(Interval(dt, dt, Inclusivity(false, true)))
-            @test_throws DomainError T(Interval(dt, dt, Inclusivity(true, false)))
-            @test T(Interval(dt, dt, Inclusivity(true, true))) == dt
-            @test_throws DomainError T(Interval(dt, dt + Day(1), Inclusivity(true, true)))
+            @test_throws DomainError convert(T, Interval(dt, dt, Inclusivity(false, false)))
+            @test_throws DomainError convert(T, Interval(dt, dt, Inclusivity(false, true)))
+            @test_throws DomainError convert(T, Interval(dt, dt, Inclusivity(true, false)))
+            @test convert(T, Interval(dt, dt, Inclusivity(true, true))) == dt
+            @test_throws DomainError convert(T, Interval(dt, dt + Day(1), Inclusivity(true, true)))
         end
     end
 

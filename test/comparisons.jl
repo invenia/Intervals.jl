@@ -42,6 +42,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [earlier, later]
         @test !overlaps(earlier, later)
         @test !contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, true, true)
     end
 
     # Compare two intervals which "touch" but both intervals do not include that point:
@@ -74,6 +75,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [earlier, later]
         @test !overlaps(earlier, later)
         @test !contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, false, false)
     end
 
     # Compare two intervals which "touch" and the later interval includes that point:
@@ -106,6 +108,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [Interval(1, 5, false, true)]
         @test !overlaps(earlier, later)
         @test contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, false, true)
     end
 
     # Compare two intervals which "touch" and the earlier interval includes that point:
@@ -138,6 +141,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [Interval(1, 5, true, false)]
         @test !overlaps(earlier, later)
         @test contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, true, false)
     end
 
     # Compare two intervals which "touch" and both intervals include that point:
@@ -170,6 +174,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [Interval(1, 5, true, true)]
         @test overlaps(earlier, later)
         @test !contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, true, true)
     end
 
     # Compare two intervals which overlap
@@ -202,6 +207,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([earlier, later]) == [Interval(1, 5, true, true)]
         @test overlaps(earlier, later)
         @test !contiguous(earlier, later)
+        @test superset([earlier, later]) == Interval(1, 5, true, true)
     end
 
     @testset "equal ()/()" begin
@@ -229,6 +235,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, false, false)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, false, false)
     end
 
     @testset "equal [)/()" begin
@@ -256,6 +263,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, true, false)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, true, false)
     end
 
     @testset "equal (]/()" begin
@@ -283,6 +291,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, false, true)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, false, true)
     end
 
     @testset "equal []/()" begin
@@ -310,6 +319,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, true, true)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, true, true)
     end
 
     @testset "equal [)/[]" begin
@@ -337,6 +347,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, true, true)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, true, true)
     end
 
     @testset "equal (]/[]" begin
@@ -364,6 +375,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, true, true)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, true, true)
     end
 
     @testset "equal []/[]" begin
@@ -391,6 +403,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([a, b]) == [Interval(1, 5, true, true)]
         @test overlaps(a, b)
         @test !contiguous(a, b)
+        @test superset([a, b]) == Interval(1, 5, true, true)
     end
 
     # Compare two intervals where the first interval is contained by the second
@@ -423,5 +436,6 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test union([smaller, larger]) == [Interval(larger)]
         @test overlaps(smaller, larger)
         @test !contiguous(smaller, larger)
+        @test superset([smaller, larger]) == Interval(1, 5, true, true)
     end
 end

@@ -84,6 +84,13 @@ Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
 Interval(interval::AbstractInterval) = convert(Interval, interval)
 Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
+# Endpoint constructors
+function Interval{T}(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T
+    Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+end
+
+Interval(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T = Interval{T}(left, right)
+
 # Empty Intervals
 Interval{T}() where T = Interval{T}(zero(T), zero(T), Inclusivity(false, false))
 Interval{T}() where T <: TimeType = Interval{T}(T(0), T(0), Inclusivity(false, false))
@@ -250,7 +257,7 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+    return Interval{T}(left, right)
 end
 
 # There is power in a union.
@@ -295,6 +302,18 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
     return intervals
 end
 
+"""
+    superset(intervals::AbstractArray{<:AbstractInterval}) -> Interval
+
+Create the smallest single interval which encompasses all of the provided intervals.
+"""
+function superset(intervals::AbstractArray{<:AbstractInterval})
+    left = minimum(LeftEndpoint.(intervals))
+    right = maximum(RightEndpoint.(intervals))
+
+    return Interval(left, right)
+end
+
 function Base.merge(a::AbstractInterval, b::AbstractInterval)
     if !overlaps(a, b) && !contiguous(a, b)
         throw(ArgumentError("$a and $b are neither overlapping or contiguous."))
@@ -302,11 +321,7 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
-    return Interval(
-        left.endpoint,
-        right.endpoint,
-        Inclusivity(left.included, right.included)
-    )
+    return Interval(left, right)
 end
 
 ##### TIME ZONES #####

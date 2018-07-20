@@ -71,11 +71,11 @@ struct Interval{T} <: AbstractInterval{T}
     end
 end
 
-Interval{T}(f::T, l::T, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
-Interval{T}(f::T, l::T) where T = Interval{T}(f, l, Inclusivity(true, true))
-Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
+Interval{T}(f, l, inc::Inclusivity) where T = Interval{T}(convert(T, f), convert(T, l), inc)
+Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
+Interval{T}(f, l) where T = Interval{T}(f, l, true, true)
 
-Interval{T}(f, l, inc...) where T = Interval{T}(convert(T, f), convert(T, l), inc...)
+Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
 Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
 
 (..)(first, last) = Interval(first, last)

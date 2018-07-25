@@ -119,6 +119,15 @@ function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
     return AnchoredInterval{P, T}(anchor(x), inclusivity(x))
 end
 
+function Base.hash(interval::AnchoredInterval{P}, h::UInt) where P
+    # Note: we shouldn't need to hash the second type parameter of an AnchoredInterval as
+    # that information should be covered by the anchor field.
+    h = hash(:AnchoredInterval, h)
+    h = hash(P, h)
+    h = hash(interval.anchor, h)
+    return hash(interval.inclusivity, h)
+end
+
 ##### ACCESSORS #####
 
 Base.first(interval::AnchoredInterval{P}) where P = min(interval.anchor, interval.anchor+P)

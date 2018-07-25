@@ -101,6 +101,13 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
+function Base.hash(interval::Interval, h::UInt)
+    h = hash(:Interval, h)
+    h = hash(interval.first, h)
+    h = hash(interval.last, h)
+    return hash(interval.inclusivity, h)
+end
+
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first

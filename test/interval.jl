@@ -37,6 +37,14 @@
         @test_throws MethodError Interval(1, 2, 3)
     end
 
+    @testset "hash" begin
+        # Need a complicated enough element type for this test to ever fail
+        zdt = now(tz"Europe/London")
+        a = Interval(zdt, zdt)
+        b = deepcopy(a)
+        @test hash(a) == hash(b)
+    end
+
     @testset "conversion" begin
         @test_throws DomainError convert(Int, Interval(10, 10, Inclusivity(false, false)))
         @test_throws DomainError convert(Int, Interval(10, 10, Inclusivity(false, true)))

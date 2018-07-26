@@ -36,6 +36,14 @@ using Intervals: canonicalize
         @test AnchoredInterval{25}('a') isa AnchoredInterval
     end
 
+    @testset "hash" begin
+        # Need a complicated enough element type for this test to ever fail
+        zdt = now(tz"Europe/London")
+        a = HE(zdt)
+        b = deepcopy(a)
+        @test hash(a) == hash(b)
+    end
+
     @testset "conversion" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)

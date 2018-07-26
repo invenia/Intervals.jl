@@ -215,8 +215,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         b = convert(B, Interval(1, 5, false, false))
 
         @test a == b
-        @test A != B || isequal(a, b)
-        @test A != B || hash(a) == hash(b)
+        @test isequal(a, b)
+        @test hash(a) == hash(b)
 
         @test !isless(a, b)
         @test !isless(a, b)
@@ -383,8 +383,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         b = convert(B, Interval(1, 5, true, true))
 
         @test a == b
-        @test A != B || isequal(a, b)
-        @test A != B || hash(a) == hash(b)
+        @test isequal(a, b)
+        @test hash(a) == hash(b)
 
         @test !isless(a, b)
         @test !isless(b, a)

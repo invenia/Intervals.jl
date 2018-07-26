@@ -101,6 +101,12 @@ end
 
 Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
 
+function Base.hash(interval::AbstractInterval, h::UInt)
+    h = hash(LeftEndpoint(interval), h)
+    h = hash(RightEndpoint(interval), h)
+    return h
+end
+
 ##### ACCESSORS #####
 
 Base.first(interval::Interval) = interval.first

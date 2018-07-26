@@ -206,4 +206,27 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test RightEndpoint(1, false) != LeftEndpoint(1.0, true)
         @test RightEndpoint(1, true) == LeftEndpoint(1.0, true)
     end
+
+    @testset "hash" begin
+        # Need a complicated enough element type for this test to possibly fail. Using a
+        # ZonedDateTime with a VariableTimeZone should do the trick.
+        a = now(tz"Europe/London")
+        b = deepcopy(a)
+        @test hash(a) == hash(b)  # Double check
+
+        @test hash(LeftEndpoint(a, false)) == hash(LeftEndpoint(b, false))
+        @test hash(LeftEndpoint(a, true)) != hash(LeftEndpoint(b, false))
+        @test hash(LeftEndpoint(a, false)) != hash(LeftEndpoint(b, true))
+        @test hash(LeftEndpoint(a, true)) == hash(LeftEndpoint(b, true))
+
+        @test hash(RightEndpoint(a, false)) == hash(RightEndpoint(b, false))
+        @test hash(RightEndpoint(a, true)) != hash(RightEndpoint(b, false))
+        @test hash(RightEndpoint(a, false)) != hash(RightEndpoint(b, true))
+        @test hash(RightEndpoint(a, true)) == hash(RightEndpoint(b, true))
+
+        @test hash(LeftEndpoint(a, false)) != hash(RightEndpoint(b, false))
+        @test hash(LeftEndpoint(a, true)) != hash(RightEndpoint(b, false))
+        @test hash(LeftEndpoint(a, false)) != hash(RightEndpoint(b, true))
+        @test hash(LeftEndpoint(a, true)) != hash(RightEndpoint(b, true))
+    end
 end

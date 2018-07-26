@@ -26,6 +26,14 @@ RightEndpoint(ep::T, included::Bool) where T = RightEndpoint{T}(ep, included)
 LeftEndpoint(i::AbstractInterval{T}) where T = LeftEndpoint{T}(first(i), first(inclusivity(i)))
 RightEndpoint(i::AbstractInterval{T}) where T = RightEndpoint{T}(last(i), last(inclusivity(i)))
 
+function Base.hash(x::Endpoint{T, D}, h::UInt) where {T, D}
+    # Note: we shouldn't need to hash `T` as this is covered by the endpoint field.
+    h = hash(:Endpoint, h)
+    h = hash(D, h)
+    h = hash(x.endpoint, h)
+    h = hash(x.included, h)
+    return h
+end
 
 """
     ==(a::Endpoint, b::Endpoint) -> Bool

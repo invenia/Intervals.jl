@@ -178,6 +178,12 @@ function Base.:(==)(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) == LeftEndpoint(b) && RightEndpoint(a) == RightEndpoint(b)
 end
 
+function Base.isequal(a::AbstractInterval, b::AbstractInterval)
+    le = isequal(LeftEndpoint(a), LeftEndpoint(b))
+    re = isequal(RightEndpoint(a), RightEndpoint(b))
+    return le && re
+end
+
 # While it might be convincingly argued that this should define < instead of isless (see
 # https://github.com/invenia/Intervals.jl/issues/14), this breaks sort.
 Base.isless(a::AbstractInterval, b) = LeftEndpoint(a) < b

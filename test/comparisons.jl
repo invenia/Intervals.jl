@@ -1,4 +1,4 @@
-using Intervals: Ending, Beginning, overlaps, contiguous
+using Intervals: Ending, Beginning, overlaps, contiguous, RightEndpoint, LeftEndpoint
 
 function unique_paired_permutation(v::Vector{T}) where T
     results = Tuple{T, T}[]
@@ -406,6 +406,37 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test superset([a, b]) == Interval(1, 5, true, true)
     end
 
+    @testset "equal -0.0/0.0" begin
+        # Skip tests when we're comparing ending and beginning anchored intervals
+        if Set((A, B)) != Set((AnchoredInterval{Ending}, AnchoredInterval{Beginning}))
+            a = convert(A, Interval(0.0, -0.0))
+            b = convert(B, Interval(-0.0, 0.0))
+
+            @test a == b
+            @test_broken !isequal(a, b)
+            @test hash(a) != hash(b)
+
+            # All other comparison should still work as expected
+            @test !isless(a, b)
+            @test !isless(b, a)
+
+            @test !(a < b)
+            @test !(b < a)
+
+            @test !(a ≪ b)
+            @test !(b ≪ a)
+
+            @test issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == Interval(0.0, 0.0)
+            @test merge(a, b) == Interval(0.0, 0.0)
+            @test union([a, b]) == [Interval(0.0, 0.0)]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == Interval(0.0, 0.0)
+        end
+    end
     # Compare two intervals where the first interval is contained by the second
     # Visualization:
     #

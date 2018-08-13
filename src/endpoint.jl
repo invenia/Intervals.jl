@@ -66,6 +66,18 @@ function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
     a.endpoint == b.endpoint && a.included && b.included
 end
 
+function Base.isequal(a::Endpoint, b::Endpoint)
+    isequal(a.endpoint, b.endpoint) && isequal(a.included, b.included)
+end
+
+function Base.isequal(a::LeftEndpoint, b::RightEndpoint)
+    isequal(a.endpoint, b.endpoint) && a.included && b.included
+end
+
+function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
+    isequal(a.endpoint, b.endpoint) && a.included && b.included
+end
+
 function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && a.included && !b.included)
 end

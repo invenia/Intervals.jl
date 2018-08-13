@@ -212,13 +212,13 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test isequal(LeftEndpoint(0.0, false), LeftEndpoint(0.0, false))
         @test !isequal(LeftEndpoint(-0.0, true), LeftEndpoint(0.0, false))
         @test !isequal(LeftEndpoint(-0.0, false), LeftEndpoint(0.0, true))
-        @test_broken !isequal(LeftEndpoint(-0.0, true), LeftEndpoint(0.0, true))
-        @test_broken !isequal(LeftEndpoint(-0.0, false), LeftEndpoint(0.0, false))
+        @test !isequal(LeftEndpoint(-0.0, true), LeftEndpoint(0.0, true))
+        @test !isequal(LeftEndpoint(-0.0, false), LeftEndpoint(0.0, false))
 
         @test isequal(RightEndpoint(0.0, true), LeftEndpoint(0.0, true))
         @test !isequal(LeftEndpoint(-0.0, true), RightEndpoint(0.0, false))
         @test !isequal(RightEndpoint(-0.0, false), LeftEndpoint(0.0, true))
-        @test_broken !isequal(LeftEndpoint(-0.0, true), RightEndpoint(0.0, true))
+        @test !isequal(LeftEndpoint(-0.0, true), RightEndpoint(0.0, true))
     end
 
     @testset "hash" begin

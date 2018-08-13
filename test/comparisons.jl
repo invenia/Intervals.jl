@@ -413,7 +413,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             b = convert(B, Interval(-0.0, 0.0))
 
             @test a == b
-            @test_broken !isequal(a, b)
+            @test !isequal(a, b)
             @test hash(a) != hash(b)
 
             # All other comparison should still work as expected

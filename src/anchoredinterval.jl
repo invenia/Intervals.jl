@@ -121,8 +121,14 @@ end
 
 ##### ACCESSORS #####
 
-Base.first(interval::AnchoredInterval{P}) where P = min(interval.anchor, interval.anchor+P)
-Base.last(interval::AnchoredInterval{P}) where P = max(interval.anchor, interval.anchor+P)
+function Base.first(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor + P) : (interval.anchor)
+end
+
+function Base.last(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor) : (interval.anchor + P)
+end
+
 anchor(interval::AnchoredInterval) = interval.anchor
 span(interval::AnchoredInterval{P}) where P = abs(P)
 

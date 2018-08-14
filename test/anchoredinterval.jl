@@ -36,6 +36,16 @@ using Intervals: canonicalize
         @test AnchoredInterval{25}('a') isa AnchoredInterval
     end
 
+    @testset "non-ordered" begin
+        interval = AnchoredInterval{-Inf}(Inf)
+        @test isequal(first(interval), NaN)
+        @test isequal(last(interval), Inf)
+
+        interval = AnchoredInterval{Inf}(-Inf)
+        @test isequal(first(interval), -Inf)
+        @test isequal(last(interval), NaN)
+    end
+
     @testset "hash" begin
         # Need a complicated enough element type for this test to ever fail
         zdt = now(tz"Europe/London")

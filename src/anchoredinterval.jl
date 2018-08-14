@@ -215,6 +215,10 @@ end
 
 ##### EQUALITY #####
 
+function Base.:(==)(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
+    return anchor(a) == anchor(b) && inclusivity(a) == inclusivity(b)
+end
+
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
 function Base.isless(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
     return (

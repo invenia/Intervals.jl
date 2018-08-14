@@ -37,13 +37,17 @@ using Intervals: canonicalize
     end
 
     @testset "non-ordered" begin
-        interval = AnchoredInterval{-Inf}(Inf)
-        @test isequal(first(interval), NaN)
-        @test isequal(last(interval), Inf)
+        ending = AnchoredInterval{-Inf}(Inf)
+        @test isequal(first(ending), NaN)
+        @test isequal(last(ending), Inf)
+        @test ending == ending
+        @test isequal(ending, ending)
 
-        interval = AnchoredInterval{Inf}(-Inf)
-        @test isequal(first(interval), -Inf)
-        @test isequal(last(interval), NaN)
+        beginning = AnchoredInterval{Inf}(-Inf)
+        @test isequal(first(beginning), -Inf)
+        @test isequal(last(beginning), NaN)
+        @test beginning == beginning
+        @test isequal(beginning, beginning)
     end
 
     @testset "hash" begin

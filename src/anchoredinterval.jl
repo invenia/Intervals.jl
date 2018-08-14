@@ -121,6 +121,10 @@ end
 
 ##### ACCESSORS #####
 
+# We would typically compute `first` and `last` using `min` and `max` respectively, but we
+# can get unexpected behaviour if adding the span to the anchor endpoint produces a value
+# that is no longer comparable (e.g., `NaN`).
+
 function Base.first(interval::AnchoredInterval{P}) where P
     P < zero(P) ? (interval.anchor + P) : (interval.anchor)
 end

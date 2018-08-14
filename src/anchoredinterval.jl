@@ -121,8 +121,18 @@ end
 
 ##### ACCESSORS #####
 
-Base.first(interval::AnchoredInterval{P}) where P = min(interval.anchor, interval.anchor+P)
-Base.last(interval::AnchoredInterval{P}) where P = max(interval.anchor, interval.anchor+P)
+# We would typically compute `first` and `last` using `min` and `max` respectively, but we
+# can get unexpected behaviour if adding the span to the anchor endpoint produces a value
+# that is no longer comparable (e.g., `NaN`).
+
+function Base.first(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor + P) : (interval.anchor)
+end
+
+function Base.last(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor) : (interval.anchor + P)
+end
+
 anchor(interval::AnchoredInterval) = interval.anchor
 span(interval::AnchoredInterval{P}) where P = abs(P)
 
@@ -208,6 +218,10 @@ function Base.:-(a::AnchoredInterval{P, T}) where {P, T <: Number}
 end
 
 ##### EQUALITY #####
+
+function Base.:(==)(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
+    return anchor(a) == anchor(b) && inclusivity(a) == inclusivity(b)
+end
 
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
 function Base.isless(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}

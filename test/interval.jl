@@ -37,6 +37,11 @@
         @test_throws MethodError Interval(1, 2, 3)
     end
 
+    @testset "non-ordered" begin
+        @test_throws ArgumentError Interval(NaN, Inf)
+        @test_throws ArgumentError Interval(NaN, NaN)
+    end
+
     @testset "hash" begin
         # Need a complicated enough element type for this test to ever fail
         zdt = now(tz"Europe/London")

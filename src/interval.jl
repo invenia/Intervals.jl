@@ -63,8 +63,10 @@ struct Interval{T} <: AbstractInterval{T}
         # Ensure that `first` preceeds `last`.
         f, l, inc = if f ≤ l
             f, l, inc
-        else
+        elseif l ≤ f
             l, f, Inclusivity(last(inc), first(inc))
+        else
+            throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
         end
 
         return new(f, l, inc)

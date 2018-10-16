@@ -17,6 +17,10 @@ function description(interval::AnchoredInterval{P, ZonedDateTime}, s::String) wh
     )
 end
 
+function description(dt, p::Period, suffix::String)
+    return "$(prefix(p))$suffix $(string(dt))"
+end
+
 function description(dt::Date, p::Period, suffix::String)
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))
     return "$(prefix(p))$suffix $ds"

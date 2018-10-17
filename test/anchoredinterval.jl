@@ -284,11 +284,12 @@ using Intervals: canonicalize
             "Inclusivity(false, true))",
         )
 
-        interval = AnchoredInterval{Millisecond(-10)}(Time(1, 0, 0))
-        @test string(interval) == "(10msE 01:00:00]"
+        interval = AnchoredInterval{Second(-10)}(Time(1, 0, 0))
+        @test string(interval) == "(10SE 01:00:00]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-10 milliseconds,Time}(01:00:00, Inclusivity(false, true))")
+            "AnchoredInterval{-10 seconds,$(dates_prefix)Time}(01:00:00, ",
+            "Inclusivity(false, true))")
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)

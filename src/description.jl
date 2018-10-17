@@ -36,6 +36,8 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
         ts = string(max_val)
     end
 
+    isa(dt, Time) && return "$(prefix(p))$suffix $ts"
+
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))
 
     if p isa TimePeriod

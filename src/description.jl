@@ -17,7 +17,7 @@ function description(interval::AnchoredInterval{P, ZonedDateTime}, s::String) wh
     )
 end
 
-function description(dt, p::Period, suffix::String)
+function description(dt::TimeType, p::Period, suffix::String)
     return "$(prefix(p))$suffix $(string(dt))"
 end
 

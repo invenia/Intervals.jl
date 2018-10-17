@@ -17,10 +17,6 @@ function description(interval::AnchoredInterval{P, ZonedDateTime}, s::String) wh
     )
 end
 
-function description(dt::TimeType, p::Period, suffix::String)
-    return string(prefix(p), suffix, " ", dt)
-end
-
 function description(dt::Date, p::Period, suffix::String)
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))
     return "$(prefix(p))$suffix $ds"
@@ -36,7 +32,9 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
         ts = string(max_val)
     end
 
-    isa(dt, Time) && return string(prefix(p), suffix, " ", ts)
+    if VERSION < v"0.7.0-DEV.3216"
+        isa(dt, Time) && return string(prefix(p), suffix, " ", ts)
+    end
 
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))
 

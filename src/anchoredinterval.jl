@@ -191,7 +191,7 @@ function Base.show(io::IO, interval::T) where T <: AnchoredInterval
     end
 end
 
-function Base.print(io::IO, interval::AnchoredInterval{P, T}) where {P, T <: TimeType}
+function Base.print(io::IO, interval::AnchoredInterval{P, T}) where {P, T <: Union{Date, AbstractDateTime}}
     # Print to io in order to keep properties like :limit and :compact
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)

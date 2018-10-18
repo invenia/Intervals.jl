@@ -32,7 +32,7 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
         ts = string(max_val)
     end
 
-    if VERSION < v"0.7.0-DEV.3216"
+    @static if VERSION < v"0.7.0-DEV.3216"
         isa(dt, Time) && return string(prefix(p), suffix, " ", ts)
     end
 

@@ -20,9 +20,8 @@ end
 if VERSION < v"0.7.0-DEV.2657"
     mod_prefix = "Intervals."
     tz_prefix = "TimeZones."
-    dates_prefix = "Base.Dates."
 else
-    mod_prefix = tz_prefix = dates_prefix = ""
+    mod_prefix = tz_prefix = ""
 end
 
 @testset "Intervals" begin

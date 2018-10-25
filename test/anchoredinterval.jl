@@ -284,6 +284,9 @@ using Intervals: canonicalize
             "Inclusivity(false, true))",
         )
 
+        interval = AnchoredInterval{Second(-10)}(Time(1, 0, 0))
+        @test_nowarn string(interval)
+
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
         @test string(interval) == "(0 .. 10]"

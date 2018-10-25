@@ -32,6 +32,10 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
         ts = string(max_val)
     end
 
+    @static if VERSION < v"0.7.0-DEV.3216"
+        isa(dt, Time) && return string(prefix(p), suffix, " ", ts)
+    end
+
     ds = @sprintf("%04d-%02d-%02d", year(dt), month(dt), day(dt))
 
     if p isa TimePeriod

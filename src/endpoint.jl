@@ -6,6 +6,8 @@ const Right = Direction{:Right}()
 const Beginning = Left
 const Ending = Right
 
+const First = Left
+const Last = Right
 
 struct Endpoint{T, D}
     endpoint::T
@@ -58,15 +60,47 @@ function Base.:(==)(a::Endpoint, b::Endpoint)
     a.endpoint == b.endpoint && a.included == b.included
 end
 
+function Base.:(==)(a::LeftEndpoint, b::LeftEndpoint)
+    a.endpoint == b.endpoint && a.included == b.included
+end
+
+function Base.:(==)(a::RightEndpoint, b::RightEndpoint)
+    a.endpoint == b.endpoint && a.included == b.included
+end
+
 function Base.:(==)(a::LeftEndpoint, b::RightEndpoint)
     a.endpoint == b.endpoint && a.included && b.included
 end
 
 function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
-    a.endpoint == b.endpoint && a.included && b.included
+    b == a
+end
+
+function Base.:(==)(a, b::LeftEndpoint)
+    a == b.endpoint && b.included
+end
+
+function Base.:(==)(a, b::RightEndpoint)
+    a == b.endpoint && b.included
+end
+
+function Base.:(==)(a::LeftEndpoint, b)
+    b == a
+end
+
+function Base.:(==)(a::RightEndpoint, b)
+    b == a
 end
 
 function Base.isequal(a::Endpoint, b::Endpoint)
+    isequal(a.endpoint, b.endpoint) && isequal(a.included, b.included)
+end
+
+function Base.isequal(a::LeftEndpoint, b::LeftEndpoint)
+    isequal(a.endpoint, b.endpoint) && isequal(a.included, b.included)
+end
+
+function Base.isequal(a::RightEndpoint, b::RightEndpoint)
     isequal(a.endpoint, b.endpoint) && isequal(a.included, b.included)
 end
 
@@ -75,7 +109,7 @@ function Base.isequal(a::LeftEndpoint, b::RightEndpoint)
 end
 
 function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
-    isequal(a.endpoint, b.endpoint) && a.included && b.included
+    isequal(b, a)
 end
 
 function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
@@ -86,12 +120,12 @@ function Base.isless(a::RightEndpoint, b::RightEndpoint)
     a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !a.included && b.included)
 end
 
-function Base.isless(a::RightEndpoint, b::LeftEndpoint)
-    a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(a.included && b.included))
-end
-
 function Base.isless(a::LeftEndpoint, b::RightEndpoint)
     a.endpoint < b.endpoint
+end
+
+function Base.isless(a::RightEndpoint, b::LeftEndpoint)
+    a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(a.included && b.included))
 end
 
 function Base.isless(a, b::LeftEndpoint)

@@ -148,6 +148,17 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test !(Endpoint(1, true) < 0.0)
     end
 
+    @testset "$Endpoint <= Scalar" for Endpoint in (LeftEndpoint, RightEndpoint)
+        @test Endpoint(1, false) <= 2.0
+        @test Endpoint(1, true) <= 2.0
+
+        @test (Endpoint(1, false) <= 1.0) == (Endpoint === RightEndpoint)
+        @test Endpoint(1, true) <= 1.0
+
+        @test !(Endpoint(1, false) <= 0.0)
+        @test !(Endpoint(1, true) <= 0.0)
+    end
+
     @testset "Scalar < $Endpoint" for Endpoint in (LeftEndpoint, RightEndpoint)
         @test 0 < Endpoint(1.0, false)
         @test 0 < Endpoint(1.0, true)
@@ -157,6 +168,17 @@ using Intervals: LeftEndpoint, RightEndpoint
 
         @test !(2 < Endpoint(1.0, false))
         @test !(2 < Endpoint(1.0, true))
+    end
+
+    @testset "Scalar <= $Endpoint" for Endpoint in (LeftEndpoint, RightEndpoint)
+        @test 0 <= Endpoint(1.0, false)
+        @test 0 <= Endpoint(1.0, true)
+
+        @test (1 <= Endpoint(1.0, false)) == (Endpoint === LeftEndpoint)
+        @test 1 <= Endpoint(1.0, true)
+
+        @test !(2 <= Endpoint(1.0, false))
+        @test !(2 <= Endpoint(1.0, true))
     end
 
     @testset "LeftEndpoint == LeftEndpoint" begin
@@ -205,6 +227,28 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test RightEndpoint(1, true) != LeftEndpoint(1.0, false)
         @test RightEndpoint(1, false) != LeftEndpoint(1.0, true)
         @test RightEndpoint(1, true) == LeftEndpoint(1.0, true)
+    end
+
+    @testset "$Endpoint == Scalar" for Endpoint in (LeftEndpoint, RightEndpoint)
+        @test Endpoint(0, false) != 1.0
+        @test Endpoint(0, true) != 1.0
+
+        @test Endpoint(1, false) != 1.0
+        @test Endpoint(1, true) == 1.0
+
+        @test Endpoint(2, false) != 1.0
+        @test Endpoint(2, true) != 1.0
+    end
+
+    @testset "Scalar == $Endpoint" for Endpoint in (LeftEndpoint, RightEndpoint)
+        @test 1.0 != Endpoint(0, false)
+        @test 1.0 != Endpoint(0, true)
+
+        @test 1.0 != Endpoint(1, false)
+        @test 1.0 == Endpoint(1, true)
+
+        @test 1.0 != Endpoint(2, false)
+        @test 1.0 != Endpoint(2, true)
     end
 
     @testset "isequal" begin

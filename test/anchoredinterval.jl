@@ -590,4 +590,16 @@ using Intervals: canonicalize
             end
         end
     end
+
+    @testset "broadcasting" begin
+        # Check that we can broadcast a vector of anchored intervals against a scalar
+
+        a = [
+            HourEnding(DateTime(2016, 8, 11)),
+            HourEnding(DateTime(2016, 8, 12)),
+        ]
+
+        mask = a .== a[2]
+        @test mask == [false, true]
+    end
 end

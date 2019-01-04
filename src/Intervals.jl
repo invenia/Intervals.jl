@@ -16,6 +16,10 @@ abstract type AbstractInterval{T} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 
+if VERSION >= v"0.7"
+    Base.broadcastable(x::AbstractInterval) = Ref(x)
+end
+
 include("inclusivity.jl")
 include("endpoint.jl")
 include("interval.jl")

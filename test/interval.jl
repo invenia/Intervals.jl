@@ -1,6 +1,7 @@
 @testset "Interval" begin
     test_values = [
         (-10, 1000, 1),
+        (0.0, 1, 0.01),  # Use different types to test promotion
         ('a', 'z', 1),
         (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
         (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1))
@@ -384,7 +385,7 @@
             @test in(b - unit, interval)
             @test !in(b + unit, interval)
 
-            @test_throws MethodError (in(Interval(a, b), Interval(a, b)))
+            @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
     end
 

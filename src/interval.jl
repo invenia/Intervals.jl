@@ -243,7 +243,12 @@ true
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
-Base.in(a::T, b::AbstractInterval{T}) where T = !(a ≫ b || a ≪ b)
+Base.in(a, b::AbstractInterval) = !(a ≫ b || a ≪ b)
+
+function Base.in(a::AbstractInterval, b::AbstractInterval)
+    # Intervals should be compared with set operations
+    throw(ArgumentError("Intervals can not be compared with `in`. Use `issubset` instead."))
+end
 
 function Base.issubset(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)

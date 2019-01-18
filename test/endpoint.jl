@@ -250,6 +250,7 @@ using Intervals: LeftEndpoint, RightEndpoint
         @test 1.0 != Endpoint(2, false)
         @test 1.0 != Endpoint(2, true)
 
+        # Verify that Endpoint is treated as a scalar during broadcast
         result = 1.0 .== [Endpoint(1, false), Endpoint(1, true)]
         @test result == [false, true]
     end

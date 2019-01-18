@@ -249,6 +249,9 @@ using Intervals: LeftEndpoint, RightEndpoint
 
         @test 1.0 != Endpoint(2, false)
         @test 1.0 != Endpoint(2, true)
+
+        result = 1.0 .== [Endpoint(1, false), Endpoint(1, true)]
+        @test result == [false, true]
     end
 
     @testset "isequal" begin

@@ -148,141 +148,252 @@ using Intervals: canonicalize
         @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
             mod_prefix * "AnchoredInterval{1 day,DateTime}"
 
-        interval = HourEnding(dt)
-        @test string(interval) == "(2016-08-11 HE02]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:00:00, Inclusivity(false, true))"
+        # Each tuple contains...
+        # (
+        #     Interval,
+        #     String Interpretation,
+        #     show interpretation,
+        #     show interpretation for VERSION < v"1.2.0-Dev.30"
+        # )
+        display_tests = NamedTuple{(:interval, :string, :show, :show_old)}.([
+            (
+                HourEnding(dt),
+                "(2016-08-11 HE02]",
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false)),
+                "[2013-02-12 HE24)",
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(DateTime(2013, 2, 13, 0, 0, 0), Inclusivity(true, false))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(2013-02-13T00:00:00, Inclusivity(true, false))",
+                ),
+            ),
+            (
+                HourEnding(dt + Minute(15) + Second(30)),
+                "(2016-08-11 HE02:15:30]",
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 15, 30), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(2016-08-11T02:15:30, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                HourEnding(dt + Millisecond(2)),
+                "(2016-08-11 HE02:00:00.002]",
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0, 2), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(2016-08-11T02:00:00.002, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false)),
+                "[2013-02-13 HE00:01:00)",
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(DateTime(2013, 2, 13, 0, 1, 0), Inclusivity(true, false))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,DateTime}",
+                    "(2013-02-13T00:01:00, Inclusivity(true, false))",
+                ),
+            ),
+            (
+                HourBeginning(dt),
+                "[2016-08-11 HB02)",
+                string(
+                    "AnchoredInterval{1 hour,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(true, false))",
+                ),
+                string(
+                    "AnchoredInterval{1 hour,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(true, false))",
+                ),
+            ),
+            (
+                HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true)),
+                "(2013-02-13 HB00]",
+                string(
+                    "AnchoredInterval{1 hour,DateTime}",
+                    "(DateTime(2013, 2, 13, 0, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{1 hour,DateTime}",
+                    "(2013-02-13T00:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                HourEnding(ZonedDateTime(dt, tz"America/Winnipeg")),
+                "(2016-08-11 HE02-05:00]",
+                string(
+                    # ZonedDateTime doesn't have the new style output
+                    "AnchoredInterval{-1 hour,$ZonedDateTime}",
+                    "(2016-08-11T02:00:00-05:00, Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 hour,$ZonedDateTime}",
+                    "(2016-08-11T02:00:00-05:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Year(-1)}(Date(dt)),
+                "(YE 2016-08-11]",
+                string(
+                    "AnchoredInterval{-1 year,Date}",
+                    "(Date(2016, 8, 11), Inclusivity(false, true))",
+                ),
+                "AnchoredInterval{-1 year,Date}(2016-08-11, Inclusivity(false, true))",
+            ),
+            (
+                AnchoredInterval{Year(-1)}(ceil(Date(dt), Year)),
+                "(YE 2017-01-01]",
+                string(
+                    "AnchoredInterval{-1 year,Date}",
+                    "(Date(2017, 1, 1), Inclusivity(false, true))",
+                ),
+                "AnchoredInterval{-1 year,Date}(2017-01-01, Inclusivity(false, true))",
+            ),
+            (
+                AnchoredInterval{Month(-1)}(dt),
+                "(MoE 2016-08-11 02:00:00]",
+                string(
+                    "AnchoredInterval{-1 month,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                 string(
+                    "AnchoredInterval{-1 month,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Month(-1)}(ceil(dt, Month)),
+                "(MoE 2016-09-01]",
+                string(
+                    "AnchoredInterval{-1 month,DateTime}",
+                    "(DateTime(2016, 9, 1, 0, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 month,DateTime}",
+                    "(2016-09-01T00:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Day(-1)}(DateTime(dt)),
+                "(DE 2016-08-11 02:00:00]",
+                string(
+                    "AnchoredInterval{-1 day,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 day,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day)),
+                "(DE 2016-08-12]",
+                string(
+                    "AnchoredInterval{-1 day,DateTime}",
+                    "(DateTime(2016, 8, 12, 0, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-1 day,DateTime}",
+                    "(2016-08-12T00:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                # Date(dt) will truncate the DateTime to the nearest day
+                AnchoredInterval{Day(-1)}(Date(dt)),
+                "(DE 2016-08-11]",
+                string(
+                    "AnchoredInterval{-1 day,Date}",
+                    "(Date(2016, 8, 11), Inclusivity(false, true))",
+                ),
+                "AnchoredInterval{-1 day,Date}(2016-08-11, Inclusivity(false, true))",
+            ),
+            (
+                # Prevent confusion when dealing with time zones by ensuring
+                # that the full date and time are displayed
+                AnchoredInterval{Day(-1)}(
+                    ceil(ZonedDateTime(dt, tz"America/Winnipeg"), Day)
+                ),
+                "(DE 2016-08-12 00:00:00-05:00]",
+                string(
+                    # ZonedDateTime doesn't have the new style output
+                    "AnchoredInterval{-1 day,$(tz_prefix)ZonedDateTime}",
+                    "(2016-08-12T00:00:00-05:00, Inclusivity(false, true))"
+                ),
+                string(
+                    "AnchoredInterval{-1 day,$(tz_prefix)ZonedDateTime}",
+                    "(2016-08-12T00:00:00-05:00, Inclusivity(false, true))"
+                ),
+            ),
+            (
+                AnchoredInterval{Minute(-5)}(dt),
+                "(2016-08-11 5ME02:00]",
+                string(
+                    "AnchoredInterval{-5 minutes,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-5 minutes,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Second(-30)}(dt),
+                "(2016-08-11 30SE02:00:00]",
+                string(
+                    "AnchoredInterval{-30 seconds,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-30 seconds,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+            ),
+            (
+                AnchoredInterval{Millisecond(-10)}(dt),
+                "(2016-08-11 10msE02:00:00.000]",
+                string(
+                    "AnchoredInterval{-10 milliseconds,DateTime}",
+                    "(DateTime(2016, 8, 11, 2, 0, 0), Inclusivity(false, true))",
+                ),
+                string(
+                    "AnchoredInterval{-10 milliseconds,DateTime}",
+                    "(2016-08-11T02:00:00, Inclusivity(false, true))",
+                ),
+           ),
+        ])
 
-        interval = HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false))
-        @test string(interval) == "[2013-02-12 HE24)"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2013-02-13T00:00:00, Inclusivity(true, false))"
 
-        interval = HourEnding(dt + Minute(15) + Second(30))
-        @test string(interval) == "(2016-08-11 HE02:15:30]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:15:30, Inclusivity(false, true))"
-
-        interval = HourEnding(dt + Millisecond(2))
-        @test string(interval) == "(2016-08-11 HE02:00:00.002]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2016-08-11T02:00:00.002, Inclusivity(false, true))"
-
-        interval = HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false))
-        @test string(interval) == "[2013-02-13 HE00:01:00)"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 hour,DateTime}(2013-02-13T00:01:00, Inclusivity(true, false))"
-
-        interval = HourBeginning(dt)
-        @test string(interval) == "[2016-08-11 HB02)"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{1 hour,DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))"
-
-        interval = HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true))
-        @test string(interval) == "(2013-02-13 HB00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{1 hour,DateTime}(2013-02-13T00:00:00, Inclusivity(false, true))"
-
-        interval = HourEnding(ZonedDateTime(dt, tz"America/Winnipeg"))
-        @test string(interval) == "(2016-08-11 HE02-05:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 hour,$ZonedDateTime}(2016-08-11T02:00:00-05:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Year(-1)}(Date(dt))
-        @test string(interval) == "(YE 2016-08-11]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 year,Date}(2016-08-11, Inclusivity(false, true))"
-
-        interval = AnchoredInterval{Year(-1)}(ceil(Date(dt), Year))
-        @test string(interval) == "(YE 2017-01-01]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 year,Date}(2017-01-01, Inclusivity(false, true))"
-
-        interval = AnchoredInterval{Month(-1)}(dt)
-        @test string(interval) == "(MoE 2016-08-11 02:00:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 month,DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Month(-1)}(ceil(dt, Month))
-        @test string(interval) == "(MoE 2016-09-01]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 month,DateTime}(2016-09-01T00:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Day(-1)}(DateTime(dt))
-        @test string(interval) == "(DE 2016-08-11 02:00:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 day,DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))"
-        )
-
-        interval = AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day))
-        @test string(interval) == "(DE 2016-08-12]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 day,DateTime}(2016-08-12T00:00:00, ",
-            "Inclusivity(false, true))"
-        )
-
-        # Date(dt) will truncate the DateTime to the nearest day
-        interval = AnchoredInterval{Day(-1)}(Date(dt))
-        @test string(interval) == "(DE 2016-08-11]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-1 day,Date}(2016-08-11, Inclusivity(false, true))"
-
-        # Prevent confusion when dealing with time zones by ensuring that the full date and
-        # time are displayed
-        zdt = ceil(ZonedDateTime(dt, tz"America/Winnipeg"), Day)
-        interval = AnchoredInterval{Day(-1)}(zdt)
-        @test string(interval) == "(DE 2016-08-12 00:00:00-05:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-1 day,$(tz_prefix)ZonedDateTime}(2016-08-12T00:00:00-05:00, ",
-            "Inclusivity(false, true))"
-        )
-
-        interval = AnchoredInterval{Minute(-5)}(dt)
-        @test string(interval) == "(2016-08-11 5ME02:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-5 minutes,DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Second(-30)}(dt)
-        @test string(interval) == "(2016-08-11 30SE02:00:00]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-30 seconds,DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
-        )
-
-        interval = AnchoredInterval{Millisecond(-10)}(dt)
-        @test string(interval) == "(2016-08-11 10msE02:00:00.000]"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == mod_prefix * string(
-            "AnchoredInterval{-10 milliseconds,DateTime}(2016-08-11T02:00:00, ",
-            "Inclusivity(false, true))",
-        )
+        for test in display_tests
+            interval = test.interval
+            @test string(interval) == test.string
+            @test sprint(print, interval) == test.string
+            @test sprint(show, interval, context=:compact=>true) == string(interval)
+            show_str = VERSION < v"1.2.0-DEV.29" ? test.show_old : test.show
+            @test sprint(show, interval) == mod_prefix * show_str
+            @test repr(interval) == mod_prefix * show_str
+        end
 
         interval = AnchoredInterval{Second(-10)}(Time(1, 0, 0))
         @test_nowarn string(interval)

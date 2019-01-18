@@ -32,6 +32,11 @@ function Base.convert(::Type{I}, x::Inclusivity) where I <: Integer
     return I(x.last << 1 + x.first)
 end
 
+# https://github.com/JuliaLang/julia/pull/26601
+if VERSION >= v"0.7.0-DEV.4743"
+    Base.broadcastable(i::Inclusivity) = Ref(i)
+end
+
 Base.first(x::Inclusivity) = x.first
 Base.last(x::Inclusivity) = x.last
 

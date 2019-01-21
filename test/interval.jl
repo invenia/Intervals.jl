@@ -904,6 +904,7 @@
         @test floor(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 1.0)
         @test floor(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 1.0)
 
+        # Test supplying a period to floor to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
         expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2))
         @test floor(interval, Day) == expected
@@ -926,6 +927,7 @@
         @test ceil(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 2.0)
         @test ceil(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
 
+        # Test supplying a period to ceil to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
         expected = Interval(DateTime(2011, 2, 2), DateTime(2011, 2, 3))
         @test ceil(interval, Day) == expected
@@ -948,6 +950,7 @@
         @test round(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 2.0)
         @test round(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
 
+        # Test supplying a period to round to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
         expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 3))
         @test round(interval, Day) == expected

@@ -478,6 +478,32 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
     return Interval(left, right)
 end
 
+##### ROUNDING #####
+
+for f in (:floor, :ceil, :round)
+    @eval function Base.$f(
+        interval::Interval,
+        args...;
+        on::Type{<:Endpoint}=LeftAndRightEndpoint,
+    )
+        left = LeftEndpoint(interval)
+        right = RightEndpoint(interval)
+
+        if on === LeftAndRightEndpoint
+            left = $f(left, args...)
+            right = $f(right, args...)
+        elseif on === LeftEndpoint
+            left = $f(left, args...)
+        elseif on === RightEndpoint
+            right = $f(right, args...)
+        else
+            throw(ArgumentError("Unhandled `on` type: $on"))
+        end
+
+        return Interval(left, right)
+    end
+end
+
 ##### TIME ZONES #####
 
 function TimeZones.astimezone(i::Interval{ZonedDateTime, L, R}, tz::TimeZone) where {L,R}

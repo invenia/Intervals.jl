@@ -24,6 +24,7 @@ struct Endpoint{T, D, B <: Bound}
     end
 end
 
+
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
 
 const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B}
@@ -34,6 +35,10 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
+
+# Unconstructable Endpoint types used for rounding
+const AnchorEndpoint{B} = Endpoint{Union{}, Direction{:Anchor}(), B} where {B}
+const LeftAndRightEndpoint{B} = Endpoint{Union{}, Direction{:LeftAndRight}(), B} where {B}
 
 endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
@@ -169,3 +174,15 @@ end
 
 Base.isless(a, b::RightEndpoint) = isunbounded(b) || a < b.endpoint
 Base.isless(a::LeftEndpoint, b)  = isunbounded(a) || a.endpoint < b
+
+for f in (:floor, :ceil, :round)
+    @eval begin
+        function Base.$f(p::Endpoint{T,D,B}) where {T,D,B}
+            Endpoint{T,D,B}($f(p.endpoint), p.included)
+        end
+
+        function Base.$f(p::Endpoint{T,D,B}, duration) where {T <: TimeType,D,B}
+            Endpoint{T,D,B}($f(p.endpoint, duration), p.included)
+        end
+    end
+end

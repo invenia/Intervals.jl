@@ -281,6 +281,12 @@
         @test Interval(Date(2014), Date(2016)) < Date(2017)
     end
 
+    @testset "broadcasting" begin
+        # Validate that an Interval is treated as a scalar during broadcasting
+        interval = Interval(DateTime(2016, 8, 11, 17), DateTime(2016, 8, 11, 18))
+        @test size(interval .== interval) == ()
+    end
+
     @testset "sort" begin
         i1 = 1 .. 10
         i2 = Interval(1, 10, false, false)

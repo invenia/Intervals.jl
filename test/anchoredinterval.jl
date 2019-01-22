@@ -376,6 +376,12 @@ using Intervals: canonicalize
         @test HourEnding(dt) < dt + Hour(1)
     end
 
+    @testset "broadcasting" begin
+        # Validate that an AnchoredInterval is treated as a scalar during broadcasting
+        interval = HourEnding(DateTime(2016, 8, 11, 18))
+        @test size(interval .== interval) == ()
+    end
+
     @testset "sort" begin
         hb1 = HourBeginning(dt)
         he1 = HourEnding(dt)
@@ -589,17 +595,5 @@ using Intervals: canonicalize
                 )
             end
         end
-    end
-
-    @testset "broadcasting" begin
-        # Check that we can broadcast a vector of anchored intervals against a scalar
-
-        a = [
-            HourEnding(DateTime(2016, 8, 11)),
-            HourEnding(DateTime(2016, 8, 12)),
-        ]
-
-        mask = a .== a[2]
-        @test mask == [false, true]
     end
 end

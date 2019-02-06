@@ -310,4 +310,8 @@ HE
 HB
 ≪
 ≫
+==
+union
+union!
+superset
 ```

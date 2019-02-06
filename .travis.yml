@@ -11,6 +11,14 @@ matrix:
   allow_failures:
     - julia: nightly
   fast_finish: true
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build()'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
 notifications:
   email: false
 # script:

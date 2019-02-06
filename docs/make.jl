@@ -2,7 +2,7 @@ using Documenter, Intervals
 
 makedocs(;
     modules=[Intervals],
-    format=:html,
+    format=Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
     pages=[
         "Home" => "index.md",
     ],
@@ -13,12 +13,9 @@ makedocs(;
         "assets/invenia.css",
         "assets/logo.png",
     ],
+    strict=true,
 )
 
 deploydocs(;
     repo="github.com/invenia/Intervals.jl",
-    target="build",
-    julia="1.0",
-    deps=nothing,
-    make=nothing,
 )

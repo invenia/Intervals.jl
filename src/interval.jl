@@ -131,11 +131,11 @@ Compat.Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval
 
 ##### DISPLAY #####
 
-function Base.show(io::IO, interval::Interval{T}) where T
+function Base.show(io::IO, interval::T) where T <: Interval
     if get(io, :compact, false)
         print(io, interval)
     else
-        print(io, "Interval{$T}(")
+        print(io, "$T(")
         show(io, interval.first)
         print(io, ", ")
         show(io, interval.last)

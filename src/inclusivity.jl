@@ -40,11 +40,11 @@ Base.isopen(x::Inclusivity) = !(first(x) || last(x))
 
 Base.isless(a::Inclusivity, b::Inclusivity) = isless(convert(Int, a), convert(Int, b))
 
-function Base.show(io::IO, x::Inclusivity)
+function Base.show(io::IO, x::T) where T <: Inclusivity
     if get(io, :compact, false)
         print(io, x)
     else
-        print(io, "Inclusivity($(x.first), $(x.last))")
+        print(io, "$T($(x.first), $(x.last))")
     end
 end
 

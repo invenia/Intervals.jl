@@ -112,18 +112,21 @@
         @test sprint(show, interval) == "Interval{Char}('a', 'b', Inclusivity(false, true))"
 
         interval = Interval(Date(2012), Date(2013), Inclusivity(true, false))
-        @test string(interval) == "[2012-01-01 .. 2013-01-01)"
-        @test sprint(show, interval, context=:compact=>true) == string(interval)
-        if VERSION < v"1.2.0-DEV.29"
-            @test sprint(show, interval) == string(
-                "Interval{Date}(2012-01-01, 2013-01-01, Inclusivity(true, false))"
+        shown = if VERSION < v"1.2.0-DEV.29"
+             string(
+                "Interval{Date}(",
+                repr(Date(2012, 1, 1)),
+                ", ",
+                repr(Date(2013, 1, 1)),
+                ", Inclusivity(true, false))",
             )
         else
-            @test sprint(show, interval) == string(
-                "Interval{Date}",
-                "(Date(2012, 1, 1), Date(2013, 1, 1), Inclusivity(true, false))",
-            )
+            "Interval{Date}(Date(2012, 1, 1), Date(2013, 1, 1), Inclusivity(true, false))"
         end
+
+        @test string(interval) == "[2012-01-01 .. 2013-01-01)"
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) == shown
 
         interval = Interval("a", "b", Inclusivity(true, true))
         @test string(interval) == "[a .. b]"

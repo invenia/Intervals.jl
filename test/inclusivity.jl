@@ -49,7 +49,7 @@
         @test hash(inc) != hash(diff)
 
         # Verify that Inclusivity is treated as a scalar during broadcast
-        @test Inclusivity(false, true) .== Inclusivity(false, true)
+        @test size(Inclusivity(false, true) .== Inclusivity(false, true)) == ()
     end
 
     @testset "display" begin

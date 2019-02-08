@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · Intervals.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><a href="index.html"><img class="logo" src="assets/logo.png" alt="Intervals.jl logo"/></a><h1>Intervals.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href>Home</a><ul class="internal"><li><a class="toctext" href="#Example-Usage-1">Example Usage</a></li><li><a class="toctext" href="#API-1">API</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Home</a></li></ul><a class="edit-page" href="https://github.com/invenia/Intervals.jl/blob/master/docs/src/index.md#L"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Home</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Intervals-1" href="#Intervals-1">Intervals</a></h1><p>This package defines:</p><ul><li><code>AbstractInterval</code>, along with its subtypes:<ul><li><a href="#Intervals.Interval"><code>Interval{T}</code></a>, which represents a non-iterable range between two endpoints of type <code>T</code></li><li><a href="#Intervals.AnchoredInterval"><code>AnchoredInterval{P, T}</code></a>, which represents a non-iterable range defined by a single value <code>anchor::T</code> and the value type <code>P</code> which represents the size of the range<ul><li><a href="#Intervals.HourEnding"><code>HourEnding</code></a>, a type alias for <code>AnchoredInterval{Hour(-1), T}</code></li><li><a href="#Intervals.HourBeginning"><code>HourBeginning</code></a>, a type alias for <code>AnchoredInterval{Hour(1), T}</code></li><li><a href="#Intervals.HE"><code>HE</code></a> and <a href="#Intervals.HB"><code>HB</code></a>, pseudoconstructors for <code>HourEnding</code> and <code>HourBeginning</code> that round the anchor up (<code>HE</code>) or down (<code>HB</code>) to the nearest hour</li></ul></li></ul></li><li><a href="#Intervals.Inclusivity"><code>Inclusivity</code></a>, which represents whether an <code>AbstractInterval</code> is open, half-open, or closed</li></ul><h2><a class="nav-anchor" id="Example-Usage-1" href="#Example-Usage-1">Example Usage</a></h2><h3><a class="nav-anchor" id="Intersection-1" href="#Intersection-1">Intersection</a></h3><pre><code class="language-julia-repl">julia&gt; a = 1..10
+Interval{Int64}(1, 10, Inclusivity(true, true))
+
+julia&gt; b = 5..15
+Interval{Int64}(5, 15, Inclusivity(true, true))
+
+julia&gt; intersect(a, b)
+Interval{Int64}(5, 10, Inclusivity(true, true))</code></pre><h3><a class="nav-anchor" id="Inclusivity-1" href="#Inclusivity-1">Inclusivity</a></h3><pre><code class="language-julia-repl">julia&gt; a = Interval(1, 10)
+Interval{Int64}(1, 10, Inclusivity(true, true))
+
+julia&gt; b = Interval(5, 15, false, false)
+Interval{Int64}(5, 15, Inclusivity(false, false))
+
+julia&gt; 5 in a
+true
+
+julia&gt; 5 in b
+false
+
+julia&gt; intersect(a, b)
+Interval{Int64}(5, 10, Inclusivity(false, true))
+
+julia&gt; c = Interval(15, 20)
+Interval{Int64}(15, 20, Inclusivity(true, true))
+
+julia&gt; isempty(intersect(b, c))
+true</code></pre><h3><a class="nav-anchor" id="Display-1" href="#Display-1">Display</a></h3><pre><code class="language-julia-repl">julia&gt; a = Interval(&#39;a&#39;, &#39;z&#39;)
+Interval{Char}(&#39;a&#39;, &#39;z&#39;, Inclusivity(true, true))
+
+julia&gt; string(a)
+&quot;[a .. z]&quot;
+
+julia&gt; using Dates
+
+julia&gt; b = Interval(Date(2013), Date(2016), true, false)
+Interval{Date}(2013-01-01, 2016-01-01, Inclusivity(true, false))
+
+julia&gt; string(b)
+&quot;[2013-01-01 .. 2016-01-01)&quot;
+
+julia&gt; c = HourEnding(DateTime(2016, 8, 11))
+AnchoredInterval{-1 hour,DateTime}(2016-08-11T00:00:00, Inclusivity(false, true))
+
+julia&gt; string(c)
+&quot;(2016-08-10 HE24]&quot;</code></pre><h3><a class="nav-anchor" id="HourEnding-and-HE-1" href="#HourEnding-and-HE-1"><code>HourEnding</code> and <code>HE</code></a></h3><pre><code class="language-julia-repl">julia&gt; using TimeZones, Dates
+
+julia&gt; unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz&quot;America/Winnipeg&quot;))
+AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T00:30:00-06:00, Inclusivity(false, true))
+
+julia&gt; he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz&quot;America/Winnipeg&quot;))
+AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))
+
+julia&gt; he + Hour(1)
+AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))
+
+julia&gt; foreach(println, he:he + Day(1))
+(2013-02-13 HE01-06:00]
+(2013-02-13 HE02-06:00]
+(2013-02-13 HE03-06:00]
+(2013-02-13 HE04-06:00]
+(2013-02-13 HE05-06:00]
+(2013-02-13 HE06-06:00]
+(2013-02-13 HE07-06:00]
+(2013-02-13 HE08-06:00]
+(2013-02-13 HE09-06:00]
+(2013-02-13 HE10-06:00]
+(2013-02-13 HE11-06:00]
+(2013-02-13 HE12-06:00]
+(2013-02-13 HE13-06:00]
+(2013-02-13 HE14-06:00]
+(2013-02-13 HE15-06:00]
+(2013-02-13 HE16-06:00]
+(2013-02-13 HE17-06:00]
+(2013-02-13 HE18-06:00]
+(2013-02-13 HE19-06:00]
+(2013-02-13 HE20-06:00]
+(2013-02-13 HE21-06:00]
+(2013-02-13 HE22-06:00]
+(2013-02-13 HE23-06:00]
+(2013-02-13 HE24-06:00]
+(2013-02-14 HE01-06:00]
+
+julia&gt; anchor(he)
+2013-02-13T01:00:00-06:00</code></pre><h3><a class="nav-anchor" id="Comparisons-1" href="#Comparisons-1">Comparisons</a></h3><h4><a class="nav-anchor" id="Equality-1" href="#Equality-1">Equality</a></h4><p>Two <code>AbstractInterval</code>s are considered equal if they have identical left and right endpoints (taking <code>Inclusivity</code> into account):</p><pre><code class="language-julia-repl">julia&gt; a = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), true, false)
+Interval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(true, false))
+
+julia&gt; b = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), false, true)
+Interval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(false, true))
+
+julia&gt; c = HourEnding(DateTime(2013, 2, 13, 1))
+AnchoredInterval{-1 hour,DateTime}(2013-02-13T01:00:00, Inclusivity(false, true))
+
+julia&gt; a == b
+false
+
+julia&gt; b == c
+true</code></pre><h4><a class="nav-anchor" id="Less-Than-1" href="#Less-Than-1">Less Than</a></h4><p>When determining whether one <code>AbstractInterval</code> is less than (or greater than) another, two sets of comparison operators are available: <code>&lt;</code>/<code>&gt;</code> and <code>≪</code>/<code>≫</code>.</p><p>The standard <code>&lt;</code> and <code>&gt;</code> operators (which are not explicitly defined, but are derived from <code>isless</code>) simply compare the leftmost endpoint of the intervals, and are used for things like <code>sort</code>, <code>min</code>, <code>max</code>, etc.</p><p>The <code>≪</code> and <code>≫</code> operators (the Unicode symbols for &quot;much less than&quot; and &quot;much greater than&quot;, accessible from the REPL with <code>\ll</code> and <code>\gg</code>, respectively) are used in this context to mean &quot;less/greater than and disjoint&quot;; they will verify that there is no overlap between the intervals.</p><pre><code class="language-julia-repl">julia&gt; 0..10 &lt; 10..20
+true
+
+julia&gt; 0..10 ≪ 10..20
+false
+
+julia&gt; 0..10 ≪ 11..20
+true</code></pre><h2><a class="nav-anchor" id="API-1" href="#API-1">API</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.Inclusivity" href="#Intervals.Inclusivity"><code>Intervals.Inclusivity</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">Inclusivity(first::Bool, last::Bool) -&gt; Inclusivity</code></pre><p>Defines whether an <code>AbstractInterval</code> is open, half-open, or closed.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/inclusivity.jl#LL1-L5">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.Inclusivity-Tuple{Integer}" href="#Intervals.Inclusivity-Tuple{Integer}"><code>Intervals.Inclusivity</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-none">Inclusivity(i::Integer) -&gt; Inclusivity</code></pre><p>Defines whether an interval is open, half-open, or closed, using an integer code:</p><p><strong>Inclusivity Values</strong></p><ul><li><code>0</code>: Neither endpoint is included (the <code>AbstractInterval</code> is open)</li><li><code>1</code>: Only the lesser endpoint is included (the <code>AbstractInterval</code> is left-closed)</li><li><code>2</code>: Only the greater endpoint is included (the <code>AbstractInterval</code> is right-closed)</li><li><code>3</code>: Both endpoints are included (the <code>AbstractInterval</code> is closed)</li></ul><p>Note that this constructor does not perform bounds-checking: instead it checks the values of the two least-significant bits of the integer. This means that <code>Inclusivity(5)</code> is equivalent to <code>Inclusivity(1)</code>.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/inclusivity.jl#LL11-L26">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.Interval" href="#Intervals.Interval"><code>Intervals.Interval</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">Interval(first, last, [inclusivity::Inclusivity]) -&gt; Interval
+Interval(first, last, [closed_left::Bool, closed_right::Bool]) -&gt; Interval</code></pre><p>An <code>Interval</code> represents a non-iterable range or span of values (non-interable because, unlike a <code>StepRange</code>, no step is defined).</p><p>An <code>Interval</code> can be closed (both <code>first</code> and <code>last</code> are included in the interval), open (neither <code>first</code> nor <code>last</code> are included), or half-open. This openness is defined by an <code>Inclusivity</code> value, which defaults to closed.</p><p><strong>Example</strong></p><pre><code class="language-julia">julia&gt; i = Interval(0, 100, true, false)
+Interval{Int64}(0, 100, Inclusivity(true, false))
+
+julia&gt; in(0, i)
+true
+
+julia&gt; in(50, i)
+true
+
+julia&gt; in(100, i)
+false
+
+julia&gt; intersect(Interval(0, 25, false, false), Interval(20, 50, true, true)
+Interval{Int64}(20, 25, Inclusivity(true, false))</code></pre><p><strong>Infix Constructor: <code>..</code></strong></p><p>A closed <code>Interval</code> can be constructed with the <code>..</code> infix constructor:</p><pre><code class="language-julia">julia&gt; Dates.today() - Dates.Week(1) .. Dates.today()
+Interval{Date}(2018-01-24, 2018-01-31, Inclusivity(true, true))</code></pre><p><strong>Note on Ordering</strong></p><p>The <code>Interval</code> constructor will compare <code>first</code> and <code>last</code>; if it finds that <code>first &gt; last</code>, they will be reversed to ensure that <code>first &lt; last</code>. This simplifies calls to <code>in</code> and <code>intersect</code>:</p><pre><code class="language-julia">julia&gt; i = Interval(Date(2016, 8, 11), Date(2013, 2, 13), false, true)
+Interval{Date}(2013-02-13, 2016-08-11, Inclusivity(true, false))</code></pre><p>Note that the <code>Inclusivity</code> value is also reversed in this case.</p><p>See also: <a href="#Intervals.AnchoredInterval"><code>AnchoredInterval</code></a>, <a href="#Intervals.Inclusivity"><code>Inclusivity</code></a></p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL3-L56">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.AnchoredInterval" href="#Intervals.AnchoredInterval"><code>Intervals.AnchoredInterval</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -&gt; AnchoredInterval{P, T}
+AnchoredInterval{P, T}(anchor::T, [closed_left::Bool, closed_right::Bool]) where {P, T} -&gt; AnchoredInterval{P, T}</code></pre><p><code>AnchoredInterval</code> is a subtype of <code>AbstractInterval</code> that represents a non-iterable range or span of values defined not by two endpoints but instead by a single <code>anchor</code> point and the value type <code>P</code> which represents the size of the range. When <code>P</code> is positive, the <code>anchor</code> represents the lesser endpoint (the beginning of the range); when <code>P</code> is negative, the <code>anchor</code> represents the greater endpoint (the end of the range).</p><p>The interval represented by an <code>AnchoredInterval</code> value may be closed (both endpoints are included in the interval), open (neither endpoint is included), or half-open. This openness is defined by an <code>Inclusivity</code> value, which defaults to half-open (with the lesser endpoint included for positive values of <code>P</code> and the greater endpoint included for negative values).</p><p><strong>Why?</strong></p><p><code>AnchoredIntervals</code> are most useful in cases where a single value is used to stand in for a range of values. This happens most often with dates and times, where &quot;HE15&quot; is often used as shorthand for (14:00..15:00].</p><p>To this end, <code>HourEnding</code> is a type alias for <code>AnchoredInterval{Hour(-1)}</code>. Similarly, <code>HourBeginning</code> is a type alias for <code>AnchoredInterval{Hour(1)}</code>.</p><p><strong>Rounding</strong></p><p>While the user may expect an <code>HourEnding</code> or <code>HourBeginning</code> value to be anchored to a specific hour, the constructor makes no guarantees that the anchor provided is rounded:</p><pre><code class="language-julia">julia&gt; HourEnding(DateTime(2016, 8, 11, 2, 30))
+HourEnding{DateTime}(2016-08-11T02:30:00, Inclusivity(false, true))</code></pre><p>The <code>HE</code> and <code>HB</code> pseudoconstructors round the input up or down to the nearest hour, as appropriate:</p><pre><code class="language-julia">julia&gt; HE(DateTime(2016, 8, 11, 2, 30))
+HourEnding{DateTime}(2016-08-11T03:00:00, Inclusivity(false, true))
+
+julia&gt; HB(DateTime(2016, 8, 11, 2, 30))
+HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))</code></pre><p><strong>Example</strong></p><pre><code class="language-julia">julia&gt; AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12))
+HourEnding{DateTime}(2016-08-11T12:00:00, Inclusivity(false, true))
+
+julia&gt; AnchoredInterval{Day(1)}(DateTime(2016, 8, 11))
+AnchoredInterval{1 day, DateTime}(2016-08-11T00:00:00, Inclusivity(true, false))
+
+julia&gt; AnchoredInterval{Minute(5)}(DateTime(2016, 8, 11, 12, 30), true, true)
+AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, true))</code></pre><p>See also: <a href="#Intervals.Interval"><code>Interval</code></a>, <a href="#Intervals.Inclusivity"><code>Inclusivity</code></a>, <a href="#Intervals.HE"><code>HE</code></a>, <a href="#Intervals.HB"><code>HB</code></a></p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/anchoredinterval.jl#LL3-L62">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.HourEnding" href="#Intervals.HourEnding"><code>Intervals.HourEnding</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">HourEnding{T&lt;:TimeType} &lt;: AbstractInterval{T}</code></pre><p>A type alias for <code>AnchoredInterval{Hour(-1), T}</code> which is used to denote a 1-hour period of time which ends at a time instant (of type <code>T</code>).</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/anchoredinterval.jl#LL84-L89">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.HourBeginning" href="#Intervals.HourBeginning"><code>Intervals.HourBeginning</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">HourBeginning{T&lt;:TimeType} &lt;: AbstractInterval{T}</code></pre><p>A type alias for <code>AnchoredInterval{Hour(1), T}</code> which is used to denote a 1-hour period of time which begins at a time instant (of type <code>T</code>).</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/anchoredinterval.jl#LL93-L98">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.HE" href="#Intervals.HE"><code>Intervals.HE</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">HE(anchor, args...) -&gt; HourEnding</code></pre><p><code>HE</code> is a pseudoconstructor for <a href="#Intervals.HourEnding"><code>HourEnding</code></a> that rounds the anchor provided up to the nearest hour.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/anchoredinterval.jl#LL102-L107">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.HB" href="#Intervals.HB"><code>Intervals.HB</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">HB(anchor, args...) -&gt; HourBeginning</code></pre><p><code>HB</code> is a pseudoconstructor for <a href="#Intervals.HourBeginning"><code>HourBeginning</code></a> that rounds the anchor provided down to the nearest hour.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/anchoredinterval.jl#LL110-L115">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.:≪" href="#Intervals.:≪"><code>Intervals.:≪</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">≪(a::AbstractInterval, b::AbstractInterval) -&gt; Bool
+less_than_disjoint(a::AbstractInterval, b::AbstractInterval) -&gt; Bool</code></pre><p>Less-than-and-disjoint comparison operator. Returns <code>true</code> if <code>a</code> is less than <code>b</code> and they are disjoint (they do not overlap).</p><pre><code class="language-none">julia&gt; 0..10 ≪ 10..20
+false
+
+julia&gt; 0..10 ≪ 11..20
+true</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL207-L221">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.:≫" href="#Intervals.:≫"><code>Intervals.:≫</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">≫(a::AbstractInterval, b::AbstractInterval) -&gt; Bool
+greater_than_disjoint(a::AbstractInterval, b::AbstractInterval) -&gt; Bool</code></pre><p>Greater-than-and-disjoint comparison operator. Returns <code>true</code> if <code>a</code> is greater than <code>b</code> and they are disjoint (they do not overlap).</p><pre><code class="language-none">julia&gt; 10..20 ≫ 0..10
+false
+
+julia&gt; 11..20 ≫ 0..10
+true</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL225-L239">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Base.:==" href="#Base.:=="><code>Base.:==</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">==(a::Endpoint, b::Endpoint) -&gt; Bool</code></pre><p>Determine if two endpoints are equal. When both endpoints are left or right then the points and inclusiveness must be the same.</p><p>Checking the equality of left-endpoint and a right-endpoint is slightly more difficult. A left-endpoint and a right-endpoint are only equal when they use the same point and are both included. Note that left/right endpoints which are both not included are not equal as the left-endpoint contains values below that point while the right-endpoint only contains values that are above that point.</p><p>Visualizing two contiguous intervals can assist in understanding this logic:</p><pre><code class="language-none">[x..y][y..z] -&gt; RightEndpoint == LeftEndpoint
+[x..y)[y..z] -&gt; RightEndpoint != LeftEndpoint
+[x..y](y..z] -&gt; RightEndpoint != LeftEndpoint
+[x..y)(y..z] -&gt; RightEndpoint != LeftEndpoint</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/endpoint.jl#LL42-L60">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Base.union" href="#Base.union"><code>Base.union</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">union(intervals::AbstractVector{&lt;:AbstractInterval})</code></pre><p>Flattens a vector of overlapping intervals into a new, smaller vector containing only non-overlapping intervals.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL283-L288">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Base.union!" href="#Base.union!"><code>Base.union!</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">union!(intervals::AbstractVector{&lt;:Union{Interval, AbstractInterval}})</code></pre><p>Flattens a vector of overlapping intervals in-place to be a smaller vector containing only non-overlapping intervals.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL293-L298">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Intervals.superset" href="#Intervals.superset"><code>Intervals.superset</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">superset(intervals::AbstractArray{&lt;:AbstractInterval}) -&gt; Interval</code></pre><p>Create the smallest single interval which encompasses all of the provided intervals.</p></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Intervals.jl/blob/00895f3baa0efb309e391b35cf616d8504dfcfdd/src/interval.jl#LL324-L328">source</a></section><footer><hr/></footer></article></body></html>

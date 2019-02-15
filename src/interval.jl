@@ -1,5 +1,3 @@
-import TimeZones: astimezone
-
 """
     Interval(first, last, [inclusivity::Inclusivity]) -> Interval
     Interval(first, last, [closed_left::Bool, closed_right::Bool]) -> Interval
@@ -345,6 +343,6 @@ end
 
 ##### TIME ZONES #####
 
-function astimezone(i::Interval{ZonedDateTime}, tz::TimeZone)
+function TimeZones.astimezone(i::Interval{ZonedDateTime}, tz::TimeZone)
     return Interval(astimezone(first(i), tz), astimezone(last(i), tz), inclusivity(i))
 end

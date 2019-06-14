@@ -536,6 +536,18 @@
     end
 
     @testset "union" begin
+        a = Interval(-100, -1)
+        b = Interval(-3, 10)
+
+        @test union(a) == AbstractInterval[a]
+        @test union(b) == AbstractInterval[b]
+        @test union(a, b) == AbstractInterval[Interval(-100, 10)]
+        @test union(b, a) == AbstractInterval[Interval(-100, 10)]
+        @test union([a, b]) == AbstractInterval[Interval(-100, 10)]
+        @test union([b, a]) == AbstractInterval[Interval(-100, 10)]
+        @test union!([a, b]) == [Interval(-100, 10)]
+        @test union!([b, a]) == [Interval(-100, 10)]
+
         intervals = [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
@@ -572,5 +584,39 @@
             Interval(-10, -1, Inclusivity(true, true))
         ]
         @test union(intervals) == [Interval(-100, -1, Inclusivity(false, true))]
+
+        # anchored
+        intervals = [
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 12, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 12, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 13, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 13, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 14, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 14, 7, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 12, 8, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 12, 8, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 13, 8, tz"UTC"), Inclusivity(false, true)),
+            HourEnding{ZonedDateTime}(ZonedDateTime(2013, 2, 13, 8, tz"UTC"), Inclusivity(false, true)),
+        ]
+
+        expected = [
+            Interval{ZonedDateTime}(ZonedDateTime(2013, 2, 12, 6, tz"UTC"), ZonedDateTime(2013, 2, 12, 8, tz"UTC"), Inclusivity(false, true)),
+            Interval{ZonedDateTime}(ZonedDateTime(2013, 2, 13, 6, tz"UTC"), ZonedDateTime(2013, 2, 13, 8, tz"UTC"), Inclusivity(false, true)),
+            Interval{ZonedDateTime}(ZonedDateTime(2013, 2, 14, 6, tz"UTC"), ZonedDateTime(2013, 2, 14, 7, tz"UTC"), Inclusivity(false, true)),
+        ]
+
+        @test union(intervals) == expected
+        @test_throws ArgumentError union!(intervals)
+
+        abstract_intervals = convert(Vector{AbstractInterval}, intervals)
+        @test union(abstract_intervals) == expected
+        @test length(abstract_intervals) == length(intervals)  # test that union doesn't mutate
+        @test union!(abstract_intervals) == expected
+        @test abstract_intervals == expected  # test that union! does mutate
+
+        # varargs
+        @test union(intervals...) == expected
+        @test_throws MethodError union!(intervals...)
+        @test union!(abstract_intervals[1:1], abstract_intervals[2:3], abstract_intervals[4:end]...) == expected
     end
 end

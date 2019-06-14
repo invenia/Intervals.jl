@@ -279,22 +279,24 @@ end
 
 # There is power in a union.
 """
-    union(intervals::AbstractVector{<:AbstractInterval})
+    union(intervals::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, itrs...)
 
-Flattens a vector of overlapping intervals into a new, smaller vector containing only
+Flattens sets of overlapping intervals into a new, smaller vector containing only
 non-overlapping intervals.
 """
-function Base.union(intervals::AbstractVector{<:AbstractInterval})
-    return union!(convert(Vector{AbstractInterval}, intervals))
+function Base.union(
+    interval::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, intervals...,
+)
+    return union!(AbstractInterval[interval; intervals...])
 end
 
-"""
-    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
+function Base.union!(intervals::AbstractVector{T}) where T <: AbstractInterval
+    if !(T <: Interval) && T != AbstractInterval
+        throw(ArgumentError(
+            "Cannot `union!` array of intervals of type $T as the type may change"
+        ))
+    end
 
-Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
-non-overlapping intervals.
-"""
-function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
     sort!(intervals)
 
     i = 2
@@ -317,6 +319,28 @@ function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector
     end
 
     return intervals
+end
+
+"""
+    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}}, itrs...)
+
+Flattens sets of overlapping intervals in-place into the first argument, making it a smaller
+vector containing only non-overlapping intervals.
+"""
+function union!(
+    intervals::AbstractVector{<:AbstractInterval},
+    interval_varargs...
+)
+    # imitates the behaviour of vcat/promote_eltypeof
+    for interval_vararg in interval_varargs
+        if interval_vararg isa AbstractInterval
+            push!(intervals, interval_vararg)
+        else
+            append!(intervals, interval_vararg)
+        end
+    end
+
+    return union!(intervals)
 end
 
 """

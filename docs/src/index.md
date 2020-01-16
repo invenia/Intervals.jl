@@ -94,13 +94,13 @@ julia> string(c)
 julia> using TimeZones, Dates
 
 julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T00:30:00-06:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"), Inclusivity(false, true))
 
 julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T01:00:00-06:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"), Inclusivity(false, true))
 
 julia> he + Hour(1)
-AnchoredInterval{-1 hour,ZonedDateTime}(2013-02-13T02:00:00-06:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"), Inclusivity(false, true))
 
 julia> foreach(println, he:he + Day(1))
 (2013-02-13 HE01-06:00]

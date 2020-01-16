@@ -5,27 +5,23 @@ os:
   - osx
 julia:
   - 1.0
+  - 1.3
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
   fast_finish: true
-  include:
-    - stage: "Documentation"
-      julia: 1.0
-      os: linux
-      script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate(); Pkg.build()'
-        - julia --project=docs/ docs/make.jl
-      after_success: skip
 notifications:
   email: false
-# script:
-#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#   - julia -e 'Pkg.clone(pwd()); Pkg.build("Intervals"); Pkg.test("Intervals"; coverage=true)'
 after_success:
-  - |
-    julia -e '
-      using Pkg
-      Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())
-      Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+jobs:
+  include:
+    - stage: Documentation
+      julia: 1.0
+      script: julia --project=docs -e '
+          using Pkg;
+          Pkg.develop(PackageSpec(path=pwd()));
+          Pkg.instantiate();
+          include("docs/make.jl");'
+      after_success: skip

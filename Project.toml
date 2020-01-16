@@ -1,8 +1,8 @@
 name = "Intervals"
-desc = "Non-iterable ranges"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
-authors = ["Curtis Vogt <curtis.vogt@gmail.com>", "Gem Newman <spurll@gmail.com>"]
 license = "MIT"
+desc = "Non-iterable ranges"
+authors = ["Curtis Vogt <curtis.vogt@gmail.com>", "Gem Newman <spurll@gmail.com>"]
 version = "0.6.0"
 
 [deps]

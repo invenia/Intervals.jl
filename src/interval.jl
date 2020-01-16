@@ -124,8 +124,8 @@ function Base.convert(::Type{T}, i::Interval{T}) where T
 end
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Compat.Dates.Date(interval::Interval{Date}) = convert(Date, interval)
-Compat.Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
+Dates.Date(interval::Interval{Date}) = convert(Date, interval)
+Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
 
 ##### DISPLAY #####
 

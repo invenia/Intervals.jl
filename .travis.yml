@@ -4,7 +4,6 @@ os:
   - linux
   - osx
 julia:
-  - 0.7
   - 1.0
   - nightly
 matrix:
@@ -27,7 +26,6 @@ notifications:
 after_success:
   - |
     julia -e '
-      VERSION >= v"0.7.0-DEV.3656" && using Pkg
-      VERSION >= v"0.7.0-DEV.5183" || cd(Pkg.dir("Intervals"))
+      using Pkg
       Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())
       Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'

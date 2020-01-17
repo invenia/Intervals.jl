@@ -2,13 +2,11 @@ __precompile__()
 
 module Intervals
 
-using Compat
-using Compat.Dates
-using Compat.Printf
+using Dates
+using Printf
 using TimeZones
 
-using Compat.Dates: value, coarserperiod
-using Compat: AbstractDateTime
+using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 

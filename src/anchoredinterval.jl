@@ -174,8 +174,8 @@ end
 Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Compat.Dates.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
-Compat.Dates.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
+Dates.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
+Dates.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
 
 ##### DISPLAY #####
 

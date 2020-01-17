@@ -6,7 +6,7 @@ using Dates
 using Printf
 using TimeZones
 
-using Dates: value, coarserperiod, AbstractDateTime
+using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 

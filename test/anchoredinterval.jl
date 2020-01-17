@@ -321,8 +321,6 @@ using Intervals: canonicalize
         ]
 
         for (interval, printed, shown) in tests
-            shown = shown
-
             @test sprint(print, interval) == printed
             @test string(interval) == printed
             @test sprint(show, interval) == shown

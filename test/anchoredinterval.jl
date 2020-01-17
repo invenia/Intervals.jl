@@ -146,18 +146,18 @@ using Intervals: canonicalize
         # - `repr(Period(...))`can be converted to hardcode strings
 
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Hour(-1))),T} where T"
+            "AnchoredInterval{$(repr(Hour(-1))),T} where T"
         @test sprint(show, AnchoredInterval{Hour(1)}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Hour(1))),T} where T"
+            "AnchoredInterval{$(repr(Hour(1))),T} where T"
 
         @test sprint(show, AnchoredInterval{Day(-1)}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Day(-1))),T} where T"
+            "AnchoredInterval{$(repr(Day(-1))),T} where T"
         @test sprint(show, AnchoredInterval{Day(1)}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Day(1))),T} where T"
+            "AnchoredInterval{$(repr(Day(1))),T} where T"
         @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Day(-1))),DateTime}"
+            "AnchoredInterval{$(repr(Day(-1))),DateTime}"
         @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-            mod_prefix * "AnchoredInterval{$(repr(Day(1))),DateTime}"
+            "AnchoredInterval{$(repr(Day(1))),DateTime}"
 
         # Tuples contain fields: interval, printed, shown
         tests = [
@@ -321,7 +321,7 @@ using Intervals: canonicalize
         ]
 
         for (interval, printed, shown) in tests
-            shown = mod_prefix * shown
+            shown = shown
 
             @test sprint(print, interval) == printed
             @test string(interval) == printed
@@ -338,13 +338,13 @@ using Intervals: canonicalize
         @test string(interval) == "(0 .. 10]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{-10,$Int}(10, Inclusivity(false, true))"
+            "AnchoredInterval{-10,$Int}(10, Inclusivity(false, true))"
 
         interval = AnchoredInterval{25}('a')
         @test string(interval) == "[a .. z)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            mod_prefix * "AnchoredInterval{25,Char}('a', Inclusivity(true, false))"
+            "AnchoredInterval{25,Char}('a', Inclusivity(true, false))"
     end
 
     @testset "equality" begin

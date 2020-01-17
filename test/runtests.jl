@@ -4,8 +4,6 @@ using Test
 using Dates
 
 
-mod_prefix = tz_prefix = ""
-
 @testset "Intervals" begin
     include("inclusivity.jl")
     include("endpoint.jl")

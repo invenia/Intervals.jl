@@ -8,7 +8,7 @@ interval_markers(x::Bool) = x ? :vline : :none
     new_xs = T[]
     new_ys = []
     markers = Symbol[]
-    for (x,y) in zip(xs, ys)
+    for (x, y) in zip(xs, ys)
         # To cause line to not be connected, need to add a breaker point with
         # NaN in one of the coordinates. We pute that in `new_ys` as that is probably a
         # float. where-as new_xs is potentially a DateTime etc that would not accept NaN

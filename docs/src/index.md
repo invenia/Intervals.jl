@@ -154,7 +154,7 @@ julia> plot(intervals, 1:11)
 
 ![plot](../../test/references/HE.png)
 
-In the plot, inclusive boundries are marked with a vertical bar, where as exclusive boundries just end.
+In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
 
 
 

@@ -18,3 +18,6 @@ This package defines:
       anchor up (`HE`) or down (`HB`) to the nearest hour
 * `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
   closed
+
+
+![plot](test/references/HE.png)

@@ -1,7 +1,10 @@
+using Dates
+using Plots
 using Intervals
 using TimeZones
 using Test
-using Dates
+using VisualRegressionTests
+
 
 
 @testset "Intervals" begin
@@ -10,4 +13,5 @@ using Dates
     include("interval.jl")
     include("anchoredinterval.jl")
     include("comparisons.jl")
+    include("plotting.jl")
 end

@@ -1,7 +1,7 @@
 @testset "plotting" begin
-    possible_inclusivities = Iterators.product((true, false),(true, false))
+    possible_inclusivities = Iterators.product((true, false), (true, false))
     @testset "Interval{Float64} with inclusivity=$inc" for inc in possible_inclusivities
-        intervals = [Interval(float(x), float(x+0.5), inc...) for x in 1:11]
+        intervals = [Interval(float(x), float(x + 0.5), inc...) for x in 1:11]
         @plottest plot(intervals, 1:11) "references/interval_$inc.png" false
 
         @testset "Make sure still looks same in scatter plot" begin

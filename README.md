@@ -19,5 +19,3 @@ This package defines:
 * `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
   closed
 
-
-![plot](test/references/HE.png)

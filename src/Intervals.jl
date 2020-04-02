@@ -13,10 +13,7 @@ import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 abstract type AbstractInterval{T} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
-
-if VERSION >= v"0.7"
-    Base.broadcastable(x::AbstractInterval) = Ref(x)
-end
+Base.broadcastable(x::AbstractInterval) = Ref(x)
 
 include("inclusivity.jl")
 include("endpoint.jl")

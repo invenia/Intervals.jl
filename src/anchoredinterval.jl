@@ -238,15 +238,8 @@ function Base.steprange_last(start::T, step, stop::T) where {T <: AnchoredInterv
 end
 
 # Infer step for two-argument StepRange{<:AnchoredInterval}
-if VERSION < v"0.7.0-DEV.4003"
-    function Base.colon(start::AnchoredInterval{P, T}, stop::AnchoredInterval{P, T}) where {P,T}
-        return colon(start, abs(P), stop)
-    end
-else
-    # https://github.com/JuliaLang/julia/pull/26074
-    function Base.:(:)(start::AnchoredInterval{P, T}, stop::AnchoredInterval{P, T}) where {P,T}
-        return (:)(start, abs(P), stop)
-    end
+function Base.:(:)(start::AnchoredInterval{P, T}, stop::AnchoredInterval{P, T}) where {P,T}
+    return (:)(start, abs(P), stop)
 end
 
 function Base.length(r::StepRange{<:AnchoredInterval})

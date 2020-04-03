@@ -34,10 +34,7 @@ function Base.hash(x::Endpoint{T, D}, h::UInt) where {T, D}
     return h
 end
 
-# https://github.com/JuliaLang/julia/pull/26601
-if VERSION >= v"0.7.0-DEV.4743"
-    Base.broadcastable(e::Endpoint) = Ref(e)
-end
+Base.broadcastable(e::Endpoint) = Ref(e)
 
 """
     ==(a::Endpoint, b::Endpoint) -> Bool

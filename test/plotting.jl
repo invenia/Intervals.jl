@@ -4,7 +4,7 @@
         intervals = [Interval(float(x), float(x + 0.5), inc...) for x in 1:11]
         @plottest plot(intervals, 1:11) "references/interval_$inc.png" false
 
-        @testset "Make sure still looks same in scatter plot" begin
+        @testset "scatter" begin
             # Earlier versions of this functionality showed only end-points if plotted in
             # scatter, but for intervals the connect-line is part of the "marker"
             @plottest scatter(intervals, 1:11) "references/interval_$inc.png" false
@@ -12,8 +12,8 @@
     end
 
     @testset "DateTime intervals" begin
-        start_dt = DateTime(2017,1,1,0,0,0)
-        end_dt = DateTime(2017,1,1,10,30,0)
+        start_dt = DateTime(2017, 1 ,1, 0, 0)
+        end_dt = DateTime(2017, 1, 1, 10, 30)
         datetimes = start_dt:Hour(1):end_dt
 
         @testset "Interval{DateTime}" begin

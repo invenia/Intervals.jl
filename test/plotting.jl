@@ -2,12 +2,12 @@
     possible_inclusivities = Iterators.product((true, false), (true, false))
     @testset "Interval{Float64} with inclusivity=$inc" for inc in possible_inclusivities
         intervals = [Interval(float(x), float(x + 0.5), inc...) for x in 1:11]
-        @plottest plot(intervals, 1:11) "references/interval_$inc.png" false
+        @plottest plot(intervals, 1:11) "references/interval_$(join(inc)).png" false
 
         @testset "scatter" begin
             # Earlier versions of this functionality showed only end-points if plotted in
             # scatter, but for intervals the connect-line is part of the "marker"
-            @plottest scatter(intervals, 1:11) "references/interval_$inc.png" false
+            @plottest scatter(intervals, 1:11) "references/interval_$(join(inc)).png" false
         end
     end
 

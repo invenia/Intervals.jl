@@ -2,7 +2,7 @@ name = "Intervals"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
 license = "MIT"
 authors = ["Invenia Technical Computing"]
-version = "1.0.0"
+version = "1.1.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -15,10 +15,10 @@ TimeZones = "0.7, 0.8, 0.9, 0.10, 0.11, 1"
 julia = "1"
 
 [extras]
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
-ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 
 [targets]
-test = ["Test", "Plots", "VisualRegressionTests", "ImageMagick"]
+test = ["ImageMagick", "Plots", "Test", "VisualRegressionTests"]

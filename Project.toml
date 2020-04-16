@@ -11,6 +11,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 
 [compat]
+RecipesBase = "0.8, 1"
 TimeZones = "0.7, 0.8, 0.9, 0.10, 0.11, 1"
 julia = "1"
 

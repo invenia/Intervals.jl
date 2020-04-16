@@ -2,6 +2,7 @@ module Intervals
 
 using Dates
 using Printf
+using RecipesBase
 using TimeZones
 
 using Dates: AbstractDateTime, value, coarserperiod
@@ -18,6 +19,7 @@ include("endpoint.jl")
 include("interval.jl")
 include("anchoredinterval.jl")
 include("description.jl")
+include("plotting.jl")
 
 export AbstractInterval,
        Interval,

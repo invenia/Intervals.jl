@@ -57,6 +57,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "#Plotting-1",
+    "page": "Home",
+    "title": "Plotting",
+    "category": "section",
+    "text": "AbstractInterval subtypes can be plotted with Plots.jl.julia> using Plots\n\njulia> start_dt = DateTime(2017,1,1,0,0,0);\n\njulia> end_dt = DateTime(2017,1,1,10,30,0);\n\njulia> datetimes = start_dt:Hour(1):end_dt\n2017-01-01T00:00:00:1 hour:2017-01-01T10:00:00\n\njulia> intervals = HE.(datetimes);\n\njulia> plot(intervals, 1:11)(Image: plot)In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end."
+},
+
+{
     "location": "#Comparisons-1",
     "page": "Home",
     "title": "Comparisons",

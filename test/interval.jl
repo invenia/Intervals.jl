@@ -512,6 +512,13 @@
         end
     end
 
+    @testset "timezone" begin
+        zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+        zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
+        i = Interval(zdt1, zdt2)
+        @test timezone(i) == tz"America/Winnipeg"
+    end
+
     @testset "merge" begin
         a = Interval(-100, -1)
         b = Interval(-3, 10)

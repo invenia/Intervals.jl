@@ -640,4 +640,10 @@ using Intervals: canonicalize
             end
         end
     end
+
+    @testset "timezone" begin
+        zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+        ai = AnchoredInterval{Day(1)}(zdt)
+        @test timezone(ai) == tz"America/Winnipeg"
+    end
 end

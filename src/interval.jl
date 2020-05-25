@@ -9,6 +9,10 @@ An `Interval` can be closed (both `first` and `last` are included in the interva
 (neither `first` nor `last` are included), or half-open. This openness is defined by an
 `Inclusivity` value, which defaults to closed.
 
+An `Interval` may be unbounded on either side, or on both sides. From the lowest bound to
+some value, from some value to the highest bound, or if both sides are unbounded then the
+interval encompases all values of that type.
+
 ### Example
 
 ```julia
@@ -26,6 +30,42 @@ false
 
 julia> intersect(Interval(0, 25, false, false), Interval(20, 50, true, true)
 Interval{Int64}(20, 25, Inclusivity(true, false))
+
+julia> i = Interval(nothing, 100, true, false)
+Interval{Int64}(nothing, 100, true, false)
+
+julia> in(0, i)
+true
+
+julia> in(-345, i)
+true
+
+julia> in(101, i)
+false
+
+julia> i = Interval(0, nothing, true, false)
+Interval{Int64}(0, nothing, true, false)
+
+julia> in(0, i)
+true
+
+julia> in(-345, i)
+false
+
+julia> in(101, i)
+true
+
+julia> i = Interval(nothing, nothing, true, false)
+Interval{Int64}(nothing, nothing, true, false)
+
+julia> in(0, i)
+true
+
+julia> in(-345, i)
+true
+
+julia> in(101, i)
+true
 ```
 
 ### Infix Constructor: `..`
@@ -35,6 +75,9 @@ A closed `Interval` can be constructed with the `..` infix constructor:
 ```julia
 julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date}(2018-01-24, 2018-01-31, Inclusivity(true, true))
+
+julia> Dates.today() .. nothing
+Interval{Date}(2018-01-24, nothing, Inclusivity(true, true))
 ```
 
 ### Note on Ordering
@@ -53,21 +96,31 @@ Note that the `Inclusivity` value is also reversed in this case.
 See also: [`AnchoredInterval`](@ref), [`Inclusivity`](@ref)
 """
 struct Interval{T} <: AbstractInterval{T}
-    first::T
-    last::T
+    first::Union{T, Nothing}
+    last::Union{T, Nothing}
     inclusivity::Inclusivity
 
-    function Interval{T}(f::T, l::T, inc::Inclusivity) where T
-        # Ensure that `first` preceeds `last`.
-        f, l, inc = if f ≤ l
-            f, l, inc
-        elseif l ≤ f
-            l, f, Inclusivity(last(inc), first(inc))
-        else
-            throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
+    function Interval{T}(
+        f::Union{T, Nothing}, l::Union{T, Nothing}, inc::Inclusivity
+    ) where T
+        # If one or both endpoints are unbounded (Nothing), then any value is valid.
+        # If both endpoints are unbounded, this interval acompases all values
+        if !(isnothing(f) || isnothing(l))
+            # Ensure that `first` preceeds `last`
+            f, l, inc = if f ≤ l
+                f, l, inc
+            elseif l ≤ f
+                l, f, Inclusivity(last(inc), first(inc))
+            else
+                throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
+            end
         end
 
-        return new(f, l, inc)
+        # If either endpoint is unbounded, we will mutate the inclusivity to be open.
+        a = isnothing(f) ? false : first(inc)
+        b = isnothing(l) ? false : last(inc)
+
+        return new(f, l, Inclusivity(a, b))
     end
 end
 
@@ -76,7 +129,16 @@ Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y
 Interval{T}(f, l) where T = Interval{T}(f, l, true, true)
 
 Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
-Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
+Interval(::Nothing, ::Nothing, inc...) = Interval{Nothing}(nothing, nothing, inc...)
+function Interval(f, l, inc...)
+    if isnothing(f) || isnothing(l)
+        # If only one endpoint is nothing, use the type of the other endpoint
+        T = isnothing(f) ? typeof(l) : typeof(f)
+        return Interval{T}(f, l, inc...)
+    else
+        return Interval(promote(f, l)..., inc...)
+    end
+end
 
 (..)(first, last) = Interval(first, last)
 
@@ -161,7 +223,13 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, inclusivity(a))
+function Base.:+(a::T, b) where {T <: Interval}
+    # For values that are not unbounded, we can increment their value by b
+    a_unit = isnothing(first(a)) ? nothing : first(a) + b
+    b_unit = isnothing(last(a)) ? nothing : last(a) + b
+
+    return T(a_unit, b_unit, inclusivity(a))
+end
 
 Base.:+(a, b::Interval) = b + a
 Base.:-(a::Interval, b) = a + -b
@@ -197,7 +265,14 @@ function Base.:isless(a::AbstractInterval, b::AbstractInterval)
 end
 
 function less_than_disjoint(a::AbstractInterval, b::AbstractInterval)
-    return RightEndpoint(a) < LeftEndpoint(b)
+    re = RightEndpoint(a)
+    le = LeftEndpoint(b)
+
+    if isnothing(re) || isnothing(le)
+        return false
+    else
+        return re < le
+    end
 end
 
 greater_than_disjoint(a, b) = less_than_disjoint(b, a)
@@ -241,7 +316,17 @@ true
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
-Base.in(a, b::AbstractInterval) = !(a ≫ b || a ≪ b)
+function Base.in(a, b::AbstractInterval)
+    if isnothing(a)
+        if isnothing(first(b)) && isnothing(last(b))
+            return true
+        else
+            return false
+        end
+    else
+        return !(a ≫ b || a ≪ b)
+    end
+end
 
 function Base.in(a::AbstractInterval, b::AbstractInterval)
     # Intervals should be compared with set operations

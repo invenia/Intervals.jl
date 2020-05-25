@@ -4,7 +4,17 @@
         (0.0, 1, 0.01),  # Use different types to test promotion
         ('a', 'z', 1),
         (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
-        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1))
+        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
+        # Test unbounded endpoints
+        (nothing, 10, 1),
+        (10, nothing, 1),
+        (nothing, nothing, 1),
+        ('a', nothing, 1),
+        (nothing, 'z', 1),
+        (Date(2013, 2, 13), nothing, Day(1)),
+        (nothing, Date(2013, 3, 13), Day(1)),
+        (DateTime(2016, 8, 11, 0, 30), nothing, Millisecond(1)),
+        (nothing, DateTime(2016, 8, 11, 1), Millisecond(1)),
     ]
 
     @testset "constructor" begin
@@ -22,15 +32,47 @@
 
         for (a, b, _) in test_values
             @test a..b == Interval(a, b)
-            @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
-            @test Interval(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
-            @test Interval{typeof(a)}(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
-            @test Interval(a, b, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
-            @test Interval(b, a, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(false, true))
+
+            # Unbounded intervals work different here
+            if !(isnothing(a) || isnothing(b))
+                @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
+                @test Interval(a, b, true, false) ==
+                    Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                @test Interval{typeof(a)}(a, b, true, false) ==
+                    Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                @test Interval(a, b, Inclusivity(true, false)) ==
+                    Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                @test Interval(b, a, Inclusivity(true, false)) ==
+                    Interval{typeof(a)}(a, b, Inclusivity(false, true))
+            else
+                if isnothing(a) && isnothing(b)
+                    # The cases where both endpoints are unbounded
+                    @test Interval(a, b) ==
+                        Interval{typeof(a)}(a, b, Inclusivity(false ,false))
+                    @test Interval(a, b, true, false) ==
+                        Interval{typeof(a)}(a, b, Inclusivity(false, false))
+                    @test Interval{typeof(a)}(a, b, true, false) ==
+                        Interval{typeof(a)}(a, b, Inclusivity(false, false))
+                    @test Interval(a, b, Inclusivity(true, false)) ==
+                        Interval{typeof(a)}(a, b, Inclusivity(false, false))
+                    @test Interval(b, a, Inclusivity(false, false)) ==
+                        Interval(b, a, Inclusivity(false, false))
+                else
+                    # The cases where only one endpoint is unbounded
+                    T = isnothing(a) ? typeof(b) : typeof(a)
+                    inc = if isnothing(a)
+                        Inclusivity(false, true)
+                    else
+                        Inclusivity(true, false)
+                    end
+
+                    @test Interval(a, b) == Interval{T}(a, b, inc)
+                    @test Interval(a, b, true, true) == Interval{T}(a, b, inc)
+                    @test Interval{T}(a, b, true, true) == Interval{T}(a, b, inc)
+                    @test Interval(a, b, Inclusivity(true, true)) == Interval{T}(a, b, inc)
+                    @test Interval(b, a, inc) != Interval(a, b, inc)
+                end
+            end
         end
 
         # The three-argument Interval constructor can generate a StackOverflow if we aren't
@@ -77,14 +119,28 @@
         for (a, b, _) in test_values
             for i in 0:3
                 inc = Inclusivity(i)
+
+                # Unbounded endpoints will always be set to open
+                if isnothing(a) && isnothing(b)
+                    inc = Inclusivity(false, false)
+                elseif isnothing(a)
+                    inc = Inclusivity(false, last(inc))
+                elseif isnothing(b)
+                    inc = Inclusivity(first(inc), false)
+                end
                 interval = Interval(a, b, inc)
 
                 @test first(interval) == a
                 @test last(interval) == b
-                @test span(interval) == b - a
                 @test inclusivity(interval) == inc
                 @test isclosed(interval) == (first(inc) && last(inc))
                 @test isopen(interval) == !(first(inc) || last(inc))
+
+                # Unbounded intervals work different here
+                # XXX: FIX!
+                if !(isnothing(a) || isnothing(b))
+                    @test span(interval) == b - a
+                end
             end
         end
 
@@ -136,46 +192,92 @@
             for i in 0:3
                 interval = Interval(a, b, Inclusivity(i))
                 cp = copy(interval)
-                lesser_val = Interval(a - unit, b + unit, Inclusivity(i))
-                greater_val = Interval(a + unit, b + unit, Inclusivity(i))
-                diff_inc = Interval(a, b, Inclusivity(mod(i + 1, 4)))
+
+                # For any unbounded endpoint, we can't actually modify the value by adding
+                # or subtracting a unit, so let's just keep it as `nothing`.
+                # This makes `lesser_val` and `greater_val` somewhat misleading
+                pos_a = isnothing(a) ? a : a + unit
+                neg_a = isnothing(a) ? a : a - unit
+                pos_b = isnothing(b) ? b : b + unit
+
+                lesser_val = Interval(neg_a, pos_b, Inclusivity(i))
+                greater_val = Interval(pos_a, pos_b, Inclusivity(i))
+
+                diff_inc = if (
+                    (isnothing(a) && !isnothing(b)) || (!isnothing(a) && isnothing(b))
+                )
+                    # If just one endpoint is unbounded, then flip the inclusivity of the
+                    # bounded endpoint
+                    if isnothing(a)
+                        Interval(a, b, Inclusivity(false, !last(inclusivity(interval))))
+                    else
+                        Interval(a, b, Inclusivity(!first(inclusivity(interval)), false))
+                    end
+                else
+                    # If both endpoints are bounded, then just modify the inclusivity
+                    Interval(a, b, Inclusivity(mod(i + 1, 4)))
+                end
 
                 @test interval == cp
-                @test interval != lesser_val
-                @test interval != diff_inc
-
                 @test isequal(interval, cp)
-                @test !isequal(interval, lesser_val)
-                @test !isequal(interval, diff_inc)
-
                 @test hash(interval) == hash(cp)
-                @test hash(interval) != hash(lesser_val)
-                @test hash(interval) != hash(diff_inc)
+
+                if isnothing(a) && isnothing(b)
+                    # If both endpoints are unbounded, then they will always be equal
+                    @test interval == lesser_val
+                    @test isequal(interval, lesser_val)
+                    @test hash(interval) == hash(lesser_val)
+
+                    @test interval == diff_inc
+                    @test isequal(interval, diff_inc)
+                    @test hash(interval) == hash(diff_inc)
+
+                else
+                    # If neither point is unbounded, then this will be different
+                    @test interval != lesser_val
+                    @test !isequal(interval, lesser_val)
+                    @test hash(interval) != hash(lesser_val)
+
+                    @test interval != diff_inc
+                    @test !isequal(interval, diff_inc)
+                    @test hash(interval) != hash(diff_inc)
+                end
 
                 @test !isless(interval, cp)
                 @test !(interval < cp)
                 @test !(interval ≪ cp)
                 @test !(interval > cp)
                 @test !(interval ≫ cp)
-                @test isless(interval, greater_val)
-                @test interval < greater_val
+
+                if isnothing(a)
+                    # When the LeftEndpoint is unbounded, isless will never return true
+                    @test !isless(interval, greater_val)
+                    @test !(interval < greater_val)
+                    @test !(greater_val > interval)
+                    @test !isless(lesser_val, interval)
+                    @test !(lesser_val < interval)
+                    @test !(interval > lesser_val)
+                else
+                    @test isless(interval, greater_val)
+                    @test interval < greater_val
+                    @test greater_val > interval
+                    @test isless(lesser_val, interval)
+                    @test lesser_val < interval
+                    @test interval > lesser_val
+                end
                 @test !(interval ≪ greater_val)     # Still overlap, so not disjoint
                 @test !(interval > greater_val)
                 @test !(interval ≫ greater_val)
                 @test !isless(greater_val, interval)
                 @test !(greater_val < interval)
                 @test !(greater_val ≪ interval)     # Still overlap, so not disjoint
-                @test greater_val > interval
                 @test !(greater_val ≫ interval)     # Still overlap, so not disjoint
-                @test isless(lesser_val, interval)
-                @test lesser_val < interval
                 @test !(lesser_val ≪ interval)
                 @test !(lesser_val > interval)
                 @test !(lesser_val ≫ interval)
                 @test !isless(interval, lesser_val)
                 @test !(interval < lesser_val)
                 @test !(interval ≪ lesser_val)
-                @test interval > lesser_val
                 @test !(interval ≫ lesser_val)      # Still overlap, so not disjoint
             end
         end
@@ -308,11 +410,19 @@
             for i in 0:3
                 inc = Inclusivity(i)
                 interval = Interval(a, b, inc)
-                @test interval + unit == Interval(a + unit, b + unit, inc)
-                @test unit + interval == Interval(a + unit, b + unit, inc)
-                @test interval - unit == Interval(a - unit, b - unit, inc)
 
-                if a isa Number
+                # For any unbounded endpoint, we can't actually modify the value by
+                # adding or subtracting a unit, so let's just keep it as `nothing`.
+                pos_a = isnothing(a) ? a : a + unit
+                neg_a = isnothing(a) ? a : a - unit
+                pos_b = isnothing(b) ? b : b + unit
+                neg_b = isnothing(b) ? b : b - unit
+
+                @test interval + unit == Interval(pos_a, pos_b, inc)
+                @test unit + interval == Interval(pos_a, pos_b, inc)
+                @test interval - unit == Interval(neg_a, neg_b, inc)
+
+                if a isa Number && !isnothing(b)
                     @test -interval == Interval(-b, -a, last(inc), first(inc))
                     @test unit - interval == Interval(unit-b, unit-a, last(inc), first(inc))
                 else
@@ -365,38 +475,66 @@
     end
 
     @testset "in" begin
-        for (a, b, unit) in test_values
+    for (a, b, unit) in test_values
             interval = Interval(a, b)
-            @test in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
-            @test in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
 
-            interval = Interval(a, b, Inclusivity(true, false))
-            @test in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
-            @test !in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+            # For any unbounded endpoint, we can't actually modify the value by
+            # adding or subtracting a unit, so let's just keep it as `nothing`.
+            pos_a = isnothing(a) ? a : a + unit
+            neg_a = isnothing(a) ? a : a - unit
+            pos_b = isnothing(b) ? b : b + unit
+            neg_b = isnothing(b) ? b : b - unit
 
-            interval = Interval(a, b, Inclusivity(false, true))
-            @test !in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
-            @test in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+            if !(isnothing(a) || isnothing(b))
+                @test in(a, interval)
+                @test in(pos_a, interval)
+                @test !in(neg_a, interval)
+                @test in(b, interval)
+                @test in(neg_b, interval)
+                @test !in(pos_b, interval)
 
-            interval = Interval(a, b, Inclusivity(false, false))
-            @test !in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
-            @test !in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+                interval = Interval(a, b, Inclusivity(true, false))
+                @test in(a, interval)
+                @test in(pos_a, interval)
+                @test !in(neg_a, interval)
+                @test !in(b, interval)
+                @test in(neg_b, interval)
+                @test !in(pos_b, interval)
+
+                interval = Interval(a, b, Inclusivity(false, true))
+                @test !in(a, interval)
+                @test in(pos_a, interval)
+                @test !in(neg_a, interval)
+                @test in(b, interval)
+                @test in(neg_b, interval)
+                @test !in(pos_b, interval)
+
+                interval = Interval(a, b, Inclusivity(false, false))
+                @test !in(a, interval)
+                @test in(pos_a, interval)
+                @test !in(neg_a, interval)
+                @test !in(b, interval)
+                @test in(neg_b, interval)
+                @test !in(pos_b, interval)
+            else
+                # Unbounded intervals have a smaller subset of testing for `in`
+                if isnothing(a) && isnothing(b)
+                    # If both endpoints are unbounded, then every value returns as true
+                    @test in(a, interval)
+                    @test in(10, interval)
+                    @test in(-10, interval)
+                else
+                    if isnothing(a)
+                        @test !in(a, interval)
+                        @test !in(pos_b, interval)
+                        @test in(neg_b, interval)
+                    elseif isnothing(b)
+                        @test !in(b, interval)
+                        @test in(pos_a, interval)
+                        @test !in(neg_a, interval)
+                    end
+                end
+            end
 
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end

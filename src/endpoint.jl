@@ -1,3 +1,5 @@
+isunbounded(a) = isnothing(a)
+
 struct Direction{T} end
 
 const Left = Direction{:Left}()
@@ -23,11 +25,11 @@ LeftEndpoint(ep::T, included::Bool) where T = LeftEndpoint{T}(ep, included)
 RightEndpoint(ep::T, included::Bool) where T = RightEndpoint{T}(ep, included)
 
 function LeftEndpoint(i::AbstractInterval{T}) where T
-    X = isnothing(first(i)) ? Nothing : T
+    X = isunbounded(first(i)) ? Nothing : T
     return LeftEndpoint{X}(first(i), first(inclusivity(i)))
 end
 function RightEndpoint(i::AbstractInterval{T}) where T
-    X = isnothing(last(i)) ? Nothing : T
+    X = isunbounded(last(i)) ? Nothing : T
     return RightEndpoint{X}(last(i), last(inclusivity(i)))
 end
 
@@ -86,19 +88,19 @@ function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
 end
 
 function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
-    return !(isnothing(a.endpoint) && isnothing(b.endpoint)) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && a.included && !b.included))
+    return !(isunbounded(a.endpoint) && isunbounded(b.endpoint)) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && a.included && !b.included))
 end
 
 function Base.isless(a::RightEndpoint, b::RightEndpoint)
-    return !(isnothing(a.endpoint) && isnothing(b.endpoint)) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !a.included && b.included))
+    return !(isunbounded(a.endpoint) && isunbounded(b.endpoint)) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !a.included && b.included))
 end
 
 function Base.isless(a::LeftEndpoint, b::RightEndpoint)
-    return isnothing(a.endpoint) || isnothing(b.endpoint) || a.endpoint < b.endpoint
+    return isunbounded(a.endpoint) || isunbounded(b.endpoint) || a.endpoint < b.endpoint
 end
 
 function Base.isless(a::RightEndpoint, b::LeftEndpoint)
-    return !isnothing(a.endpoint) && !isnothing(b.endpoint) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(a.included && b.included)))
+    return !isunbounded(a.endpoint) && !isunbounded(b.endpoint) && (a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(a.included && b.included)))
 end
 
 # Comparisons between Scalars and Endpoints
@@ -112,9 +114,9 @@ Base.isless(a::Endpoint{Nothing}, b::Endpoint{Nothing}) = false
 
 function Base.isless(a, b::LeftEndpoint)
     # If the left endpoint is unbounded, then there can be no value less than the endpoint
-    if isnothing(b.endpoint)
+    if isunbounded(b.endpoint)
         return false
-    elseif isnothing(a)
+    elseif isunbounded(a)
         return true
     else
         return a < b.endpoint || (a == b.endpoint && !b.included)
@@ -126,9 +128,9 @@ Base.isless(a::LeftEndpoint, b) = a.endpoint < b
 function Base.isless(a::RightEndpoint, b)
     # If the right endpoint is unbounded, then there can be no value greater than the
     # endpoint
-    if isnothing(a.endpoint)
+    if isunbounded(a.endpoint)
         return false
-    elseif isnothing(b)
+    elseif isunbounded(b)
         return true
     else
         return a.endpoint < b || (a.endpoint == b && !a.included)

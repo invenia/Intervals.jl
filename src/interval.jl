@@ -105,7 +105,7 @@ struct Interval{T} <: AbstractInterval{T}
     ) where T
         # If one or both endpoints are unbounded (Nothing), then any value is valid.
         # If both endpoints are unbounded, this interval acompases all values
-        if !(isnothing(f) || isnothing(l))
+        if !(isunbounded(f) || isunbounded(l))
             # Ensure that `first` preceeds `last`
             f, l, inc = if f ≤ l
                 f, l, inc
@@ -117,8 +117,8 @@ struct Interval{T} <: AbstractInterval{T}
         end
 
         # If either endpoint is unbounded, we will mutate the inclusivity to be open.
-        a = isnothing(f) ? false : first(inc)
-        b = isnothing(l) ? false : last(inc)
+        a = isunbounded(f) ? false : first(inc)
+        b = isunbounded(l) ? false : last(inc)
 
         return new(f, l, Inclusivity(a, b))
     end
@@ -219,8 +219,8 @@ end
 
 function Base.:+(a::T, b) where {T <: Interval}
     # For values that are not unbounded, we can increment their value by b
-    a_unit = isnothing(first(a)) ? nothing : first(a) + b
-    b_unit = isnothing(last(a)) ? nothing : last(a) + b
+    a_unit = isunbounded(first(a)) ? nothing : first(a) + b
+    b_unit = isunbounded(last(a)) ? nothing : last(a) + b
 
     return T(a_unit, b_unit, inclusivity(a))
 end

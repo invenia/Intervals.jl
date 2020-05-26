@@ -103,8 +103,7 @@ struct Interval{T} <: AbstractInterval{T}
     function Interval{T}(
         f::Union{T, Nothing}, l::Union{T, Nothing}, inc::Inclusivity
     ) where T
-        # If one or both endpoints are unbounded (Nothing), then any value is valid.
-        # If both endpoints are unbounded, this interval acompases all values
+        # If one or both endpoints are unbounded, then any value is valid.
         if !(isunbounded(f) || isunbounded(l))
             # Ensure that `first` preceeds `last`
             f, l, inc = if f ≤ l

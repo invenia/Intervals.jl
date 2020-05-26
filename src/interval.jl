@@ -348,6 +348,8 @@ function TimeZones.astimezone(i::Interval{ZonedDateTime}, tz::TimeZone)
 end
 
 function TimeZones.timezone(i::Interval{ZonedDateTime})
-    timezone(first(i)) == timezone(last(i)) && return timezone(first(i))
-    throw(ArgumentError("Interval $i contains mixed timezones."))
+    if timezone(first(i)) != timezone(last(i))
+        throw(ArgumentError("Interval $i contains mixed timezones."))
+    end
+    return timezone(first(i))
 end

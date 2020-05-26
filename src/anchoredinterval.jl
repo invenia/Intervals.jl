@@ -279,8 +279,8 @@ canonicalize(target_type::Type{P}, p::P) where P <: Period = p
 
 ##### TIME ZONES #####
 
-function astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
+function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
     return AnchoredInterval{P, ZonedDateTime}(astimezone(anchor(i), tz), inclusivity(i))
 end
 
-timezone(i::AnchoredInterval{P, ZonedDateTime}) where P = timezone(anchor(i))
+TimeZones.timezone(i::AnchoredInterval{P, ZonedDateTime}) where P = timezone(anchor(i))

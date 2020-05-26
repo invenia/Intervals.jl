@@ -8,7 +8,6 @@ using TimeZones
 using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
-import TimeZones: astimezone, timezone
 
 abstract type AbstractInterval{T} end
 

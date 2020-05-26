@@ -1,10 +1,23 @@
 @testset "Interval" begin
     test_values = [
         (-10, 1000, 1),
-        (0.0, 1, 0.01),  # Use different types to test promotion
+        # Use different types to test promotion
+        (0.0, 1, 0.01),
         ('a', 'z', 1),
         (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
-        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1))
+        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
+        # Test unbounded endpoints
+        (-∞, ∞, 1),
+        (-∞, 10, 1),
+        (10, ∞, 1),
+        (-∞, 1, 0.01),
+        (0.0, ∞, 0.01),
+        (-∞, 'z', 1),
+        ('a', ∞, 1),
+        (-∞, Date(2013, 3, 13), Day(1)),
+        (Date(2013, 2, 13), ∞, Day(1)),
+        (-∞, DateTime(2016, 8, 11, 1), Millisecond(1)),
+        (DateTime(2016, 8, 11, 0, 30), ∞, Millisecond(1)),
     ]
 
     @testset "constructor" begin

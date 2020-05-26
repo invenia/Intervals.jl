@@ -1,4 +1,5 @@
-isunbounded(a) = isnothing(a)
+# isnothing doesn't exist in Julia 1.0
+isunbounded(a) = a === nothing
 
 struct Direction{T} end
 

@@ -1,11 +1,10 @@
 using Dates
 using Plots
 using Intervals
+using Intervals: isunbounded
 using TimeZones
 using Test
 using VisualRegressionTests
-
-
 
 @testset "Intervals" begin
     #include("inclusivity.jl")

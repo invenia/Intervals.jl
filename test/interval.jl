@@ -34,7 +34,7 @@
             @test a..b == Interval(a, b)
 
             # Unbounded intervals work different here
-            if !(isnothing(a) || isnothing(b))
+            if !(isunbounded(a) || isunbounded(b))
                 @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
                 @test Interval(a, b, true, false) ==
                     Interval{typeof(a)}(a, b, Inclusivity(true, false))
@@ -45,7 +45,7 @@
                 @test Interval(b, a, Inclusivity(true, false)) ==
                     Interval{typeof(a)}(a, b, Inclusivity(false, true))
             else
-                if isnothing(a) && isnothing(b)
+                if isunbounded(a) && isunbounded(b)
                     # The cases where both endpoints are unbounded
                     @test Interval(a, b) ==
                         Interval{typeof(a)}(a, b, Inclusivity(false ,false))
@@ -59,8 +59,8 @@
                         Interval(b, a, Inclusivity(false, false))
                 else
                     # The cases where only one endpoint is unbounded
-                    T = isnothing(a) ? typeof(b) : typeof(a)
-                    inc = if isnothing(a)
+                    T = isunbounded(a) ? typeof(b) : typeof(a)
+                    inc = if isunbounded(a)
                         Inclusivity(false, true)
                     else
                         Inclusivity(true, false)
@@ -121,11 +121,11 @@
                 inc = Inclusivity(i)
 
                 # Unbounded endpoints will always be set to open
-                if isnothing(a) && isnothing(b)
+                if isunbounded(a) && isunbounded(b)
                     inc = Inclusivity(false, false)
-                elseif isnothing(a)
+                elseif isunbounded(a)
                     inc = Inclusivity(false, last(inc))
-                elseif isnothing(b)
+                elseif isunbounded(b)
                     inc = Inclusivity(first(inc), false)
                 end
                 interval = Interval(a, b, inc)
@@ -138,7 +138,7 @@
 
                 # Unbounded intervals work different here
                 # XXX: FIX!
-                if !(isnothing(a) || isnothing(b))
+                if !(isunbounded(a) || isunbounded(b))
                     @test span(interval) == b - a
                 end
             end
@@ -196,19 +196,19 @@
                 # For any unbounded endpoint, we can't actually modify the value by adding
                 # or subtracting a unit, so let's just keep it as `nothing`.
                 # This makes `lesser_val` and `greater_val` somewhat misleading
-                pos_a = isnothing(a) ? a : a + unit
-                neg_a = isnothing(a) ? a : a - unit
-                pos_b = isnothing(b) ? b : b + unit
+                pos_a = isunbounded(a) ? a : a + unit
+                neg_a = isunbounded(a) ? a : a - unit
+                pos_b = isunbounded(b) ? b : b + unit
 
                 lesser_val = Interval(neg_a, pos_b, Inclusivity(i))
                 greater_val = Interval(pos_a, pos_b, Inclusivity(i))
 
                 diff_inc = if (
-                    (isnothing(a) && !isnothing(b)) || (!isnothing(a) && isnothing(b))
+                    (isunbounded(a) && !isunbounded(b)) || (!isunbounded(a) && isunbounded(b))
                 )
                     # If just one endpoint is unbounded, then flip the inclusivity of the
                     # bounded endpoint
-                    if isnothing(a)
+                    if isunbounded(a)
                         Interval(a, b, Inclusivity(false, !last(inclusivity(interval))))
                     else
                         Interval(a, b, Inclusivity(!first(inclusivity(interval)), false))
@@ -222,7 +222,7 @@
                 @test isequal(interval, cp)
                 @test hash(interval) == hash(cp)
 
-                if isnothing(a) && isnothing(b)
+                if isunbounded(a) && isunbounded(b)
                     # If both endpoints are unbounded, then they will always be equal
                     @test interval == lesser_val
                     @test isequal(interval, lesser_val)
@@ -249,7 +249,7 @@
                 @test !(interval > cp)
                 @test !(interval ≫ cp)
 
-                if isnothing(a)
+                if isunbounded(a)
                     # When the LeftEndpoint is unbounded, isless will never return true
                     @test !isless(interval, greater_val)
                     @test !(interval < greater_val)
@@ -413,16 +413,16 @@
 
                 # For any unbounded endpoint, we can't actually modify the value by
                 # adding or subtracting a unit, so let's just keep it as `nothing`.
-                pos_a = isnothing(a) ? a : a + unit
-                neg_a = isnothing(a) ? a : a - unit
-                pos_b = isnothing(b) ? b : b + unit
-                neg_b = isnothing(b) ? b : b - unit
+                pos_a = isunbounded(a) ? a : a + unit
+                neg_a = isunbounded(a) ? a : a - unit
+                pos_b = isunbounded(b) ? b : b + unit
+                neg_b = isunbounded(b) ? b : b - unit
 
                 @test interval + unit == Interval(pos_a, pos_b, inc)
                 @test unit + interval == Interval(pos_a, pos_b, inc)
                 @test interval - unit == Interval(neg_a, neg_b, inc)
 
-                if a isa Number && !isnothing(b)
+                if a isa Number && !isunbounded(b)
                     @test -interval == Interval(-b, -a, last(inc), first(inc))
                     @test unit - interval == Interval(unit-b, unit-a, last(inc), first(inc))
                 else
@@ -480,12 +480,12 @@
 
             # For any unbounded endpoint, we can't actually modify the value by
             # adding or subtracting a unit, so let's just keep it as `nothing`.
-            pos_a = isnothing(a) ? a : a + unit
-            neg_a = isnothing(a) ? a : a - unit
-            pos_b = isnothing(b) ? b : b + unit
-            neg_b = isnothing(b) ? b : b - unit
+            pos_a = isunbounded(a) ? a : a + unit
+            neg_a = isunbounded(a) ? a : a - unit
+            pos_b = isunbounded(b) ? b : b + unit
+            neg_b = isunbounded(b) ? b : b - unit
 
-            if !(isnothing(a) || isnothing(b))
+            if !(isunbounded(a) || isunbounded(b))
                 @test in(a, interval)
                 @test in(pos_a, interval)
                 @test !in(neg_a, interval)
@@ -518,17 +518,17 @@
                 @test !in(pos_b, interval)
             else
                 # Unbounded intervals have a smaller subset of testing for `in`
-                if isnothing(a) && isnothing(b)
+                if isunbounded(a) && isunbounded(b)
                     # If both endpoints are unbounded, then every value returns as true
                     @test in(a, interval)
                     @test in(10, interval)
                     @test in(-10, interval)
                 else
-                    if isnothing(a)
+                    if isunbounded(a)
                         @test !in(a, interval)
                         @test !in(pos_b, interval)
                         @test in(neg_b, interval)
-                    elseif isnothing(b)
+                    elseif isunbounded(b)
                         @test !in(b, interval)
                         @test in(pos_a, interval)
                         @test !in(neg_a, interval)

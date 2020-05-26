@@ -127,18 +127,12 @@ end
 Interval{T}(f, l, inc::Inclusivity) where T = Interval{T}(convert(T, f), convert(T, l), inc)
 Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
 Interval{T}(f, l) where T = Interval{T}(f, l, true, true)
-
 Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
+Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
+
+Interval(f::Nothing, l::T, inc...) where T = Interval{T}(f, l, inc...)
+Interval(f::T, l::Nothing, inc...) where T = Interval{T}(f, l, inc...)
 Interval(::Nothing, ::Nothing, inc...) = Interval{Nothing}(nothing, nothing, inc...)
-function Interval(f, l, inc...)
-    if isnothing(f) || isnothing(l)
-        # If only one endpoint is nothing, use the type of the other endpoint
-        T = isnothing(f) ? typeof(l) : typeof(f)
-        return Interval{T}(f, l, inc...)
-    else
-        return Interval(promote(f, l)..., inc...)
-    end
-end
 
 (..)(first, last) = Interval(first, last)
 
@@ -265,14 +259,7 @@ function Base.:isless(a::AbstractInterval, b::AbstractInterval)
 end
 
 function less_than_disjoint(a::AbstractInterval, b::AbstractInterval)
-    re = RightEndpoint(a)
-    le = LeftEndpoint(b)
-
-    if isnothing(re) || isnothing(le)
-        return false
-    else
-        return re < le
-    end
+    return RightEndpoint(a) < LeftEndpoint(b)
 end
 
 greater_than_disjoint(a, b) = less_than_disjoint(b, a)
@@ -316,17 +303,7 @@ true
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
-function Base.in(a, b::AbstractInterval)
-    if isnothing(a)
-        if isnothing(first(b)) && isnothing(last(b))
-            return true
-        else
-            return false
-        end
-    else
-        return !(a ≫ b || a ≪ b)
-    end
-end
+Base.in(a, b::AbstractInterval) = !(a ≫ b || a ≪ b)
 
 function Base.in(a::AbstractInterval, b::AbstractInterval)
     # Intervals should be compared with set operations

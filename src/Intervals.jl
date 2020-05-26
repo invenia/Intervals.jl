@@ -41,5 +41,6 @@ export AbstractInterval,
        less_than_disjoint,
        greater_than_disjoint,
        superset,
-       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
+       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉,
+       Endpoint, Left, Right, LeftEndpoint, RightEndpoint
 end

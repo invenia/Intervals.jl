@@ -1,5 +1,3 @@
-import TimeZones: astimezone
-
 """
     AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -> AnchoredInterval{P, T}
     AnchoredInterval{P, T}(anchor::T, [closed_left::Bool, closed_right::Bool]) where {P, T} -> AnchoredInterval{P, T}
@@ -281,6 +279,8 @@ canonicalize(target_type::Type{P}, p::P) where P <: Period = p
 
 ##### TIME ZONES #####
 
-function astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
+function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
     return AnchoredInterval{P, ZonedDateTime}(astimezone(anchor(i), tz), inclusivity(i))
 end
+
+TimeZones.timezone(i::AnchoredInterval{P, ZonedDateTime}) where P = timezone(anchor(i))

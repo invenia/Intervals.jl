@@ -347,4 +347,7 @@ function TimeZones.astimezone(i::Interval{ZonedDateTime}, tz::TimeZone)
     return Interval(astimezone(first(i), tz), astimezone(last(i), tz), inclusivity(i))
 end
 
-timezone(i::Interval{ZonedDateTime}) = timezone(first(i))
+function timezone(i::Interval{ZonedDateTime})
+    timezone(first(i)) == timezone(last(i)) && return timezone(first(i))
+    throw(ArgumentError("Interval $i contains mixed timezones."))
+end

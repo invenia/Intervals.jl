@@ -513,10 +513,17 @@
     end
 
     @testset "timezone" begin
-        zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
-        zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
-        i = Interval(zdt1, zdt2)
-        @test timezone(i) == tz"America/Winnipeg"
+        @testset "basic" begin
+            zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+            zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
+            @test timezone(Interval(zdt1, zdt2)) == tz"America/Winnipeg"
+        end
+
+        @testset "multiple timezones" begin
+            zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+            zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"Europe/London")
+            @test_throws ArgumentError timezone(Interval(zdt1, zdt2))
+        end
     end
 
     @testset "merge" begin

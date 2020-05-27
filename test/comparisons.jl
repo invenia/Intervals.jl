@@ -18,31 +18,41 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     # [12]
     #     [45]
     @testset "non-overlapping" begin
-        earlier = convert(A, Interval(1, 2, true, true))
-        later = convert(B, Interval(4, 5, true, true))
+        tests = [
+            ((1, 2, true, true), (4, 5, true, true)),
+            ((-∞, 2, true, true), (4, ∞, true, true)),
+        ]
+        for (a, b) in tests
+            @show a
+            @show b
+            @show A
+            @show B
+            earlier = convert(A, Interval(a[1], a[2], a[3], a[4]))
+            later = convert(B, Interval(b[1], b[2], b[3], b[4]))
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test earlier ≪ later
-        @test !(later ≪ earlier)
+            @test earlier ≪ later
+            @test !(later ≪ earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
 
-        @test isempty(intersect(earlier, later))
-        @test_throws ArgumentError merge(earlier, later)
-        @test union([earlier, later]) == [earlier, later]
-        @test !overlaps(earlier, later)
-        @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, true, true)
+            @test isempty(intersect(earlier, later))
+            @test_throws ArgumentError merge(earlier, later)
+            @test union([earlier, later]) == [earlier, later]
+            @test !overlaps(earlier, later)
+            @test !contiguous(earlier, later)
+            @test superset([earlier, later]) == Interval(a[1], b[2], a[3], b[4])
+        end
     end
 
     # Compare two intervals which "touch" but both intervals do not include that point:

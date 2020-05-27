@@ -71,7 +71,27 @@ struct Interval{T} <: AbstractInterval{T}
     end
 end
 
-Interval{T}(f, l, inc::Inclusivity) where T = Interval{T}(convert(T, f), convert(T, l), inc)
+isbounded(a) = !isposinf(a) && !isneginf(a)
+isunbounded(a) = !isbounded(a)
+
+function Interval{T}(f, l, inc::Inclusivity) where T
+    if (isbounded(f) && isbounded(l)) || (isunbounded(f) && isunbounded(l))
+        return Interval{T}(convert(T, f), convert(T, l), inc)
+    else
+        # If either endpoint is unbounded, we want to convert the bounded variable, and then
+        # try and promote them both to a compatable type.
+        # If T is a subset of the Infinite type, then don't try to convert at all, as trying
+        # to convert any type to Infinite will result in an error
+        if !(T <: Infinite)
+            if isbounded(f)
+                f = convert(T, f)
+            else
+                l = convert(T, l)
+            end
+        end
+        return Interval(f, l, inc)
+    end
+end
 Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
 Interval{T}(f, l) where T = Interval{T}(f, l, true, true)
 
@@ -161,7 +181,8 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, inclusivity(a))
+Base.:+(a::Interval, b) = Interval(first(a) + b, last(a) + b, inclusivity(a))
+
 
 Base.:+(a, b::Interval) = b + a
 Base.:-(a::Interval, b) = a + -b
@@ -338,7 +359,14 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
-    return Interval(left, right)
+
+    # This promotion fixes the situation where one endpoint has a type of
+    # `InfExtended{T}` yet the ∞ value is of type `Infinite`.
+    # This will cause an error when trying to `promote(left, right)`
+    return Interval(
+        promote(left.endpoint, right.endpoint)...,
+        left.included, right.included
+    )
 end
 
 ##### TIME ZONES #####

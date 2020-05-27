@@ -6,19 +6,20 @@
         ('a', 'z', 1),
         (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
         (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
+    ]
+    inf_test_values = [
         # Test unbounded endpoints
         (-∞, ∞, 1),
         (-∞, 10, 1),
         (10, ∞, 1),
-        (-∞, 1, 0.01),
+        (-∞, 1.0, 0.01),
         (0.0, ∞, 0.01),
-        (-∞, 'z', 1),
-        ('a', ∞, 1),
-        (-∞, Date(2013, 3, 13), Day(1)),
-        (Date(2013, 2, 13), ∞, Day(1)),
-        (-∞, DateTime(2016, 8, 11, 1), Millisecond(1)),
-        (DateTime(2016, 8, 11, 0, 30), ∞, Millisecond(1)),
+        #(-∞, Date(2013, 3, 13), Day(1)),
+        #(Date(2013, 2, 13), ∞, Day(1)),
+        #(-∞, DateTime(2016, 8, 11, 1), Millisecond(1)),
+        #(DateTime(2016, 8, 11, 0, 30), ∞, Millisecond(1)),
     ]
+    all_test_values = vcat(test_values, inf_test_values)
 
     @testset "constructor" begin
         for T in [Int32, Int64, Float64]
@@ -33,7 +34,7 @@
             ZonedDateTime(0, tz"UTC"), ZonedDateTime(0, tz"UTC"), Inclusivity(false, false)
         )
 
-        for (a, b, _) in test_values
+        for (a, b, _) in all_test_values
             @test a..b == Interval(a, b)
             @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
             @test Interval(a, b, true, false) ==
@@ -87,7 +88,7 @@
     end
 
     @testset "accessors" begin
-        for (a, b, _) in test_values
+        for (a, b, _) in all_test_values
             for i in 0:3
                 inc = Inclusivity(i)
                 interval = Interval(a, b, inc)
@@ -142,6 +143,18 @@
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "Interval{String}(\"a\", \"b\", Inclusivity(true, true))"
+
+        interval = Interval(-∞, ∞, Inclusivity(true, true))
+        @test string(interval) == "[-∞ .. ∞]"
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) ==
+            "Interval{Infinite}(-∞, ∞, Inclusivity(true, true))"
+
+        interval = Interval(0, ∞, Inclusivity(true, true))
+        @test string(interval) == "[0 .. ∞]"
+        @test sprint(show, interval, context=:compact=>true) == string(interval)
+        @test sprint(show, interval) ==
+            "Interval{InfExtended{Int64}}(0, ∞, Inclusivity(true, true))"
     end
 
     @testset "equality" begin
@@ -192,6 +205,36 @@
                 @test !(interval ≫ lesser_val)      # Still overlap, so not disjoint
             end
         end
+
+        ###################
+        # Unbounded tests #
+        ###################
+        # Disjoint
+        @test !(Interval(-∞, ∞) ≪ Interval(-∞, ∞))
+        @test !(Interval(-∞, ∞) ≪ Interval(-100, 100))
+        @test !(Interval(-∞, ∞) ≫ Interval(-∞, ∞))
+        @test !(Interval(-∞, ∞) ≫ Interval(-100, 100))
+        @test Interval(-100, 100) ≪ Interval(200, ∞)
+        @test !(Interval(-100, 100) ≪ Interval(50, ∞))
+        @test Interval(-100, 100) ≫ Interval(-∞, -200)
+        @test !(Interval(-100, 100) ≫ Interval(-∞, -50))
+
+        # Less/Greater than
+        @test !isless(Interval(-∞, ∞), Interval(-∞, ∞))
+        @test !(Interval(-∞, ∞) < Interval(-∞, ∞))
+        @test !(Interval(100, 200) < Interval(-∞, ∞))
+        @test Interval(100, 200) < Interval(150, ∞)
+        @test !(Interval(-∞, ∞) > Interval(-∞, ∞))
+        @test Interval(100, 200) > Interval(-∞, ∞)
+        @test Interval(100, 200) > Interval(-∞, 150)
+        @test Interval(150, 200) > Interval(100, ∞)
+
+        # Equality
+        @test Interval(-∞, ∞) == Interval(-∞, ∞)
+        @test Interval(-∞, ∞) != Interval(-∞, ∞, true, false)
+        @test Interval(-∞, ∞) != Interval(-∞, ∞, false, true)
+        @test Interval(-∞, ∞) != Interval(-∞, ∞, false, false)
+        ###################
 
         @test Interval(2010, 2011) ≪ Interval(2012, 2013)
         @test !(Interval(2012, 2013) ≪ Interval(2010, 2011))
@@ -311,13 +354,14 @@
         i1 = 1 .. 10
         i2 = Interval(1, 10, false, false)
         i3 = 2 .. 11
+        i4 = -∞ .. ∞
 
-        @test sort([i1, i2, i3]) == [i1, i2, i3]
-        @test sort([i1, i2, i3]; rev=true) == [i3, i2, i1]
+        @test sort([i1, i2, i3, i4]) == [i4, i1, i2, i3]
+        @test sort([i1, i2, i3, i4]; rev=true) == [i3, i2, i1, i4]
     end
 
     @testset "arithmetic" begin
-        for (a, b, unit) in test_values
+        for (a, b, unit) in all_test_values
             for i in 0:3
                 inc = Inclusivity(i)
                 interval = Interval(a, b, inc)
@@ -413,6 +457,77 @@
 
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
+
+        for (a, b, unit) in inf_test_values
+            if isunbounded(a) && isunbounded(b)
+                # Both values are unbounded
+                interval = Interval(a, b)
+                @test in(a, interval)
+                @test in(b, interval)
+                @test in(unit, interval)
+                @test in(-unit, interval)
+
+                interval = Interval(a, b, true, false)
+                @test in(a, interval)
+                @test !in(b, interval)
+                @test in(unit, interval)
+                @test in(-unit, interval)
+
+                interval = Interval(a, b, false, true)
+                @test !in(a, interval)
+                @test in(b, interval)
+                @test in(unit, interval)
+                @test in(-unit, interval)
+
+                interval = Interval(a, b, false, false)
+                @test !in(a, interval)
+                @test !in(b, interval)
+                @test in(unit, interval)
+                @test in(-unit, interval)
+            elseif isbounded(a)
+                # a is a bounded value, and b is unbounded
+                interval = Interval(a, b)
+                @test in(a, interval)
+                @test in(a + unit, interval)
+                @test !in(a - unit, interval)
+
+                interval = Interval(a, b, true, false)
+                @test in(a, interval)
+                @test in(a + unit, interval)
+                @test !in(a - unit, interval)
+
+                interval = Interval(a, b, false, true)
+                @test !in(a, interval)
+                @test in(a + unit, interval)
+                @test !in(a - unit, interval)
+
+                interval = Interval(a, b, false, false)
+                @test !in(a, interval)
+                @test in(a + unit, interval)
+                @test !in(a - unit, interval)
+            else
+                # a is an unbounded value, and b is bounded
+                interval = Interval(a, b)
+                @test in(b, interval)
+                @test !in(b + unit, interval)
+                @test in(b - unit, interval)
+
+                interval = Interval(a, b, true, false)
+                @test !in(b, interval)
+                @test !in(b + unit, interval)
+                @test in(b - unit, interval)
+
+                interval = Interval(a, b, false, true)
+                @test in(b, interval)
+                @test !in(b + unit, interval)
+                @test in(b - unit, interval)
+
+                interval = Interval(a, b, false, false)
+                @test !in(b, interval)
+                @test !in(b + unit, interval)
+                @test in(b - unit, interval)
+            end
+        end
     end
 
     @testset "issubset" begin
@@ -426,12 +541,24 @@
         @test 1..9 ⊉ 0..10
         @test 0..10 ⊈ 1..9
         @test 0..10 ⊇ 1..9
+
         @test 1..11 ⊈ 0..10
         @test 1..11 ⊉ 0..10
         @test -1..9 ⊈ 0..10
         @test -1..9 ⊉ 0..10
         @test 20..30 ⊈ 0..10
         @test 20..30 ⊉ 0..10
+
+        @test -∞..∞ ⊆ -∞..∞
+        @test -∞..∞ ⊇ -∞..∞
+        @test Interval(-∞, ∞, false, false) ⊆ -∞..∞
+        @test Interval(-∞, ∞, false, false) ⊉ -∞..∞
+        @test -∞..∞ ⊈ Interval(-∞, ∞, false, false)
+        @test -∞..∞ ⊇ Interval(-∞, ∞, false, false)
+        @test -100..100 ⊆ -∞..∞
+        @test -100..100 ⊉ -∞..∞
+        @test -∞..∞ ⊇ -100..100
+        @test -∞..∞ ⊈ -100..100
     end
 
     @testset "intersect" begin
@@ -455,6 +582,11 @@
             b = Interval(-2, 10, Inclusivity(false, true))
             @test intersect(a, b) == Interval(-2, 5, Inclusivity(false, false))
             @test intersect(b, a) == intersect(a, b)
+
+            a = Interval(-∞, 100, Inclusivity(true, true))
+            b = Interval(50, ∞, Inclusivity(true, true))
+            @test intersect(a, b) == Interval(50, 100, Inclusivity(true, true))
+            @test intersect(b, a) == intersect(a, b)
         end
 
         @testset "adjacent" begin
@@ -477,11 +609,27 @@
             b = Interval(0, 10, Inclusivity(false, true))
             @test isempty(intersect(a, b))
             @test isempty(intersect(b, a))
+
+            a = Interval(-∞, 0, Inclusivity(true, true))
+            b = Interval(0, ∞, Inclusivity(true, true))
+            @test intersect(a, b) == Interval(0, 0, Inclusivity(true, true))
+            @test intersect(b, a) == intersect(a, b)
+
+            a = Interval(-∞, 0, Inclusivity(true, false))
+            b = Interval(0, ∞, Inclusivity(true, true))
+            @test isempty(intersect(a, b))
+            @test isempty(intersect(b, a))
         end
 
         @testset "identical" begin
             for inclusivity in Inclusivity.(0:3)
                 x = Interval(1, 10, inclusivity)
+                @test intersect(x, x) == x
+
+                x = Interval(-∞, 10, inclusivity)
+                @test intersect(x, x) == x
+
+                x = Interval(1, ∞, inclusivity)
                 @test intersect(x, x) == x
             end
 
@@ -505,6 +653,11 @@
             for inclusivity in Inclusivity.(0:3)
                 a = Interval(-100, -1, inclusivity)
                 b = Interval(1, 100, inclusivity)
+                @test isempty(intersect(a, b))
+                @test isempty(intersect(b, a))
+
+                a = Interval(-∞, -1, inclusivity)
+                b = Interval(1, ∞, inclusivity)
                 @test isempty(intersect(a, b))
                 @test isempty(intersect(b, a))
             end
@@ -542,18 +695,24 @@
         a = Interval(-100, -1, Inclusivity(true, false))
         b = Interval(-2, 10, Inclusivity(false, false))
         @test merge(a, b) == Interval(-100, 10, Inclusivity(true, false))
+
+        a = Interval(-∞, -1)
+        b = Interval(-2, ∞)
+        @test merge(a, b) == Interval(-∞, ∞)
     end
 
     @testset "union" begin
         intervals = [
+            Interval(-∞, -50, Inclusivity(false, false)),
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(13, 20, Inclusivity(false, false)),
+            Interval(18, ∞, Inclusivity(false, false))
         ]
         expected = [
-            Interval(-100, -1, Inclusivity(false, false)),
-            Interval(10, 20, Inclusivity(false, false))
+            Interval(-∞, -1, Inclusivity(false, false)),
+            Interval(10, ∞, Inclusivity(false, false))
         ]
         @test union(intervals) == expected
 
@@ -562,16 +721,19 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(18, ∞, Inclusivity(false, false)),
+            Interval(13, 20, Inclusivity(false, false)),
+            Interval(-∞, -50, Inclusivity(false, false))
         ]
         @test union(intervals) == expected
         @test intervals == [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(18, ∞, Inclusivity(false, false)),
+            Interval(13, 20, Inclusivity(false, false)),
+            Interval(-∞, -50, Inclusivity(false, false))
         ]
-
         @test union!(intervals) == expected
         @test intervals == expected
 

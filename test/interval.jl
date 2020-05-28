@@ -20,7 +20,7 @@
         #(DateTime(2016, 8, 11, 0, 30), ∞, Millisecond(1)),
     ]
     all_test_values = vcat(test_values, inf_test_values)
-
+∞
     @testset "constructor" begin
         for T in [Int32, Int64, Float64]
             @test Interval{T}() == Interval{T}(zero(T), zero(T), Inclusivity(false, false))
@@ -34,7 +34,7 @@
             ZonedDateTime(0, tz"UTC"), ZonedDateTime(0, tz"UTC"), Inclusivity(false, false)
         )
 
-        for (a, b, _) in all_test_values
+        for (a, b, _) in test_values
             @test a..b == Interval(a, b)
             @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
             @test Interval(a, b, true, false) ==
@@ -45,6 +45,21 @@
                 Interval{typeof(a)}(a, b, Inclusivity(true, false))
             @test Interval(b, a, Inclusivity(true, false)) ==
                 Interval{typeof(a)}(a, b, Inclusivity(false, true))
+        end
+
+        for (a, b, _) in inf_test_values
+            @test a..b == Interval(a, b)
+            T = isbounded(a) ? typeof(a) : typeof(b)
+
+            @test Interval(a, b) == Interval{InfExtended{T}}(a, b, Inclusivity(true, true))
+            @test Interval(a, b, true, false) ==
+                Interval{InfExtended{T}}(a, b, Inclusivity(true, false))
+            @test Interval{InfExtended{T}}(a, b, true, false) ==
+                Interval{InfExtended{T}}(a, b, Inclusivity(true, false))
+            @test Interval(a, b, Inclusivity(true, false)) ==
+                Interval{InfExtended{T}}(a, b, Inclusivity(true, false))
+            @test Interval(b, a, Inclusivity(true, false)) ==
+                Interval{InfExtended{T}}(a, b, Inclusivity(false, true))
         end
 
         # The three-argument Interval constructor can generate a StackOverflow if we aren't

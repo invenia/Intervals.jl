@@ -21,18 +21,20 @@
         )
 
         for (a, b, _) in test_values
+            T = promote_type(typeof(a), typeof(b))
+
             @test a..b == Interval(a, b)
-            @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
+            @test Interval(a, b) == Interval{T}(a, b, Inclusivity(true, true))
             @test Interval(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
-            @test Interval{typeof(a)}(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                Interval{T}(a, b, Inclusivity(true, false))
+            @test Interval{T}(a, b, true, false) ==
+                Interval{T}(a, b, Inclusivity(true, false))
             @test Interval(a, b, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                Interval{T}(a, b, Inclusivity(true, false))
             @test Interval(b, a, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(false, true))
+                Interval{T}(a, b, Inclusivity(false, true))
             @test Interval(LeftEndpoint(a, true), RightEndpoint(b, true)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, true))
+                Interval{T}(a, b, Inclusivity(true, true))
         end
 
         # The three-argument Interval constructor can generate a StackOverflow if we aren't

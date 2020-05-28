@@ -16,6 +16,10 @@ struct Endpoint{T, D}
     end
 end
 
+# Unconstructable Endpoint types used for rounding
+const AnchorEndpoint = Endpoint{Union{}, Direction{:Anchor}()}
+const LeftAndRightEndpoint = Endpoint{Union{}, Direction{:LeftAndRight}()}
+
 const LeftEndpoint{T} = Endpoint{T, Left}
 const RightEndpoint{T} = Endpoint{T, Right}
 
@@ -103,3 +107,16 @@ Base.isless(a, b::LeftEndpoint)  = a < b.endpoint || (a == b.endpoint && !b.incl
 Base.isless(a, b::RightEndpoint) = a < b.endpoint
 Base.isless(a::LeftEndpoint, b)  = a.endpoint < b
 Base.isless(a::RightEndpoint, b) = a.endpoint < b || (a.endpoint == b && !a.included)
+
+
+for f in (:floor, :ceil, :round)
+    @eval begin
+        function Base.$f(p::Endpoint{T, D}) where {T, D}
+            Endpoint{T, D}($f(p.endpoint), p.included)
+        end
+
+        function Base.$f(p::Endpoint{T, D}, duration) where {T <: TimeType, D}
+            Endpoint{T, D}($f(p.endpoint, duration), p.included)
+        end
+    end
+end

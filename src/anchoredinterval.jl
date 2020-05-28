@@ -98,20 +98,20 @@ const HourBeginning{T} = AnchoredInterval{Hour(1), T} where T <: TimeType
 HourBeginning(a::T, args...) where T = HourBeginning{T}(a, args...)
 
 """
-    HE(anchor, args...) -> HourEnding
+    HE(args...) -> HourEnding
 
 `HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
-HE(a, args...) = HourEnding(ceil(a, Hour), args...)
+HE(args...) = ceil(HourEnding(args...), Hour)
 
 """
-    HB(anchor, args...) -> HourBeginning
+    HB(args...) -> HourBeginning
 
 `HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
-HB(a, args...) = HourBeginning(floor(a, Hour), args...)
+HB(args...) = floor(HourBeginning(args...), Hour)
 
 function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
     return AnchoredInterval{P, T}(anchor(x), inclusivity(x))
@@ -263,6 +263,36 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
     end
 
     return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
+end
+
+##### ROUNDING #####
+
+for f in (:floor, :ceil, :round)
+    @eval function Base.$f(
+        interval::AnchoredInterval{P, T},
+        args...;
+        on::Type{<:Endpoint}=AnchorEndpoint,
+    ) where {P, T}
+        anc = if on === AnchorEndpoint
+            $f(anchor(interval), args...)
+        elseif on === LeftEndpoint
+            if P ≤ zero(P)
+                $f(first(interval), args...) - P
+            else
+                $f(first(interval), args...)
+            end
+        elseif on === RightEndpoint
+            if P ≤ zero(P)
+                $f(last(interval), args...)
+            else
+                $f(last(interval), args...) - P
+            end
+        else
+            throw(ArgumentError("Unhandled `on` type: $on"))
+        end
+
+        return AnchoredInterval{P, T}(anc, inclusivity(interval))
+    end
 end
 
 ##### UTILITIES #####

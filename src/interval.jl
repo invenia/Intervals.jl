@@ -103,6 +103,14 @@ function Interval{T}(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T
     Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
 end
 
+"""
+When the endpoints are different types, try to find a common type to combined them into
+"""
+function Interval(left::LeftEndpoint{S}, right::RightEndpoint{D}) where {S, D}
+    T = promote_type(S, D)
+    return Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+end
+
 Interval(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T = Interval{T}(left, right)
 
 # Empty Intervals
@@ -353,14 +361,7 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
 
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
-
-    # This promotion fixes the situation where one endpoint has a type of
-    # `InfExtended{T}` yet the ∞ value is of type `Infinite`.
-    # This will cause an error when trying to `promote(left, right)`
-    return Interval(
-        promote(left.endpoint, right.endpoint)...,
-        left.included, right.included
-    )
+    return Interval(left, right)
 end
 
 ##### TIME ZONES #####

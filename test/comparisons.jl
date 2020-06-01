@@ -21,6 +21,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 2, true, true))
         later = convert(B, Interval(4, 5, true, true))
 
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval{Int}()
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -37,12 +40,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test isempty(intersect(earlier, later))
+        @test intersect(earlier, later) == expected_overlap
         @test_throws ArgumentError merge(earlier, later)
         @test union([earlier, later]) == [earlier, later]
         @test !overlaps(earlier, later)
         @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, true, true)
+        @test superset([earlier, later]) == expected_superset
     end
 
     # Compare two intervals which "touch" but both intervals do not include that point:
@@ -54,6 +57,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, false, false))
         later = convert(B, Interval(3, 5, false, false))
 
+        expected_superset = Interval(1, 5, false, false)
+        expected_overlap = Interval{Int}()
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -70,12 +76,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test isempty(intersect(earlier, later))
+        @test intersect(earlier, later) == expected_overlap
         @test_throws ArgumentError merge(earlier, later)
         @test union([earlier, later]) == [earlier, later]
         @test !overlaps(earlier, later)
         @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, false, false)
+        @test superset([earlier, later]) == expected_superset
     end
 
     # Compare two intervals which "touch" and the later interval includes that point:
@@ -87,6 +93,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, false, false))
         later = convert(B, Interval(3, 5, true, true))
 
+        expected_superset = Interval(1, 5, false, true)
+        expected_overlap = Interval{Int}()
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -103,12 +112,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test isempty(intersect(earlier, later))
-        @test merge(earlier, later) == Interval(1, 5, false, true)
-        @test union([earlier, later]) == [Interval(1, 5, false, true)]
+        @test intersect(earlier, later) == expected_overlap
+        @test merge(earlier, later) == expected_superset
+        @test union([earlier, later]) == [expected_superset]
         @test !overlaps(earlier, later)
         @test contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, false, true)
+        @test superset([earlier, later]) == expected_superset
     end
 
     # Compare two intervals which "touch" and the earlier interval includes that point:
@@ -120,6 +129,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, true, true))
         later = convert(B, Interval(3, 5, false, false))
 
+        expected_superset = Interval(1, 5, true, false)
+        expected_overlap = Interval{Int}()
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -136,12 +148,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test isempty(intersect(earlier, later))
-        @test merge(earlier, later) == Interval(1, 5, true, false)
-        @test union([earlier, later]) == [Interval(1, 5, true, false)]
+        @test intersect(earlier, later) == expected_overlap
+        @test merge(earlier, later) == expected_superset
+        @test union([earlier, later]) == [expected_superset]
         @test !overlaps(earlier, later)
         @test contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, true, false)
+        @test superset([earlier, later]) == expected_superset
     end
 
     # Compare two intervals which "touch" and both intervals include that point:
@@ -153,6 +165,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 3, true, true))
         later = convert(B, Interval(3, 5, true, true))
 
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(3, 3, true, true)
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -169,12 +184,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test intersect(earlier, later) == Interval(3, 3, true, true)
-        @test merge(earlier, later) == Interval(1, 5, true, true)
-        @test union([earlier, later]) == [Interval(1, 5, true, true)]
+        @test intersect(earlier, later) == expected_overlap
+        @test merge(earlier, later) == expected_superset
+        @test union([earlier, later]) == [expected_superset]
         @test overlaps(earlier, later)
         @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, true, true)
+        @test superset([earlier, later]) == expected_superset
     end
 
     # Compare two intervals which overlap
@@ -186,6 +201,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         earlier = convert(A, Interval(1, 4, true, true))
         later = convert(B, Interval(2, 5, true, true))
 
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(2, 4, true, true)
+
         @test earlier != later
         @test !isequal(earlier, later)
         @test hash(earlier) != hash(later)
@@ -202,17 +220,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(earlier, later)
         @test !issubset(later, earlier)
 
-        @test intersect(earlier, later) == Interval(2, 4, true, true)
-        @test merge(earlier, later) == Interval(1, 5, true, true)
-        @test union([earlier, later]) == [Interval(1, 5, true, true)]
+        @test intersect(earlier, later) == expected_overlap
+        @test merge(earlier, later) == expected_superset
+        @test union([earlier, later]) == [expected_superset]
         @test overlaps(earlier, later)
         @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == Interval(1, 5, true, true)
+        @test superset([earlier, later]) == expected_superset
     end
 
     @testset "equal ()/()" begin
         a = convert(A, Interval(1, 5, false, false))
         b = convert(B, Interval(1, 5, false, false))
+
+        expected_superset = Interval(1, 5, false, false)
+        expected_overlap = Interval(1, 5, false, false)
 
         @test a == b
         @test isequal(a, b)
@@ -230,17 +251,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test issubset(a, b)
         @test issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, false, false)
-        @test merge(a, b) == Interval(1, 5, false, false)
-        @test union([a, b]) == [Interval(1, 5, false, false)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, false, false)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal [)/()" begin
         a = convert(A, Interval(1, 5, true, false))
         b = convert(B, Interval(1, 5, false, false))
+
+        expected_superset = Interval(1, 5, true, false)
+        expected_overlap = Interval(1, 5, false, false)
 
         @test a != b
         @test !isequal(a, b)
@@ -258,17 +282,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(a, b)
         @test issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, false, false)
-        @test merge(a, b) == Interval(1, 5, true, false)
-        @test union([a, b]) == [Interval(1, 5, true, false)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, true, false)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal (]/()" begin
         a = convert(A, Interval(1, 5, false, true))
         b = convert(B, Interval(1, 5, false, false))
+
+        expected_superset = Interval(1, 5, false, true)
+        expected_overlap = Interval(1, 5, false, false)
 
         @test a != b
         @test !isequal(a, b)
@@ -286,17 +313,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(a, b)
         @test issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, false, false)
-        @test merge(a, b) == Interval(1, 5, false, true)
-        @test union([a, b]) == [Interval(1, 5, false, true)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, false, true)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal []/()" begin
         a = convert(A, Interval(1, 5, true, true))
         b = convert(B, Interval(1, 5, false, false))
+
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(1, 5, false, false)
 
         @test a != b
         @test !isequal(a, b)
@@ -314,17 +344,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test !issubset(a, b)
         @test issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, false, false)
-        @test merge(a, b) == Interval(1, 5, true, true)
-        @test union([a, b]) == [Interval(1, 5, true, true)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, true, true)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal [)/[]" begin
         a = convert(A, Interval(1, 5, true, false))
         b = convert(B, Interval(1, 5, true, true))
+
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(1, 5, true, false)
 
         @test a != b
         @test !isequal(a, b)
@@ -342,17 +375,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test issubset(a, b)
         @test !issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, true, false)
-        @test merge(a, b) == Interval(1, 5, true, true)
-        @test union([a, b]) == [Interval(1, 5, true, true)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, true, true)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal (]/[]" begin
         a = convert(A, Interval(1, 5, false, true))
         b = convert(B, Interval(1, 5, true, true))
+
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(1, 5, false, true)
 
         @test a != b
         @test !isequal(a, b)
@@ -370,17 +406,20 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test issubset(a, b)
         @test !issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, false, true)
-        @test merge(a, b) == Interval(1, 5, true, true)
-        @test union([a, b]) == [Interval(1, 5, true, true)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, true, true)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal []/[]" begin
         a = convert(A, Interval(1, 5, true, true))
         b = convert(B, Interval(1, 5, true, true))
+
+        expected_superset = Interval(1, 5, true, true)
+        expected_overlap = Interval(1, 5, true, true)
 
         @test a == b
         @test isequal(a, b)
@@ -398,12 +437,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test issubset(a, b)
         @test issubset(b, a)
 
-        @test intersect(a, b) == Interval(1, 5, true, true)
-        @test merge(a, b) == Interval(1, 5, true, true)
-        @test union([a, b]) == [Interval(1, 5, true, true)]
+        @test intersect(a, b) == expected_overlap
+        @test merge(a, b) == expected_superset
+        @test union([a, b]) == [expected_superset]
         @test overlaps(a, b)
         @test !contiguous(a, b)
-        @test superset([a, b]) == Interval(1, 5, true, true)
+        @test superset([a, b]) == expected_superset
     end
 
     @testset "equal -0.0/0.0" begin
@@ -411,6 +450,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         if Set((A, B)) != Set((AnchoredInterval{Ending}, AnchoredInterval{Beginning}))
             a = convert(A, Interval(0.0, -0.0))
             b = convert(B, Interval(-0.0, 0.0))
+
+            expected_superset = Interval(0.0, 0.0)
+            expected_overlap = Interval(0.0, 0.0)
 
             @test a == b
             @test !isequal(a, b)
@@ -429,14 +471,15 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             @test issubset(a, b)
             @test issubset(b, a)
 
-            @test intersect(a, b) == Interval(0.0, 0.0)
-            @test merge(a, b) == Interval(0.0, 0.0)
-            @test union([a, b]) == [Interval(0.0, 0.0)]
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test superset([a, b]) == Interval(0.0, 0.0)
+            @test superset([a, b]) == expected_superset
         end
     end
+
     # Compare two intervals where the first interval is contained by the second
     # Visualization:
     #
@@ -445,6 +488,9 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "containing" begin
         smaller = convert(A, Interval(2, 4, true, true))
         larger = convert(B, Interval(1, 5, true, true))
+
+        expected_superset = Interval(larger)
+        expected_overlap = Interval(smaller)
 
         @test smaller != larger
         @test !isequal(smaller, larger)
@@ -462,11 +508,11 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         @test issubset(smaller, larger)
         @test !issubset(larger, smaller)
 
-        @test intersect(smaller, larger) == Interval(smaller)
-        @test merge(smaller, larger) == Interval(larger)
-        @test union([smaller, larger]) == [Interval(larger)]
+        @test intersect(smaller, larger) == expected_overlap
+        @test merge(smaller, larger) == expected_superset
+        @test union([smaller, larger]) == [expected_superset]
         @test overlaps(smaller, larger)
         @test !contiguous(smaller, larger)
-        @test superset([smaller, larger]) == Interval(1, 5, true, true)
+        @test superset([smaller, larger]) == expected_superset
     end
 end

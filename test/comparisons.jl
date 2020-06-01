@@ -17,12 +17,37 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     #
     # [12]
     #     [45]
-    @testset "non-overlapping" begin
-        earlier = convert(A, Interval(1, 2, true, true))
-        later = convert(B, Interval(4, 5, true, true))
+    @testset "non-overlapping" for x in (
+        (
+            a=Interval(1, 2, true, true),
+            b=Interval(4, 5, true, true),
+            superset=Interval(1, 5, true, true),
+            overlap=Interval{Int}(),
+        ),
+        (
+            a=Interval(-∞, 2, true, true),
+            b=Interval(4, ∞, true, true),
+            superset=Interval(-∞, ∞, true, true),
+            overlap=Interval{Int}(),
+        ),
+        (
+            a=Interval(-∞, 2, true, true),
+            b=Interval(4, 5, true, true),
+            superset=Interval(-∞, 5, true, true),
+            overlap=Interval{Int}(),
+        ),
+        (
+            a=Interval(1, 2, true, true),
+            b=Interval(4, ∞, true, true),
+            superset=Interval(1, ∞, true, true),
+            overlap=Interval{Int}(),
+        ),
+    )
+        earlier = convert(A, x.a)
+        later = convert(B, x.b)
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval{Int}()
+        expected_superset = x.superset
+        expected_overlap = x.overlap
 
         @test earlier != later
         @test !isequal(earlier, later)

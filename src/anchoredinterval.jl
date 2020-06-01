@@ -138,6 +138,9 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
+infbits(x::InfExtended) = x.val
+infbits(x) = x
+
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P, T}) where {P, T}
     return Interval{T}(first(interval), last(interval), inclusivity(interval))
 end
@@ -164,11 +167,11 @@ end
 =#
 
 function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
-    AnchoredInterval{-span(interval), T}(last(interval), inclusivity(interval))
+    AnchoredInterval{-infbits(span(interval)), T}(last(interval), inclusivity(interval))
 end
 
 function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
-    AnchoredInterval{span(interval), T}(first(interval), inclusivity(interval))
+    AnchoredInterval{infbits(span(interval)), T}(first(interval), inclusivity(interval))
 end
 
 Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
@@ -264,7 +267,7 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
         new_P = sp
     end
 
-    return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
+    return AnchoredInterval{infbits(new_P), T}(anchor, inclusivity(interval))
 end
 
 ##### UTILITIES #####

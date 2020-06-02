@@ -71,18 +71,7 @@ struct Interval{T} <: AbstractInterval{T}
     end
 end
 
-"""
-Check if a value is ∞ or not. Specifically check if the type is `Infinite`,
-or `InfExtended`, and then check if the value is pos or neg infinity.
-"""
-function isbounded(a)
-    T = typeof(a)
-    if T <: Infinite || T <: InfExtended
-        return !isposinf(a) && !isneginf(a)
-    else
-        return true
-    end
-end
+isbounded(x) = isfinite(x)
 isunbounded(a) = !isbounded(a)
 
 Interval{T}(f, l, inc::Inclusivity) where T = Interval{T}(convert(T, f), convert(T, l), inc)

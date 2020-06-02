@@ -1,7 +1,6 @@
 module Intervals
 
 using Dates
-using Infinity: Infinite, InfExtended, isposinf, isneginf
 using Printf
 using RecipesBase
 using TimeZones

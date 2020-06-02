@@ -1,4 +1,5 @@
 using Intervals: Ending, Beginning, overlaps, contiguous, RightEndpoint, LeftEndpoint
+using Base.Iterators: product
 
 function unique_paired_permutation(v::Vector{T}) where T
     results = Tuple{T, T}[]
@@ -13,436 +14,624 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 @testset "comparisons: $A vs. $B" for (A, B) in unique_paired_permutation(INTERVAL_TYPES)
 
     # Compare two intervals which are non-overlapping:
-    # Visualization:
+    # Visualization of the finite case:
     #
     # [12]
     #     [45]
     @testset "non-overlapping" begin
-        earlier = convert(A, Interval(1, 2, true, true))
-        later = convert(B, Interval(4, 5, true, true))
+        test_intervals = product(
+            [
+                Interval(1, 2, true, true),
+                Interval(-Inf, 2, true, true),
+            ],
+            [
+                Interval(4, 5, true, true),
+                Interval(4, Inf, true, true),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval{Int}()
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test earlier ≪ later
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test earlier ≪ later
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test_throws ArgumentError merge(earlier, later)
-        @test union([earlier, later]) == [earlier, later]
-        @test !overlaps(earlier, later)
-        @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws ArgumentError merge(earlier, later)
+            @test union([earlier, later]) == [earlier, later]
+            @test !overlaps(earlier, later)
+            @test !contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     # Compare two intervals which "touch" but both intervals do not include that point:
-    # Visualization:
+    # Visualization of the finite case:
     #
     # (123)
     #   (345)
     @testset "touching open/open" begin
-        earlier = convert(A, Interval(1, 3, false, false))
-        later = convert(B, Interval(3, 5, false, false))
+        test_intervals = product(
+            [
+                Interval(1, 3, false, false),
+                Interval(-Inf, 3, false, false),
+            ],
+            [
+                Interval(3, 5, false, false),
+                Interval(3, Inf, false, false),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, false, false)
-        expected_overlap = Interval{Int}()
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test earlier ≪ later
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test earlier ≪ later
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test_throws ArgumentError merge(earlier, later)
-        @test union([earlier, later]) == [earlier, later]
-        @test !overlaps(earlier, later)
-        @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws ArgumentError merge(earlier, later)
+            @test union([earlier, later]) == [earlier, later]
+            @test !overlaps(earlier, later)
+            @test !contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     # Compare two intervals which "touch" and the later interval includes that point:
-    # Visualization:
+    # Visualization of the finite case:
     #
     # (123)
     #   [345]
     @testset "touching open/closed" begin
-        earlier = convert(A, Interval(1, 3, false, false))
-        later = convert(B, Interval(3, 5, true, true))
+         test_intervals = product(
+            [
+                Interval(1, 3, false, false),
+                Interval(-Inf, 3, false, false),
+            ],
+            [
+                Interval(3, 5, true, true),
+                Interval(3, Inf, true, true),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, false, true)
-        expected_overlap = Interval{Int}()
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test earlier ≪ later
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test earlier ≪ later
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test merge(earlier, later) == expected_superset
-        @test union([earlier, later]) == [expected_superset]
-        @test !overlaps(earlier, later)
-        @test contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
+            @test !overlaps(earlier, later)
+            @test contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     # Compare two intervals which "touch" and the earlier interval includes that point:
-    # Visualization:
+    # Visualization of the finite case:
     #
     # [123]
     #   (345)
     @testset "touching closed/open" begin
-        earlier = convert(A, Interval(1, 3, true, true))
-        later = convert(B, Interval(3, 5, false, false))
+        test_intervals = product(
+            [
+                Interval(1, 3, true, true),
+                Interval(-Inf, 3, true, true),
+            ],
+            [
+                Interval(3, 5, false, false),
+                Interval(3, Inf, false, false),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, true, false)
-        expected_overlap = Interval{Int}()
+        @testset "$a vs $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test earlier ≪ later
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test earlier ≪ later
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test merge(earlier, later) == expected_superset
-        @test union([earlier, later]) == [expected_superset]
-        @test !overlaps(earlier, later)
-        @test contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
+            @test !overlaps(earlier, later)
+            @test contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     # Compare two intervals which "touch" and both intervals include that point:
-    # Visualization:
+    # Visualization of the finite case:
     #
     # [123]
     #   [345]
     @testset "touching closed/closed" begin
-        earlier = convert(A, Interval(1, 3, true, true))
-        later = convert(B, Interval(3, 5, true, true))
+        test_intervals = product(
+            [
+                Interval(1, 3, true, true),
+                Interval(-Inf, 3, true, true),
+            ],
+            [
+                Interval(3, 5, true, true),
+                Interval(3, Inf, true, true),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(3, 3, true, true)
+        @testset "$a vs $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval(last(a), first(b), true, true)
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test !(earlier ≪ later)
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test !(earlier ≪ later)
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test merge(earlier, later) == expected_superset
-        @test union([earlier, later]) == [expected_superset]
-        @test overlaps(earlier, later)
-        @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
+            @test overlaps(earlier, later)
+            @test !contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     # Compare two intervals which overlap
-    # Visualization:
+    # Visualization of the finite case:
     #
     # [1234]
     #  [2345]
     @testset "overlapping" begin
-        earlier = convert(A, Interval(1, 4, true, true))
-        later = convert(B, Interval(2, 5, true, true))
+        test_intervals = product(
+            [
+                Interval(1, 4, true, true),
+                Interval(-Inf, 4, true, true),
+            ],
+            [
+                Interval(2, 5, true, true),
+                Interval(2, Inf, true, true),
+            ],
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(2, 4, true, true)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test earlier != later
-        @test !isequal(earlier, later)
-        @test hash(earlier) != hash(later)
+            earlier = convert(A, a)
+            later = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(a))
 
-        @test isless(earlier, later)
-        @test !isless(later, earlier)
+            @test earlier != later
+            @test !isequal(earlier, later)
+            @test hash(earlier) != hash(later)
 
-        @test earlier < later
-        @test !(later < earlier)
+            @test isless(earlier, later)
+            @test !isless(later, earlier)
 
-        @test !(earlier ≪ later)
-        @test !(later ≪ earlier)
+            @test earlier < later
+            @test !(later < earlier)
 
-        @test !issubset(earlier, later)
-        @test !issubset(later, earlier)
+            @test !(earlier ≪ later)
+            @test !(later ≪ earlier)
 
-        @test intersect(earlier, later) == expected_overlap
-        @test merge(earlier, later) == expected_superset
-        @test union([earlier, later]) == [expected_superset]
-        @test overlaps(earlier, later)
-        @test !contiguous(earlier, later)
-        @test superset([earlier, later]) == expected_superset
+            @test !issubset(earlier, later)
+            @test !issubset(later, earlier)
+
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
+            @test overlaps(earlier, later)
+            @test !contiguous(earlier, later)
+            @test superset([earlier, later]) == expected_superset
+        end
     end
 
     @testset "equal ()/()" begin
-        a = convert(A, Interval(1, 5, false, false))
-        b = convert(B, Interval(1, 5, false, false))
+        test_intervals = (
+            [
+                Interval(l, u, false, false),
+                Interval(l, u, false, false),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, false, false)
-        expected_overlap = Interval(1, 5, false, false)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a == b
-        @test isequal(a, b)
-        @test hash(a) == hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
 
-        @test !isless(a, b)
-        @test !isless(a, b)
+            @test a == b
+            @test isequal(a, b)
+            @test hash(a) == hash(b)
 
-        @test !(a < b)
-        @test !(b < a)
+            @test !isless(a, b)
+            @test !isless(a, b)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test !(a < b)
+            @test !(b < a)
 
-        @test issubset(a, b)
-        @test issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal [)/()" begin
-        a = convert(A, Interval(1, 5, true, false))
-        b = convert(B, Interval(1, 5, false, false))
+        test_intervals = (
+            [
+                Interval(l, u, true, false),
+                Interval(l, u, false, false),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, true, false)
-        expected_overlap = Interval(1, 5, false, false)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a != b
-        @test !isequal(a, b)
-        @test hash(a) != hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
 
-        @test isless(a, b)
-        @test !isless(b, a)
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
 
-        @test a < b
-        @test !(b < a)
+            @test isless(a, b)
+            @test !isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test a < b
+            @test !(b < a)
 
-        @test !issubset(a, b)
-        @test issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test !issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal (]/()" begin
-        a = convert(A, Interval(1, 5, false, true))
-        b = convert(B, Interval(1, 5, false, false))
+        test_intervals = (
+            [
+                Interval(l, u, false, true),
+                Interval(l, u, false, false),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, false, true)
-        expected_overlap = Interval(1, 5, false, false)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a != b
-        @test !isequal(a, b)
-        @test hash(a) != hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
 
-        @test !isless(a, b)
-        @test !isless(b, a)
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
 
-        @test !(a < b)
-        @test !(b < a)
+            @test !isless(a, b)
+            @test !isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test !(a < b)
+            @test !(b < a)
 
-        @test !issubset(a, b)
-        @test issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test !issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal []/()" begin
-        a = convert(A, Interval(1, 5, true, true))
-        b = convert(B, Interval(1, 5, false, false))
+        test_intervals = (
+            [
+                Interval(l, u, true, true),
+                Interval(l, u, false, false),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(1, 5, false, false)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a != b
-        @test !isequal(a, b)
-        @test hash(a) != hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
 
-        @test isless(a, b)
-        @test !isless(b, a)
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
 
-        @test a < b
-        @test !(b < a)
+            @test isless(a, b)
+            @test !isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test a < b
+            @test !(b < a)
 
-        @test !issubset(a, b)
-        @test issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test !issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal [)/[]" begin
-        a = convert(A, Interval(1, 5, true, false))
-        b = convert(B, Interval(1, 5, true, true))
+        test_intervals = (
+            [
+                Interval(l, u, true, false),
+                Interval(l, u, true, true),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(1, 5, true, false)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a != b
-        @test !isequal(a, b)
-        @test hash(a) != hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
 
-        @test !isless(a, b)
-        @test !isless(b, a)
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
 
-        @test !(a < b)
-        @test !(b < a)
+            @test !isless(a, b)
+            @test !isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test !(a < b)
+            @test !(b < a)
 
-        @test issubset(a, b)
-        @test !issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test issubset(a, b)
+            @test !issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal (]/[]" begin
-        a = convert(A, Interval(1, 5, false, true))
-        b = convert(B, Interval(1, 5, true, true))
+        test_intervals = (
+            [
+                Interval(l, u, false, true),
+                Interval(l, u, true, true),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(1, 5, false, true)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a != b
-        @test !isequal(a, b)
-        @test hash(a) != hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
 
-        @test !isless(a, b)
-        @test isless(b, a)
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
 
-        @test !(a < b)
-        @test b < a
+            @test !isless(a, b)
+            @test isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test !(a < b)
+            @test b < a
 
-        @test issubset(a, b)
-        @test !issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test issubset(a, b)
+            @test !issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal []/[]" begin
-        a = convert(A, Interval(1, 5, true, true))
-        b = convert(B, Interval(1, 5, true, true))
+        test_intervals = (
+            [
+                Interval(l, u, true, true),
+                Interval(l, u, true, true),
+            ]
+            for (l, u) in product((1, -Inf), (5, Inf))
+        )
 
-        expected_superset = Interval(1, 5, true, true)
-        expected_overlap = Interval(1, 5, true, true)
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
+            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test a == b
-        @test isequal(a, b)
-        @test hash(a) == hash(b)
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
 
-        @test !isless(a, b)
-        @test !isless(b, a)
+            @test a == b
+            @test isequal(a, b)
+            @test hash(a) == hash(b)
 
-        @test !(a < b)
-        @test !(b < a)
+            @test !isless(a, b)
+            @test !isless(b, a)
 
-        @test !(a ≪ b)
-        @test !(b ≪ a)
+            @test !(a < b)
+            @test !(b < a)
 
-        @test issubset(a, b)
-        @test issubset(b, a)
+            @test !(a ≪ b)
+            @test !(b ≪ a)
 
-        @test intersect(a, b) == expected_overlap
-        @test merge(a, b) == expected_superset
-        @test union([a, b]) == [expected_superset]
-        @test overlaps(a, b)
-        @test !contiguous(a, b)
-        @test superset([a, b]) == expected_superset
+            @test issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
     end
 
     @testset "equal -0.0/0.0" begin
@@ -450,7 +639,6 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         if Set((A, B)) != Set((AnchoredInterval{Ending}, AnchoredInterval{Beginning}))
             a = convert(A, Interval(0.0, -0.0))
             b = convert(B, Interval(-0.0, 0.0))
-
             expected_superset = Interval(0.0, 0.0)
             expected_overlap = Interval(0.0, 0.0)
 
@@ -481,38 +669,54 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     end
 
     # Compare two intervals where the first interval is contained by the second
-    # Visualization:
+    # Visualization of the finite case:
     #
     #  [234]
     # [12345]
     @testset "containing" begin
-        smaller = convert(A, Interval(2, 4, true, true))
-        larger = convert(B, Interval(1, 5, true, true))
+        test_intervals = product(
+            [
+                Interval(2, 4, true, true),
+            ],
+            [
+                Interval(1, 5, true, true),
+                Interval(1, Inf, true, true),
+                Interval(-Inf, 5, true, true),
+                Interval(-Inf, Inf, true, true),
+            ],
+        )
 
-        expected_superset = Interval(larger)
-        expected_overlap = Interval(smaller)
+        @testset "$a vs $b" for (a, b) in test_intervals
+            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
+            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
 
-        @test smaller != larger
-        @test !isequal(smaller, larger)
-        @test hash(smaller) != hash(larger)
+            smaller = convert(A, a)
+            larger = convert(B, b)
+            expected_superset = Interval(larger)
+            expected_overlap = Interval(smaller)
 
-        @test !isless(smaller, larger)
-        @test isless(larger, smaller)
+            @test smaller != larger
+            @test !isequal(smaller, larger)
+            @test hash(smaller) != hash(larger)
 
-        @test !(smaller < larger)
-        @test larger < smaller
+            @test !isless(smaller, larger)
+            @test isless(larger, smaller)
 
-        @test !(smaller ≪ larger)
-        @test !(larger ≪ smaller)
+            @test !(smaller < larger)
+            @test larger < smaller
 
-        @test issubset(smaller, larger)
-        @test !issubset(larger, smaller)
+            @test !(smaller ≪ larger)
+            @test !(larger ≪ smaller)
 
-        @test intersect(smaller, larger) == expected_overlap
-        @test merge(smaller, larger) == expected_superset
-        @test union([smaller, larger]) == [expected_superset]
-        @test overlaps(smaller, larger)
-        @test !contiguous(smaller, larger)
-        @test superset([smaller, larger]) == expected_superset
+            @test issubset(smaller, larger)
+            @test !issubset(larger, smaller)
+
+            @test intersect(smaller, larger) == expected_overlap
+            @test merge(smaller, larger) == expected_superset
+            @test union([smaller, larger]) == [expected_superset]
+            @test overlaps(smaller, larger)
+            @test !contiguous(smaller, larger)
+            @test superset([smaller, larger]) == expected_superset
+        end
     end
 end

@@ -1,11 +1,7 @@
 using Dates
-using Plots
 using Intervals
-using TimeZones
 using Test
-using VisualRegressionTests
-
-
+using TimeZones
 
 @testset "Intervals" begin
     include("inclusivity.jl")

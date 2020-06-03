@@ -1,3 +1,7 @@
+# Keeping these dependencies separate as the are slow to load
+using Plots
+using VisualRegressionTests
+
 @testset "plotting" begin
     possible_inclusivities = Iterators.product((true, false), (true, false))
     @testset "Interval{Float64} with inclusivity=$inc" for inc in possible_inclusivities

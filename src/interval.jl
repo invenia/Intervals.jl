@@ -85,11 +85,13 @@ Interval(interval::AbstractInterval) = convert(Interval, interval)
 Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
-function Interval{T}(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T
-    Interval{T}(left.endpoint, right.endpoint, left.included, right.included)
+function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
+    Interval{T}(T(left.endpoint), T(right.endpoint), left.included, right.included)
 end
 
-Interval(left::LeftEndpoint{T}, right::RightEndpoint{T}) where T = Interval{T}(left, right)
+function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S, T}
+    Interval{promote_type(S, T)}(left, right)
+end
 
 # Empty Intervals
 Interval{T}() where T = Interval{T}(zero(T), zero(T), Inclusivity(false, false))

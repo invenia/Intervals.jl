@@ -279,6 +279,14 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return Interval{T}(left, right)
 end
 
+function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S, T}
+    !overlaps(a, b) && return Interval{promote_type(S, T)}()
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return Interval(left, right)
+end
+
 # There is power in a union.
 """
     union(intervals::AbstractVector{<:AbstractInterval})

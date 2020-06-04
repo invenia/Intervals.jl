@@ -114,7 +114,7 @@ Base.last(interval::Interval) = interval.last
 span(interval::Interval) = interval.last - interval.first
 inclusivity(interval::AbstractInterval) = interval.inclusivity
 isclosed(interval::AbstractInterval) = isclosed(inclusivity(interval))
-Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
+isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
 
 ##### CONVERSION #####
 

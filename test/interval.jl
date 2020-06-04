@@ -1,10 +1,22 @@
+# Declare a new `isinf` function to avoid type piracy
+isinf(x) = Base.isinf(x)
+isinf(::Char) = false
+isinf(::TimeType) = false
+
 @testset "Interval" begin
     test_values = [
         (-10, 1000, 1),
         (0.0, 1, 0.01),  # Use different types to test promotion
         ('a', 'z', 1),
         (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
-        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1))
+        (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
+
+        # Infinite endpoints
+        (-Inf, 10, 1),
+        (10, Inf, 1),
+        (-Inf, Inf, 1),
+        (-Inf, 1.0, 0.01),
+        (0.0, Inf, 0.01),
     ]
 
     @testset "constructor" begin
@@ -21,16 +33,20 @@
         )
 
         for (a, b, _) in test_values
+            T = promote_type(typeof(a), typeof(b))
+
             @test a..b == Interval(a, b)
-            @test Interval(a, b) == Interval{typeof(a)}(a, b, Inclusivity(true, true))
+            @test Interval(a, b) == Interval{T}(a, b, Inclusivity(true, true))
             @test Interval(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
-            @test Interval{typeof(a)}(a, b, true, false) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                Interval{T}(a, b, Inclusivity(true, false))
+            @test Interval{T}(a, b, true, false) ==
+                Interval{T}(a, b, Inclusivity(true, false))
             @test Interval(a, b, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(true, false))
+                Interval{T}(a, b, Inclusivity(true, false))
             @test Interval(b, a, Inclusivity(true, false)) ==
-                Interval{typeof(a)}(a, b, Inclusivity(false, true))
+                Interval{T}(a, b, Inclusivity(false, true))
+            @test Interval(LeftEndpoint(a, true), RightEndpoint(b, true)) ==
+                Interval{T}(a, b, Inclusivity(true, true))
         end
 
         # The three-argument Interval constructor can generate a StackOverflow if we aren't
@@ -136,46 +152,56 @@
             for i in 0:3
                 interval = Interval(a, b, Inclusivity(i))
                 cp = copy(interval)
-                lesser_val = Interval(a - unit, b + unit, Inclusivity(i))
+                lesser_val = Interval(a - unit, b - unit, Inclusivity(i))
                 greater_val = Interval(a + unit, b + unit, Inclusivity(i))
                 diff_inc = Interval(a, b, Inclusivity(mod(i + 1, 4)))
 
                 @test interval == cp
-                @test interval != lesser_val
-                @test interval != diff_inc
-
                 @test isequal(interval, cp)
-                @test !isequal(interval, lesser_val)
-                @test !isequal(interval, diff_inc)
-
                 @test hash(interval) == hash(cp)
-                @test hash(interval) != hash(lesser_val)
+
+                @test interval != diff_inc
+                @test !isequal(interval, diff_inc)
                 @test hash(interval) != hash(diff_inc)
+
+                if !isinf(a) || !isinf(b)
+                    @test interval != lesser_val
+                    @test !isequal(interval, lesser_val)
+                    @test hash(interval) != hash(lesser_val)
+                else
+                    @test interval == lesser_val
+                    @test isequal(interval, lesser_val)
+                    @test hash(interval) == hash(lesser_val)
+                end
 
                 @test !isless(interval, cp)
                 @test !(interval < cp)
                 @test !(interval ≪ cp)
                 @test !(interval > cp)
                 @test !(interval ≫ cp)
-                @test isless(interval, greater_val)
-                @test interval < greater_val
+
+                @test isless(interval, greater_val) || isinf(a)
+                @test interval < greater_val || isinf(a)
                 @test !(interval ≪ greater_val)     # Still overlap, so not disjoint
                 @test !(interval > greater_val)
                 @test !(interval ≫ greater_val)
+
                 @test !isless(greater_val, interval)
                 @test !(greater_val < interval)
                 @test !(greater_val ≪ interval)     # Still overlap, so not disjoint
-                @test greater_val > interval
+                @test greater_val > interval || isinf(a)
                 @test !(greater_val ≫ interval)     # Still overlap, so not disjoint
-                @test isless(lesser_val, interval)
-                @test lesser_val < interval
+
+                @test isless(lesser_val, interval) || isinf(a)
+                @test lesser_val < interval || isinf(a)
                 @test !(lesser_val ≪ interval)
                 @test !(lesser_val > interval)
                 @test !(lesser_val ≫ interval)
+
                 @test !isless(interval, lesser_val)
                 @test !(interval < lesser_val)
                 @test !(interval ≪ lesser_val)
-                @test interval > lesser_val
+                @test interval > lesser_val || isinf(a)
                 @test !(interval ≫ lesser_val)      # Still overlap, so not disjoint
             end
         end
@@ -298,9 +324,10 @@
         i1 = 1 .. 10
         i2 = Interval(1, 10, false, false)
         i3 = 2 .. 11
+        i4 = -Inf .. Inf
 
-        @test sort([i1, i2, i3]) == [i1, i2, i3]
-        @test sort([i1, i2, i3]; rev=true) == [i3, i2, i1]
+        @test sort([i1, i2, i3, i4]) == [i4, i1, i2, i3]
+        @test sort([i1, i2, i3, i4]; rev=true) == [i3, i2, i1, i4]
     end
 
     @testset "arithmetic" begin
@@ -367,36 +394,36 @@
     @testset "in" begin
         for (a, b, unit) in test_values
             interval = Interval(a, b)
-            @test in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
-            @test in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+            @test  in(a, interval)
+            @test  in(a + unit, interval)
+            @test !in(a - unit, interval) || isinf(a)
+            @test  in(b, interval)
+            @test  in(b - unit, interval)
+            @test !in(b + unit, interval) || isinf(b)
 
             interval = Interval(a, b, Inclusivity(true, false))
-            @test in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
+            @test  in(a, interval)
+            @test  in(a + unit, interval)
+            @test !in(a - unit, interval) || isinf(a)
             @test !in(b, interval)
-            @test in(b - unit, interval)
+            @test  in(b - unit, interval) || isinf(b)
             @test !in(b + unit, interval)
 
             interval = Interval(a, b, Inclusivity(false, true))
             @test !in(a, interval)
-            @test in(a + unit, interval)
+            @test  in(a + unit, interval) || isinf(a)
             @test !in(a - unit, interval)
-            @test in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+            @test  in(b, interval)
+            @test  in(b - unit, interval)
+            @test !in(b + unit, interval) || isinf(b)
 
             interval = Interval(a, b, Inclusivity(false, false))
             @test !in(a, interval)
-            @test in(a + unit, interval)
-            @test !in(a - unit, interval)
+            @test  in(a + unit, interval) || isinf(a)
+            @test !in(a - unit, interval) || isinf(a)
             @test !in(b, interval)
-            @test in(b - unit, interval)
-            @test !in(b + unit, interval)
+            @test  in(b - unit, interval) || isinf(b)
+            @test !in(b + unit, interval) || isinf(b)
 
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
@@ -550,11 +577,11 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(13, 20, Inclusivity(false, false)),
         ]
         expected = [
             Interval(-100, -1, Inclusivity(false, false)),
-            Interval(10, 20, Inclusivity(false, false))
+            Interval(10, 20, Inclusivity(false, false)),
         ]
         @test union(intervals) == expected
 
@@ -563,16 +590,15 @@
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(13, 20, Inclusivity(false, false)),
         ]
         @test union(intervals) == expected
         @test intervals == [
             Interval(-100, -1, Inclusivity(false, false)),
             Interval(10, 15, Inclusivity(false, false)),
             Interval(-10, -1, Inclusivity(false, false)),
-            Interval(13, 20, Inclusivity(false, false))
+            Interval(13, 20, Inclusivity(false, false)),
         ]
-
         @test union!(intervals) == expected
         @test intervals == expected
 

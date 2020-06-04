@@ -61,8 +61,18 @@ using Intervals: canonicalize
     @testset "conversion" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-        @test convert(DateTime, he) == dt
-        @test convert(DateTime, hb) == dt
+
+        if isempty(methods(convert, Tuple{Type{DateTime}, AnchoredInterval{Hour,DateTime}}))
+            @warn "Deprecation has been removed, cleanup tests appropriately"
+
+            # Disallow lossy conversions
+            @test_throws MethodError convert(DateTime, he)
+            @test_throws MethodError convert(DateTime, hb)
+        else
+            @test convert(DateTime, he) == dt
+            @test convert(DateTime, hb) == dt
+        end
+
         @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))
         @test convert(Interval, hb) == Interval(dt, dt + Hour(1), Inclusivity(true, false))
         @test convert(Interval, he) == Interval(dt - Hour(1), dt, Inclusivity(false, true))

@@ -1,5 +1,7 @@
-Base.isinf(x::Char) = false
-Base.isinf(x::TimeType) = false
+# Declare a new `isinf` function to avoid type piracy
+isinf(x) = Base.isinf(x)
+isinf(::Char) = false
+isinf(::TimeType) = false
 
 @testset "Interval" begin
     test_values = [

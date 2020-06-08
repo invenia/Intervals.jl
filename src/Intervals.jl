@@ -20,6 +20,7 @@ include("interval.jl")
 include("anchoredinterval.jl")
 include("description.jl")
 include("plotting.jl")
+include("deprecated.jl")
 
 export AbstractInterval,
        Interval,

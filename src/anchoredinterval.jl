@@ -169,12 +169,6 @@ function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}
     AnchoredInterval{span(interval), T}(first(interval), inclusivity(interval))
 end
 
-Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T} = anchor(interval)
-
-# Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Dates.Date(interval::AnchoredInterval{P, Date}) where P = convert(Date, interval)
-Dates.DateTime(interval::AnchoredInterval{P, DateTime}) where P = convert(DateTime, interval)
-
 ##### DISPLAY #####
 
 function Base.show(io::IO, interval::T) where T <: AnchoredInterval

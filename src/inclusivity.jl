@@ -38,7 +38,7 @@ Base.first(x::Inclusivity) = x.first
 Base.last(x::Inclusivity) = x.last
 
 isclosed(x::Inclusivity) = first(x) && last(x)
-Base.isopen(x::Inclusivity) = !(first(x) || last(x))
+isopen(x::Inclusivity) = !(first(x) || last(x))
 
 Base.isless(a::Inclusivity, b::Inclusivity) = isless(convert(Int, a), convert(Int, b))
 

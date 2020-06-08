@@ -1,5 +1,6 @@
 using Dates
 using Intervals
+using Intervals: isclosed, isopen
 using Test
 using TimeZones
 

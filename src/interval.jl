@@ -57,12 +57,16 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
 
     function Interval{T,L,R}(f::T, l::T) where {T,L,R}
         # Ensure that `first` preceeds `last`.
-        f, l, left_bound, right_bound = if f ≤ l
-            f, l, L, R
-        elseif l ≤ f
-            l, f, R, L
+        if L !== Unbounded && R !== Unbounded
+            f, l, left_bound, right_bound = if f ≤ l
+                f, l, L, R
+            elseif l ≤ f
+                l, f, R, L
+            else
+                throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
+            end
         else
-            throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
+            left_bound, right_bound = L, R
         end
 
         return new{T, left_bound, right_bound}(f, l)
@@ -91,7 +95,7 @@ function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T, bound_type(left), bound_type(right)}(T(left.endpoint), T(right.endpoint))
+    Interval{T, bound_type(left), bound_type(right)}(left.endpoint, right.endpoint)
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
@@ -120,6 +124,8 @@ Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
+isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
+isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
 
 """
     span(interval::AbstractInterval)
@@ -164,9 +170,9 @@ function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
     print(
         io,
         L === Closed ? "[" : "(",
-        first(interval),
+        L === Unbounded ? "" : first(interval),
         " .. ",
-        last(interval),
+        R === Unbounded ? "" : last(interval),
         R === Closed ? "]" : ")",
     )
 end
@@ -274,7 +280,10 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint == left.endpoint && bound_type(left) != bound_type(right)
+    return (
+        !isunbounded(right) && !isunbounded(left) &&
+        right.endpoint == left.endpoint && isclosed(left) != isclosed(right)
+    )
 end
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T

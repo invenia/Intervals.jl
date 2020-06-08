@@ -27,6 +27,7 @@ RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(las
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
 isclosed(x::Endpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
+isbounded(x::Endpoint) = bound_type(x) !== Unbounded
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     # Note: we shouldn't need to hash `T` as this is covered by the endpoint field.

@@ -26,6 +26,7 @@ RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(las
 
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
 isclosed(x::Endpoint) = bound_type(x) === Closed
+isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     # Note: we shouldn't need to hash `T` as this is covered by the endpoint field.
@@ -58,7 +59,10 @@ Visualizing two contiguous intervals can assist in understanding this logic:
     [x..y)(y..z] -> RightEndpoint != LeftEndpoint
 """
 function Base.:(==)(a::Endpoint, b::Endpoint)
-    a.endpoint == b.endpoint && isclosed(a) == isclosed(b)
+    return (
+        isunbounded(a) && isunbounded(b) ||
+        a.endpoint == b.endpoint && bound_type(a) == bound_type(b)
+    )
 end
 
 function Base.:(==)(a::LeftEndpoint, b::RightEndpoint)
@@ -70,7 +74,10 @@ function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
 end
 
 function Base.isequal(a::Endpoint, b::Endpoint)
-    isequal(a.endpoint, b.endpoint) && isequal(isclosed(a), isclosed(b))
+    return (
+        isunbounded(a) && isunbounded(b) ||
+        isequal(a.endpoint, b.endpoint) && isequal(bound_type(a), bound_type(b))
+    )
 end
 
 function Base.isequal(a::LeftEndpoint, b::RightEndpoint)
@@ -82,26 +89,65 @@ function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
 end
 
 function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
-    a.endpoint < b.endpoint || (a.endpoint == b.endpoint && isclosed(a) && !isclosed(b))
+    return (
+        !isunbounded(b) && (
+            isunbounded(a) ||
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && isclosed(a) && !isclosed(b)
+        )
+    )
 end
 
 function Base.isless(a::RightEndpoint, b::RightEndpoint)
-    a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !isclosed(a) && isclosed(b))
+    return (
+        !isunbounded(a) && (
+            isunbounded(b) ||
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && !isclosed(a) && isclosed(b)
+        )
+    )
 end
 
 function Base.isless(a::LeftEndpoint, b::RightEndpoint)
-    a.endpoint < b.endpoint
+    return (
+        isunbounded(a) ||
+        isunbounded(b) ||
+        a.endpoint < b.endpoint
+    )
 end
 
 function Base.isless(a::RightEndpoint, b::LeftEndpoint)
-    a.endpoint < b.endpoint || (a.endpoint == b.endpoint && !(isclosed(a) && isclosed(b)))
+    return (
+        !isunbounded(a) && !isunbounded(b) &&
+        (
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && !(isclosed(a) && isclosed(b))
+        )
+    )
 end
 
 # Comparisons between Scalars and Endpoints
 Base.:(==)(a, b::Endpoint) = a == b.endpoint && isclosed(b)
 Base.:(==)(a::Endpoint, b) = b == a
 
-Base.isless(a, b::LeftEndpoint)  = a < b.endpoint || (a == b.endpoint && !isclosed(b))
-Base.isless(a, b::RightEndpoint) = a < b.endpoint
-Base.isless(a::LeftEndpoint, b)  = a.endpoint < b
-Base.isless(a::RightEndpoint, b) = a.endpoint < b || (a.endpoint == b && !isclosed(a))
+function Base.isless(a, b::LeftEndpoint)
+    return (
+        !isunbounded(b) && (
+            a < b.endpoint ||
+            a == b.endpoint && !isclosed(b)
+        )
+    )
+end
+
+function Base.isless(a::RightEndpoint, b)
+    return (
+        !isunbounded(a) &&
+        (
+            a.endpoint < b ||
+            a.endpoint == b && !isclosed(a)
+        )
+    )
+end
+
+Base.isless(a, b::RightEndpoint) = isunbounded(b) || a < b.endpoint
+Base.isless(a::LeftEndpoint, b)  = isunbounded(a) || a.endpoint < b

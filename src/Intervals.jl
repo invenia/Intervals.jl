@@ -12,6 +12,7 @@ import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 abstract type Bound end
 struct Closed <: Bound end
 struct Open <: Bound end
+struct Unbounded <: Bound end
 
 bound_type(x::Bool) = x ? Closed : Open
 
@@ -31,6 +32,7 @@ include("deprecated.jl")
 export Bound,
        Closed,
        Open,
+       Unbounded,
        AbstractInterval,
        Interval,
        AnchoredInterval,

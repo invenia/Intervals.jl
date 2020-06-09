@@ -160,12 +160,25 @@ function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where 
 end
 =#
 
-function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
-    AnchoredInterval{-span(interval), T, L, R}(last(interval))
+one(T::Type{<:TimeType}) = eps(T)
+one(x) = Base.one(x)
+
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
+    left, right = LeftEndpoint(interval), RightEndpoint(interval)
+    if isunbounded(right)
+        throw(ArgumentError("Unable to represent a right-unbounded interval using a `AnchoredInterval{Ending}`"))
+    end
+    s = isunbounded(left) ? one(T) : span(interval)
+    return AnchoredInterval{-s, T, bound_type(left), bound_type(right)}(last(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
-    AnchoredInterval{span(interval), T, L, R}(first(interval))
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
+    left, right = LeftEndpoint(interval), RightEndpoint(interval)
+    if isunbounded(left)
+        throw(ArgumentError("Unable to represent a left-unbounded interval using a `AnchoredInterval{Beginning}`"))
+    end
+    s = isunbounded(right) ? one(T) : span(interval)
+    return AnchoredInterval{s, T, bound_type(left), bound_type(right)}(first(interval))
 end
 
 ##### DISPLAY #####
@@ -244,6 +257,8 @@ function Base.isempty(interval::AnchoredInterval{P,T}) where {P,T}
     return P == zero(P) && !isclosed(interval)
 end
 
+# TODO: Not required but should be addressed
+#=
 function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
 
@@ -259,6 +274,7 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
     L, R = bounds_types(interval)
     return AnchoredInterval{new_P, T, L, R}(anchor)
 end
+=#
 
 ##### UTILITIES #####
 

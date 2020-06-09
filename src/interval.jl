@@ -95,7 +95,7 @@ function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
     Interval{T, bound(left), bound(right)}(T(left.endpoint), T(right.endpoint))
 end
 
-function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S, T}
+function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
     Interval{promote_type(S, T)}(left, right)
 end
 
@@ -291,7 +291,7 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return Interval{T}(left, right)
 end
 
-function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S, T}
+function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S,T}
     !overlaps(a, b) && return Interval{promote_type(S, T)}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))

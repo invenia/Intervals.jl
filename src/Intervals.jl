@@ -9,10 +9,12 @@ using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
-abstract type AbstractInterval{T} end
+abstract type AbstractInterval{T,L,R} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
+
+bound(x::Bool) = x ? :closed : :open
 
 include("inclusivity.jl")
 include("endpoint.jl")

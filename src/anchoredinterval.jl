@@ -58,60 +58,59 @@ AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, tru
 
 See also: [`Interval`](@ref), [`Inclusivity`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T} <: AbstractInterval{T}
+struct AnchoredInterval{P,T,L,R} <: AbstractInterval{T,L,R}
     anchor::T
-    inclusivity::Inclusivity
 end
 
-function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
-end
+AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(anchor)
 
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
-function AnchoredInterval{P, T}(i::T) where {P, T}
-    return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
+function AnchoredInterval{P,T}(anchor) where {P,T}
+    L = bound(P ≥ zero(P))
+    R = bound(P ≤ zero(P))
+    return AnchoredInterval{P,T,L,R}(anchor)
 end
 
-function AnchoredInterval{P, T}(i, inc...) where {P, T}
-    return AnchoredInterval{P, T}(convert(T, i), inc...)
-end
+AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 
-AnchoredInterval{P}(i::T, inc...) where {P, T} = AnchoredInterval{P, T}(i, inc...)
-
+# Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
+# the `HourEnding{L,R}` constructor.
 """
-    HourEnding{T<:TimeType} <: AbstractInterval{T}
+    HourEnding{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 """
-const HourEnding{T} = AnchoredInterval{Hour(-1), T} where T <: TimeType
-HourEnding(a::T, args...) where T = HourEnding{T}(a, args...)
+const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T,L,R}
+HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
+# Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
+# the `HourBeginning{L,R}` constructor.
 """
-    HourBeginning{T<:TimeType} <: AbstractInterval{T}
+    HourBeginning{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 """
-const HourBeginning{T} = AnchoredInterval{Hour(1), T} where T <: TimeType
-HourBeginning(a::T, args...) where T = HourBeginning{T}(a, args...)
+const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T,L,R}
+HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """
-    HE(anchor, args...) -> HourEnding
+    HE(anchor) -> HourEnding
 
 `HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
-HE(a, args...) = HourEnding(ceil(a, Hour), args...)
+HE(anchor) = HourEnding(ceil(anchor, Hour))
 
 """
-    HB(anchor, args...) -> HourBeginning
+    HB(anchor) -> HourBeginning
 
 `HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
-HB(a, args...) = HourBeginning(floor(a, Hour), args...)
+HB(anchor) = HourBeginning(floor(anchor, Hour))
 
 function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
     return AnchoredInterval{P, T}(anchor(x), inclusivity(x))
@@ -177,8 +176,6 @@ function Base.show(io::IO, interval::T) where T <: AnchoredInterval
     else
         print(io, "$T(")
         show(io, anchor(interval))
-        print(io, ", ")
-        show(io, inclusivity(interval))
         print(io, ")")
     end
 end
@@ -194,7 +191,7 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b, inclusivity(a))
+Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b)
 
 Base.:+(a, b::AnchoredInterval) = b + a
 Base.:-(a::AnchoredInterval, b) = a + -b
@@ -225,13 +222,17 @@ end
 
 ##### RANGE #####
 
-function Base.steprange_last(start::T, step, stop::T) where {T <: AnchoredInterval}
-    T(Base.steprange_last(anchor(start), step, anchor(stop)), inclusivity(start))
+function Base.:(:)(start::AnchoredInterval{P,T}, step::S, stop::AnchoredInterval{P,T}) where {P,T,S}
+    return StepRange{AnchoredInterval{P,T}, S}(start, step, stop)
 end
 
 # Infer step for two-argument StepRange{<:AnchoredInterval}
 function Base.:(:)(start::AnchoredInterval{P, T}, stop::AnchoredInterval{P, T}) where {P,T}
     return (:)(start, abs(P), stop)
+end
+
+function Base.steprange_last(start::T, step, stop::AnchoredInterval) where T <: AnchoredInterval
+    T(Base.steprange_last(anchor(start), step, anchor(stop)))
 end
 
 function Base.length(r::StepRange{<:AnchoredInterval})

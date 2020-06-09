@@ -52,31 +52,33 @@ Note that the `Inclusivity` value is also reversed in this case.
 
 See also: [`AnchoredInterval`](@ref), [`Inclusivity`](@ref)
 """
-struct Interval{T} <: AbstractInterval{T}
+struct Interval{T,L,R} <: AbstractInterval{T,L,R}
     first::T
     last::T
-    inclusivity::Inclusivity
 
-    function Interval{T}(f::T, l::T, inc::Inclusivity) where T
+    function Interval{T,L,R}(f::T, l::T) where {T,L,R}
         # Ensure that `first` preceeds `last`.
-        f, l, inc = if f ≤ l
-            f, l, inc
+        f, l, left_bound, right_bound = if f ≤ l
+            f, l, L, R
         elseif l ≤ f
-            l, f, Inclusivity(last(inc), first(inc))
+            l, f, R, L
         else
             throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
         end
 
-        return new(f, l, inc)
+        return new{T, left_bound, right_bound}(f, l)
     end
 end
 
-Interval{T}(f, l, inc::Inclusivity) where T = Interval{T}(convert(T, f), convert(T, l), inc)
-Interval{T}(f, l, x::Bool, y::Bool) where T = Interval{T}(f, l, Inclusivity(x, y))
-Interval{T}(f, l) where T = Interval{T}(f, l, true, true)
+Interval{T,L,R}(f, l) where {T,L,R} = Interval{T,L,R}(convert(T, f), convert(T, l))
 
-Interval(f::T, l::T, inc...) where T = Interval{T}(f, l, inc...)
-Interval(f, l, inc...) = Interval(promote(f, l)..., inc...)
+Interval{L,R}(f::T, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
+Interval{L,R}(f, l) where {L,R} = Interval{promote_type(typeof(f), typeof(l)), L, R}(f, l)
+
+Interval{T}(f, l) where {T,L,R} = Interval{T, :closed, :closed}(f, l)
+
+Interval(f::T, l::T) where T = Interval{T}(f, l)
+Interval(f, l) = Interval(promote(f, l)...)
 
 (..)(first, last) = Interval(first, last)
 
@@ -85,8 +87,12 @@ Interval(interval::AbstractInterval) = convert(Interval, interval)
 Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
+function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {T,L,R}
+    Interval{T,L,R}(left.endpoint, right.endpoint)
+end
+
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T}(T(left.endpoint), T(right.endpoint), left.included, right.included)
+    Interval{T, bound(left), bound(right)}(T(left.endpoint), T(right.endpoint))
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S, T}
@@ -101,7 +107,7 @@ function Interval{T}() where T <: ZonedDateTime
     return Interval{T}(T(0, tz"UTC"), T(0, tz"UTC"), Inclusivity(false, false))
 end
 
-Base.copy(x::Interval{T}) where T = Interval{T}(x.first, x.last, x.inclusivity)
+Base.copy(x::T) where T <: Interval = T(x.first, x.last)
 
 function Base.hash(interval::AbstractInterval, h::UInt)
     h = hash(LeftEndpoint(interval), h)
@@ -113,7 +119,7 @@ end
 
 Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
-inclusivity(interval::AbstractInterval) = interval.inclusivity
+inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R} = Inclusivity(L === :closed, R === :closed)
 isclosed(interval::AbstractInterval) = isclosed(inclusivity(interval))
 Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
 
@@ -147,8 +153,6 @@ function Base.show(io::IO, interval::T) where T <: Interval
         show(io, interval.first)
         print(io, ", ")
         show(io, interval.last)
-        print(io, ", ")
-        show(io, interval.inclusivity)
         print(io, ")")
     end
 end
@@ -171,7 +175,7 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, inclusivity(a))
+Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b)
 
 Base.:+(a, b::Interval) = b + a
 Base.:-(a::Interval, b) = a + -b
@@ -276,7 +280,7 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint == left.endpoint && left.included != right.included
+    return right.endpoint == left.endpoint && bound(left) != bound(right)
 end
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T

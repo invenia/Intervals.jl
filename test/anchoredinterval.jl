@@ -156,18 +156,18 @@ using Intervals: canonicalize
         # - `repr(Period(...))`can be converted to hardcode strings
 
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-            "AnchoredInterval{$(repr(Hour(-1))),T} where T"
+            "AnchoredInterval{$(repr(Hour(-1))),T,L,R} where R where L where T"
         @test sprint(show, AnchoredInterval{Hour(1)}) ==
-            "AnchoredInterval{$(repr(Hour(1))),T} where T"
+            "AnchoredInterval{$(repr(Hour(1))),T,L,R} where R where L where T"
 
         @test sprint(show, AnchoredInterval{Day(-1)}) ==
-            "AnchoredInterval{$(repr(Day(-1))),T} where T"
+            "AnchoredInterval{$(repr(Day(-1))),T,L,R} where R where L where T"
         @test sprint(show, AnchoredInterval{Day(1)}) ==
-            "AnchoredInterval{$(repr(Day(1))),T} where T"
+            "AnchoredInterval{$(repr(Day(1))),T,L,R} where R where L where T"
         @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-            "AnchoredInterval{$(repr(Day(-1))),DateTime}"
+            "AnchoredInterval{$(repr(Day(-1))),DateTime,L,R} where R where L"
         @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-            "AnchoredInterval{$(repr(Day(1))),DateTime}"
+            "AnchoredInterval{$(repr(Day(1))),DateTime,L,R} where R where L"
 
         # Tuples contain fields: interval, printed, shown
         tests = [
@@ -175,112 +175,112 @@ using Intervals: canonicalize
                 HourEnding(dt),
                 "(2016-08-11 HE02]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
             (
                 HourEnding(DateTime(2013, 2, 13), Inclusivity(true, false)),
                 "[2013-02-12 HE24)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime}",
-                    "($(repr(DateTime(2013, 2, 13))), Inclusivity(true, false))",
+                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,:closed,:open}",
+                    "($(repr(DateTime(2013, 2, 13))))",
                 ),
             ),
             (
                 HourEnding(dt + Minute(15) + Second(30)),
                 "(2016-08-11 HE02:15:30]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 15, 30))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2, 15, 30))))",
                 ),
             ),
             (
                 HourEnding(dt + Millisecond(2)),
                 "(2016-08-11 HE02:00:00.002]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0, 2))))",
                 ),
             ),
             (
                 HourEnding(DateTime(2013, 2, 13, 0, 1), Inclusivity(true, false)),
                 "[2013-02-13 HE00:01:00)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime}",
-                    "($(repr(DateTime(2013, 2, 13, 0, 1))), Inclusivity(true, false))",
+                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,:closed,:open}",
+                    "($(repr(DateTime(2013, 2, 13, 0, 1))))",
                 ),
             ),
             (
                 HourBeginning(dt),
                 "[2016-08-11 HB02)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(true, false))",
+                    "AnchoredInterval{$(repr(Hour(1))),DateTime,:closed,:open}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
             (
                 HourBeginning(DateTime(2013, 2, 13), Inclusivity(false, true)),
                 "(2013-02-13 HB00]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(1))),DateTime}",
-                    "($(repr(DateTime(2013, 2, 13))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Hour(1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2013, 2, 13))))",
                 ),
             ),
             (
                 HourEnding(ZonedDateTime(dt, tz"America/Winnipeg")),
                 "(2016-08-11 HE02-05:00]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),$ZonedDateTime}",
-                    "($(repr(ZonedDateTime(dt, tz"America/Winnipeg"))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Hour(-1))),$ZonedDateTime,:open,:closed}",
+                    "($(repr(ZonedDateTime(dt, tz"America/Winnipeg"))))",
                 ),
             ),
             (
                 AnchoredInterval{Year(-1)}(Date(dt)),
                 "(YE 2016-08-11]",
                 string(
-                    "AnchoredInterval{$(repr(Year(-1))),Date}",
-                    "($(repr(Date(2016, 8, 11))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Year(-1))),Date,:open,:closed}",
+                    "($(repr(Date(2016, 8, 11))))",
                 ),
             ),
             (
                 AnchoredInterval{Year(-1)}(ceil(Date(dt), Year)),
                 "(YE 2017-01-01]",
                 string(
-                    "AnchoredInterval{$(repr(Year(-1))),Date}",
-                    "($(repr(Date(2017, 1, 1))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Year(-1))),Date,:open,:closed}",
+                    "($(repr(Date(2017, 1, 1))))",
                 ),
             ),
             (
                 AnchoredInterval{Month(-1)}(dt),
                 "(MoE 2016-08-11 02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Month(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Month(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0))))",
                 ),
             ),
             (
                 AnchoredInterval{Month(-1)}(ceil(dt, Month)),
                 "(MoE 2016-09-01]",
                 string(
-                    "AnchoredInterval{$(repr(Month(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 9, 1))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Month(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 9, 1))))",
                 ),
             ),
             (
                 AnchoredInterval{Day(-1)}(DateTime(dt)),
                 "(DE 2016-08-11 02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Day(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
             (
                 AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day)),
                 "(DE 2016-08-12]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 12))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Day(-1))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 12))))",
                 ),
             ),
             (
@@ -288,8 +288,8 @@ using Intervals: canonicalize
                 AnchoredInterval{Day(-1)}(Date(dt)),
                 "(DE 2016-08-11]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))),Date}",
-                    "($(repr(Date(2016, 8, 11))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Day(-1))),Date,:open,:closed}",
+                    "($(repr(Date(2016, 8, 11))))",
                 ),
             ),
             (
@@ -300,32 +300,32 @@ using Intervals: canonicalize
                 ),
                 "(DE 2016-08-12 00:00:00-05:00]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))),$ZonedDateTime}",
-                    "($(repr(ZonedDateTime(2016, 8, 12, tz"America/Winnipeg"))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Day(-1))),$ZonedDateTime,:open,:closed}",
+                    "($(repr(ZonedDateTime(2016, 8, 12, tz"America/Winnipeg"))))",
                 ),
             ),
             (
                 AnchoredInterval{Minute(-5)}(dt),
                 "(2016-08-11 5ME02:00]",
                 string(
-                    "AnchoredInterval{$(repr(Minute(-5))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Minute(-5))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
             (
                 AnchoredInterval{Second(-30)}(dt),
                 "(2016-08-11 30SE02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Second(-30))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Second(-30))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
             (
                 AnchoredInterval{Millisecond(-10)}(dt),
                 "(2016-08-11 10msE02:00:00.000]",
                 string(
-                    "AnchoredInterval{$(repr(Millisecond(-10))),DateTime}",
-                    "($(repr(DateTime(2016, 8, 11, 2))), Inclusivity(false, true))",
+                    "AnchoredInterval{$(repr(Millisecond(-10))),DateTime,:open,:closed}",
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
            ),
         ]
@@ -346,13 +346,13 @@ using Intervals: canonicalize
         @test string(interval) == "(0 .. 10]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{-10,$Int}(10, Inclusivity(false, true))"
+            "AnchoredInterval{-10,$Int,:open,:closed}(10)"
 
         interval = AnchoredInterval{25}('a')
         @test string(interval) == "[a .. z)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
-            "AnchoredInterval{25,Char}('a', Inclusivity(true, false))"
+            "AnchoredInterval{25,Char,:closed,:open}('a')"
     end
 
     @testset "equality" begin

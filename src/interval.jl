@@ -118,10 +118,12 @@ isclosed(interval::AbstractInterval) = isclosed(inclusivity(interval))
 Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
 
 """
-    span(interval::Interval)
+    span(interval::AbstractInterval)
 
 Compute the span of the interval, that is `last(interval) - first(interval)`.
 """
+span(::AbstractInterval)
+
 span(interval::Interval) = interval.last - interval.first
 
 ##### CONVERSION #####

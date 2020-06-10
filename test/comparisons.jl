@@ -1,5 +1,4 @@
 using Intervals: Ending, Beginning, overlaps, contiguous, RightEndpoint, LeftEndpoint
-using Base.Iterators: product
 
 function unique_paired_permutation(v::Vector{T}) where T
     results = Tuple{T, T}[]
@@ -21,12 +20,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "non-overlapping" begin
         test_intervals = product(
             [
-                Interval(1, 2, true, true),
-                Interval(-Inf, 2, true, true),
+                Interval{Closed, Closed}(1, 2),
+                Interval{Closed, Closed}(-Inf, 2),
             ],
             [
-                Interval(4, 5, true, true),
-                Interval(4, Inf, true, true),
+                Interval{Closed, Closed}(4, 5),
+                Interval{Closed, Closed}(4, Inf),
             ],
         )
 
@@ -72,12 +71,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching open/open" begin
         test_intervals = product(
             [
-                Interval(1, 3, false, false),
-                Interval(-Inf, 3, false, false),
+                Interval{Open, Open}(1, 3),
+                Interval{Open, Open}(-Inf, 3),
             ],
             [
-                Interval(3, 5, false, false),
-                Interval(3, Inf, false, false),
+                Interval{Open, Open}(3, 5),
+                Interval{Open, Open}(3, Inf),
             ],
         )
 
@@ -123,12 +122,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching open/closed" begin
          test_intervals = product(
             [
-                Interval(1, 3, false, false),
-                Interval(-Inf, 3, false, false),
+                Interval{Open, Open}(1, 3),
+                Interval{Open, Open}(-Inf, 3),
             ],
             [
-                Interval(3, 5, true, true),
-                Interval(3, Inf, true, true),
+                Interval{Closed, Closed}(3, 5),
+                Interval{Closed, Closed}(3, Inf),
             ],
         )
 
@@ -174,12 +173,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching closed/open" begin
         test_intervals = product(
             [
-                Interval(1, 3, true, true),
-                Interval(-Inf, 3, true, true),
+                Interval{Closed, Closed}(1, 3),
+                Interval{Closed, Closed}(-Inf, 3),
             ],
             [
-                Interval(3, 5, false, false),
-                Interval(3, Inf, false, false),
+                Interval{Open, Open}(3, 5),
+                Interval{Open, Open}(3, Inf),
             ],
         )
 
@@ -225,12 +224,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "touching closed/closed" begin
         test_intervals = product(
             [
-                Interval(1, 3, true, true),
-                Interval(-Inf, 3, true, true),
+                Interval{Closed, Closed}(1, 3),
+                Interval{Closed, Closed}(-Inf, 3),
             ],
             [
-                Interval(3, 5, true, true),
-                Interval(3, Inf, true, true),
+                Interval{Closed, Closed}(3, 5),
+                Interval{Closed, Closed}(3, Inf),
             ],
         )
 
@@ -241,7 +240,7 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             earlier = convert(A, a)
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
-            expected_overlap = Interval(last(a), first(b), true, true)
+            expected_overlap = Interval{Closed, Closed}(last(a), first(b))
 
             @test earlier != later
             @test !isequal(earlier, later)
@@ -276,12 +275,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "overlapping" begin
         test_intervals = product(
             [
-                Interval(1, 4, true, true),
-                Interval(-Inf, 4, true, true),
+                Interval{Closed, Closed}(1, 4),
+                Interval{Closed, Closed}(-Inf, 4),
             ],
             [
-                Interval(2, 5, true, true),
-                Interval(2, Inf, true, true),
+                Interval{Closed, Closed}(2, 5),
+                Interval{Closed, Closed}(2, Inf),
             ],
         )
 
@@ -322,8 +321,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal ()/()" begin
         test_intervals = (
             [
-                Interval(l, u, false, false),
-                Interval(l, u, false, false),
+                Interval{Open, Open}(l, u),
+                Interval{Open, Open}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -367,8 +366,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal [)/()" begin
         test_intervals = (
             [
-                Interval(l, u, true, false),
-                Interval(l, u, false, false),
+                Interval{Closed, Open}(l, u),
+                Interval{Open, Open}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -412,8 +411,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal (]/()" begin
         test_intervals = (
             [
-                Interval(l, u, false, true),
-                Interval(l, u, false, false),
+                Interval{Open, Closed}(l, u),
+                Interval{Open, Open}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -457,8 +456,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal []/()" begin
         test_intervals = (
             [
-                Interval(l, u, true, true),
-                Interval(l, u, false, false),
+                Interval{Closed, Closed}(l, u),
+                Interval{Open, Open}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -502,8 +501,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal [)/[]" begin
         test_intervals = (
             [
-                Interval(l, u, true, false),
-                Interval(l, u, true, true),
+                Interval{Closed, Open}(l, u),
+                Interval{Closed, Closed}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -547,8 +546,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal (]/[]" begin
         test_intervals = (
             [
-                Interval(l, u, false, true),
-                Interval(l, u, true, true),
+                Interval{Open, Closed}(l, u),
+                Interval{Closed, Closed}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -592,8 +591,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "equal []/[]" begin
         test_intervals = (
             [
-                Interval(l, u, true, true),
-                Interval(l, u, true, true),
+                Interval{Closed, Closed}(l, u),
+                Interval{Closed, Closed}(l, u),
             ]
             for (l, u) in product((1, -Inf), (5, Inf))
         )
@@ -676,13 +675,13 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     @testset "containing" begin
         test_intervals = product(
             [
-                Interval(2, 4, true, true),
+                Interval{Closed, Closed}(2, 4),
             ],
             [
-                Interval(1, 5, true, true),
-                Interval(1, Inf, true, true),
-                Interval(-Inf, 5, true, true),
-                Interval(-Inf, Inf, true, true),
+                Interval{Closed, Closed}(1, 5),
+                Interval{Closed, Closed}(1, Inf),
+                Interval{Closed, Closed}(-Inf, 5),
+                Interval{Closed, Closed}(-Inf, Inf),
             ],
         )
 

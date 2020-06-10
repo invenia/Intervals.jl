@@ -19,6 +19,7 @@ abstract type AbstractInterval{T, L <: Bound, R <: Bound} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
+bounds(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
 
 include("inclusivity.jl")
 include("endpoint.jl")

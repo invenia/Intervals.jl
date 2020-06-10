@@ -14,15 +14,15 @@ end
 
 This package defines:
 * `AbstractInterval`, along with its subtypes:
-  * [`Interval{T}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
-  * [`AnchoredInterval{P, T}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
-    value `anchor::T` and the value type `P` which represents the size of the range
-    * [`HourEnding`](@ref), a type alias for `AnchoredInterval{Hour(-1), T}`
-    * [`HourBeginning`](@ref), a type alias for `AnchoredInterval{Hour(1), T}`
+  * [`Interval{T,L,R}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
+    with left/right bounds respectively being `L` and `R`
+  * [`AnchoredInterval{P,T,L,R}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
+    value `anchor::T` and the value type `P` which represents the span of the range. Left/right bounds are specifed
+    by `L` and `R` respectively
+    * [`HourEnding`](@ref), a type alias for `AnchoredInterval{Hour(-1)}`
+    * [`HourBeginning`](@ref), a type alias for `AnchoredInterval{Hour(1)}`
     * [`HE`](@ref) and [`HB`](@ref), pseudoconstructors for `HourEnding` and `HourBeginning` that round the
       anchor up (`HE`) or down (`HB`) to the nearest hour
-* [`Inclusivity`](@ref), which represents whether an `AbstractInterval` is open, half-open, or
-  closed
 
 ## Example Usage
 
@@ -30,23 +30,23 @@ This package defines:
 
 ```jldoctest
 julia> a = 1..10
-Interval{Int64}(1, 10, Inclusivity(true, true))
+Interval{Int64,:closed,:closed}(1, 10)
 
 julia> b = 5..15
-Interval{Int64}(5, 15, Inclusivity(true, true))
+Interval{Int64,:closed,:closed}(5, 15)
 
 julia> intersect(a, b)
-Interval{Int64}(5, 10, Inclusivity(true, true))
+Interval{Int64,:closed,:closed}(5, 10)
 ```
 
-### Inclusivity
+### Bounds
 
 ```jldoctest
-julia> a = Interval(1, 10)
-Interval{Int64}(1, 10, Inclusivity(true, true))
+julia> a = Interval{:closed,:closed}(1, 10)
+Interval{Int64,:closed,:closed}(1, 10)
 
-julia> b = Interval(5, 15, false, false)
-Interval{Int64}(5, 15, Inclusivity(false, false))
+julia> b = Interval{:open,:open}(5, 15)
+Interval{Int64,:open,:open}(5, 15)
 
 julia> 5 in a
 true
@@ -55,10 +55,10 @@ julia> 5 in b
 false
 
 julia> intersect(a, b)
-Interval{Int64}(5, 10, Inclusivity(false, true))
+Interval{Int64,:open,:closed}(5, 10)
 
 julia> c = Interval(15, 20)
-Interval{Int64}(15, 20, Inclusivity(true, true))
+Interval{Int64,:closed,:closed}(15, 20)
 
 julia> isempty(intersect(b, c))
 true
@@ -68,21 +68,21 @@ true
 
 ```jldoctest
 julia> a = Interval('a', 'z')
-Interval{Char}('a', 'z', Inclusivity(true, true))
+Interval{Char,:closed,:closed}('a', 'z')
 
 julia> string(a)
 "[a .. z]"
 
 julia> using Dates
 
-julia> b = Interval(Date(2013), Date(2016), true, false)
-Interval{Date}(2013-01-01, 2016-01-01, Inclusivity(true, false))
+julia> b = Interval{:closed,:open}(Date(2013), Date(2016))
+Interval{Date,:closed,:open}(2013-01-01, 2016-01-01)
 
 julia> string(b)
 "[2013-01-01 .. 2016-01-01)"
 
 julia> c = HourEnding(DateTime(2016, 8, 11))
-AnchoredInterval{-1 hour,DateTime}(2016-08-11T00:00:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,DateTime,:open,:closed}(2016-08-11T00:00:00)
 
 julia> string(c)
 "(2016-08-10 HE24]"
@@ -94,13 +94,13 @@ julia> string(c)
 julia> using TimeZones, Dates
 
 julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"), Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime,:open,:closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
 
 julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"), Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime,:open,:closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
 
 julia> he + Hour(1)
-AnchoredInterval{-1 hour,ZonedDateTime}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"), Inclusivity(false, true))
+AnchoredInterval{-1 hour,ZonedDateTime,:open,:closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
 
 julia> foreach(println, he:he + Day(1))
 (2013-02-13 HE01-06:00]
@@ -163,17 +163,17 @@ In the plot, inclusive boundaries are marked with a vertical bar, whereas exclus
 #### Equality
 
 Two `AbstractInterval`s are considered equal if they have identical left and right
-endpoints (taking `Inclusivity` into account):
+endpoints (taking bounds into account):
 
 ```jldoctest
-julia> a = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), true, false)
-Interval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(true, false))
+julia> a = Interval{:closed,:open}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
+Interval{DateTime,:closed,:open}(2013-02-13T00:00:00, 2013-02-13T01:00:00)
 
-julia> b = Interval(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1), false, true)
-Interval{DateTime}(2013-02-13T00:00:00, 2013-02-13T01:00:00, Inclusivity(false, true))
+julia> b = Interval{:open,:closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
+Interval{DateTime,:open,:closed}(2013-02-13T00:00:00, 2013-02-13T01:00:00)
 
 julia> c = HourEnding(DateTime(2013, 2, 13, 1))
-AnchoredInterval{-1 hour,DateTime}(2013-02-13T01:00:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,DateTime,:open,:closed}(2013-02-13T01:00:00)
 
 julia> a == b
 false
@@ -210,8 +210,6 @@ true
 ## API
 
 ```@docs
-Inclusivity
-Inclusivity(::Integer)
 Interval
 AnchoredInterval
 HourEnding

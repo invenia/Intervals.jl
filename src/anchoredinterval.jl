@@ -56,7 +56,7 @@ julia> AnchoredInterval{Minute(5)}(DateTime(2016, 8, 11, 12, 30), true, true)
 AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, true))
 ```
 
-See also: [`Interval`](@ref), [`Inclusivity`](@ref), [`HE`](@ref), [`HB`](@ref)
+See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
 struct AnchoredInterval{P,T,L,R} <: AbstractInterval{T,L,R}
     anchor::T

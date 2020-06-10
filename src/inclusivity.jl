@@ -3,6 +3,7 @@
 
 Defines whether an `AbstractInterval` is open, half-open, or closed.
 """
+
 struct Inclusivity
     first::Bool
     last::Bool
@@ -24,6 +25,7 @@ Note that this constructor does not perform bounds-checking: instead it checks t
 of the two least-significant bits of the integer. This means that `Inclusivity(5)` is
 equivalent to `Inclusivity(1)`.
 """
+
 Inclusivity(i::Integer) = Inclusivity(i & 0b01 > 0, i & 0b10 > 0)
 
 Base.copy(x::Inclusivity) = Inclusivity(x.first, x.last)

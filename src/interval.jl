@@ -50,7 +50,7 @@ Interval{Date}(2013-02-13, 2016-08-11, Inclusivity(true, false))
 
 Note that the `Inclusivity` value is also reversed in this case.
 
-See also: [`AnchoredInterval`](@ref), [`Inclusivity`](@ref)
+See also: [`AnchoredInterval`](@ref)
 """
 struct Interval{T,L,R} <: AbstractInterval{T,L,R}
     first::T

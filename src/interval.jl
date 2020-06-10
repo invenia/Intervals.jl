@@ -122,6 +122,7 @@ end
 
 Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
+
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
 isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
@@ -134,7 +135,13 @@ Compute the span of the interval, that is `last(interval) - first(interval)`.
 """
 span(::AbstractInterval)
 
-span(interval::Interval) = interval.last - interval.first
+function span(interval::Interval)
+    if isbounded(interval)
+        interval.last - interval.first
+    else
+        throw(ArgumentError("Unable to determine the span of an non-bounded interval"))
+    end
+end
 
 ##### CONVERSION #####
 

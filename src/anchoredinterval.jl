@@ -131,7 +131,14 @@ function Base.last(interval::AnchoredInterval{P}) where P
 end
 
 anchor(interval::AnchoredInterval) = interval.anchor
-span(interval::AnchoredInterval{P}) where P = abs(P)
+
+function span(interval::AnchoredInterval{P}) where P
+    if !isunbounded(interval)
+        abs(P)
+    else
+        throw(ArgumentError("Unable to determine the span of an unbounded interval"))
+    end
+end
 
 ##### CONVERSION #####
 

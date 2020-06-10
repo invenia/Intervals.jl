@@ -9,12 +9,16 @@ using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
-abstract type AbstractInterval{T,L,R} end
+abstract type Bound end
+struct Closed <: Bound end
+struct Open <: Bound end
+
+bound(x::Bool) = x ? Closed : Open
+
+abstract type AbstractInterval{T, L <: Bound, R <: Bound} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
-
-bound(x::Bool) = x ? :closed : :open
 
 include("inclusivity.jl")
 include("endpoint.jl")
@@ -24,7 +28,10 @@ include("description.jl")
 include("plotting.jl")
 include("deprecated.jl")
 
-export AbstractInterval,
+export Bound,
+       Closed,
+       Open,
+       AbstractInterval,
        Interval,
        AnchoredInterval,
        HourEnding,

@@ -58,7 +58,7 @@ AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, tru
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P,T,L,R} <: AbstractInterval{T,L,R}
+struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
 end
 
@@ -82,7 +82,7 @@ AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 """
-const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T,L,R}
+const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bound, R <: Bound}
 HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
 # Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
@@ -93,7 +93,7 @@ HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 """
-const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T,L,R}
+const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bound, R <: Bound}
 HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """

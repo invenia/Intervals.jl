@@ -52,7 +52,7 @@ Note that the `Inclusivity` value is also reversed in this case.
 
 See also: [`AnchoredInterval`](@ref)
 """
-struct Interval{T,L,R} <: AbstractInterval{T,L,R}
+struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     first::T
     last::T
 
@@ -75,7 +75,7 @@ Interval{T,L,R}(f, l) where {T,L,R} = Interval{T,L,R}(convert(T, f), convert(T, 
 Interval{L,R}(f::T, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
 Interval{L,R}(f, l) where {L,R} = Interval{promote_type(typeof(f), typeof(l)), L, R}(f, l)
 
-Interval{T}(f, l) where {T,L,R} = Interval{T, :closed, :closed}(f, l)
+Interval{T}(f, l) where {T,L,R} = Interval{T, Closed, Closed}(f, l)
 
 Interval(f::T, l::T) where T = Interval{T}(f, l)
 Interval(f, l) = Interval(promote(f, l)...)
@@ -119,7 +119,7 @@ end
 
 Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
-inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R} = Inclusivity(L === :closed, R === :closed)
+inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R} = Inclusivity(L === Closed, R === Closed)
 isclosed(interval::AbstractInterval) = isclosed(inclusivity(interval))
 Base.isopen(interval::AbstractInterval) = isopen(inclusivity(interval))
 

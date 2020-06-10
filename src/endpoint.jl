@@ -6,7 +6,7 @@ const Right = Direction{:Right}()
 const Beginning = Left
 const Ending = Right
 
-struct Endpoint{T,D,B}
+struct Endpoint{T, D, B <: Bound}
     endpoint::T
 
     function Endpoint{T,D,B}(ep::T) where {T,D,B}
@@ -25,7 +25,7 @@ LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(first
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(last(i))
 
 bound(x::Endpoint{T,D,B}) where {T,D,B} = B
-isclosed(x::Endpoint) = bound(x) === :closed
+isclosed(x::Endpoint) = bound(x) === Closed
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     # Note: we shouldn't need to hash `T` as this is covered by the endpoint field.

@@ -116,18 +116,11 @@ Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
 function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {T,L,R}
-    Interval{T,L,R}(
-        L !== Unbounded ? left.endpoint : nothing,
-        R !== Unbounded ? right.endpoint : nothing,
-    )
+    Interval{T,L,R}(endpoint(left), endpoint(right))
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    L, R = bound_type(left), bound_type(right)
-    Interval{T,L,R}(
-        L !== Unbounded ? left.endpoint : nothing,
-        R !== Unbounded ? right.endpoint : nothing,
-    )
+    Interval{T, bound_type(left), bound_type(right)}(endpoint(left), endpoint(right))
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
@@ -152,8 +145,13 @@ end
 
 ##### ACCESSORS #####
 
-Base.first(interval::Interval) = interval.first
-Base.last(interval::Interval) = interval.last
+function Base.first(interval::Interval{T,L,R}) where {T,L,R}
+    return L !== Unbounded ? interval.first : nothing
+end
+
+function Base.last(interval::Interval{T,L,R}) where {T,L,R}
+    return R !== Unbounded ? interval.last : nothing
+end
 
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open

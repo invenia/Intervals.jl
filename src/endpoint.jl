@@ -33,7 +33,9 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
 
+endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
+
 isclosed(x::Endpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 isbounded(x::Endpoint) = bound_type(x) !== Unbounded

@@ -133,12 +133,20 @@ end
 # can get unexpected behaviour if adding the span to the anchor endpoint produces a value
 # that is no longer comparable (e.g., `NaN`).
 
-function Base.first(interval::AnchoredInterval{P}) where P
-    P < zero(P) ? (interval.anchor + P) : (interval.anchor)
+function Base.first(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    return if L !== Unbounded
+        P < zero(P) ? (interval.anchor + P) : (interval.anchor)
+    else
+        nothing
+    end
 end
 
-function Base.last(interval::AnchoredInterval{P}) where P
-    P < zero(P) ? (interval.anchor) : (interval.anchor + P)
+function Base.last(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    return if R !== Unbounded
+        P < zero(P) ? (interval.anchor) : (interval.anchor + P)
+    else
+        nothing
+    end
 end
 
 anchor(interval::AnchoredInterval) = interval.anchor
@@ -154,17 +162,11 @@ end
 ##### CONVERSION #####
 
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(
-        L !== Unbounded ? first(interval) : nothing,
-        R !== Unbounded ? last(interval) : nothing,
-    )
+    return Interval{T,L,R}(first(interval), last(interval))
 end
 
 function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(
-        L !== Unbounded ? first(interval) : nothing,
-        R !== Unbounded ? last(interval) : nothing,
-    )
+    return Interval{T,L,R}(first(interval), last(interval))
 end
 
 # Conversion methods which currently aren't needed but could prove useful. Commented out

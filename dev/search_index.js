@@ -193,6 +193,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "#Intervals.span",
+    "page": "Home",
+    "title": "Intervals.span",
+    "category": "function",
+    "text": "span(interval::AbstractInterval)\n\nCompute the span of the interval, that is last(interval) - first(interval).\n\n\n\n\n\n"
+},
+
+{
     "location": "#Intervals.superset",
     "page": "Home",
     "title": "Intervals.superset",
@@ -205,7 +213,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "API",
     "category": "section",
-    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\nHourEnding\nHourBeginning\nHE\nHB\n≪\n≫\n==\nunion\nunion!\nsuperset"
+    "text": "Inclusivity\nInclusivity(::Integer)\nInterval\nAnchoredInterval\nHourEnding\nHourBeginning\nHE\nHB\n≪\n≫\n==\nunion\nunion!\nspan\nsuperset"
 },
 
 ]}

@@ -560,9 +560,10 @@ using Intervals: LeftEndpoint, RightEndpoint
         end
 
          @testset "hash" begin
+            # Note: Unbounded endpoints should ignore the value
             a = now(tz"Europe/London")
-            b = deepcopy(a)
-            @test hash(a) == hash(b)  # Double check
+            b = a - Day(1)
+            @test hash(a) != hash(b)  # Double check
 
             @test hash(LeftEndpoint{Unbounded}(a)) == hash(LeftEndpoint{Unbounded}(b))
             @test hash(LeftEndpoint{Unbounded}(a)) != hash(LeftEndpoint{Open}(b))
@@ -581,6 +582,10 @@ using Intervals: LeftEndpoint, RightEndpoint
             @test hash(LeftEndpoint{Unbounded}(a)) != hash(RightEndpoint{Closed}(b))
             @test hash(LeftEndpoint{Open}(a)) != hash(RightEndpoint{Unbounded}(b))
             @test hash(LeftEndpoint{Closed}(a)) != hash(RightEndpoint{Unbounded}(b))
+
+            @test hash(LeftEndpoint{Int,Unbounded}(0)) != hash(LeftEndpoint{Float64,Unbounded}(0.0))
+            @test hash(RightEndpoint{Int,Unbounded}(0)) != hash(RightEndpoint{Float64,Unbounded}(0.0))
+            @test hash(LeftEndpoint{Int,Unbounded}(0)) != hash(RightEndpoint{Float64,Unbounded}(0.0))
         end
     end
 

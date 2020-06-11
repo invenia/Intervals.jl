@@ -749,12 +749,13 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     end
 
     @testset "equal unbounded" begin
+        # Note: Using different values for the unbounded endpoints as this should ensure
+        # the values are being ignored.
         test_intervals = (
             [
-                Interval{Unbounded,Unbounded}(l, u),
-                Interval{Unbounded,Unbounded}(l, u),
-            ]
-            for (l, u) in product(0, 0)
+                Interval{Unbounded,Unbounded}(1, 2),
+                Interval{Unbounded,Unbounded}(4, 3),
+            ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals

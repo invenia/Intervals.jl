@@ -1,4 +1,4 @@
-using Intervals: bounds, canonicalize
+using Intervals: canonicalize
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -93,7 +93,7 @@ using Intervals: bounds, canonicalize
 
         @test first(interval) == DateTime(2016, 8, 11, 1, 45)
         @test last(interval) == dt
-        @test bounds(interval) == (Closed, Closed)
+        @test bounds_types(interval) == (Closed, Closed)
         @test span(interval) == -P
 
 
@@ -102,7 +102,7 @@ using Intervals: bounds, canonicalize
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
-        @test bounds(interval) == (Open, Open)
+        @test bounds_types(interval) == (Open, Open)
         @test span(interval) == P
 
         # DST transition
@@ -130,13 +130,13 @@ using Intervals: bounds, canonicalize
         interval = AnchoredInterval{-10}(10)
         @test first(interval) == 0
         @test last(interval) == 10
-        @test bounds(interval) == (Open, Closed)
+        @test bounds_types(interval) == (Open, Closed)
         @test span(interval) == 10
 
         interval = AnchoredInterval{25}('a')
         @test first(interval) == 'a'
         @test last(interval) == 'z'
-        @test bounds(interval) == (Closed, Open)
+        @test bounds_types(interval) == (Closed, Open)
         @test span(interval) == 25
     end
 

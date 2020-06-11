@@ -19,117 +19,117 @@ end
 
 
 function Endpoint{T,D}(ep::T, included::Bool) where {T,D}
-    B = bound(included)
+    B = bound_type(included)
     depwarn("`Endpoint{T,D}(ep, $included)` is deprecated, use `Endpoint{T,D,$(repr(B))}(ep)` instead.", :Endpoint)
     return Endpoint{T,D,B}(ep)
 end
 
 function LeftEndpoint(ep, included::Bool)
-    B = bound(included)
+    B = bound_type(included)
     depwarn("`LeftEndpoint(ep, $included)` is deprecated, use `LeftEndpoint{$(repr(B))}(ep)` instead.", :LeftEndpoint)
     return LeftEndpoint{B}(ep)
 end
 
 function RightEndpoint(ep, included::Bool)
-    B = bound(included)
+    B = bound_type(included)
     depwarn("`RightEndpoint(ep, $included)` is deprecated, use `RightEndpoint{$(repr(B))}(ep)` instead.", :RightEndpoint)
     return RightEndpoint{B}(ep)
 end
 
 # intervals.jl
 function Interval{T}(f, l, inc::Inclusivity) where T
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`Interval{T}(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
     return Interval{T,L,R}(f, l)
 end
 
 function Interval{T}(f, l, x::Bool, y::Bool) where T
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`Interval{T}(f, l, $x, $y)` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
     return Interval{T,L,R}(f, l)
 end
 
 function Interval(f, l, inc::Inclusivity)
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`Interval(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
     return Interval{L,R}(f, l)
 end
 
 function Interval(f, l, x::Bool, y::Bool)
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`Interval(f, l, $x, $y)` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
     return Interval{L,R}(f, l)
 end
 
 function inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R}
-    depwarn("`inclusivity(interval)` is deprecated and has no direct replacement. See `bounds(interval)` for similar functionality.", :inclusivity)
+    depwarn("`inclusivity(interval)` is deprecated and has no direct replacement. See `bounds_types(interval)` for similar functionality.", :inclusivity)
     return Inclusivity(L === Closed, R === Closed; ignore_depwarn=true)
 end
 
 # anchoredintervals.jl
 function AnchoredInterval{P,T}(anchor, inc::Inclusivity) where {P,T}
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`AnchoredInterval{P,T}(anchor, $(repr(inc)))` is deprecated, use `AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
     return AnchoredInterval{P,T,L,R}(anchor)
 end
 
 function AnchoredInterval{P,T}(anchor, x::Bool, y::Bool) where {P,T}
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`AnchoredInterval{P,T}(anchor, $x, $y)` is deprecated, use `AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
     return AnchoredInterval{P,T,L,R}(anchor)
 end
 
 function AnchoredInterval{P}(anchor, inc::Inclusivity) where P
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`AnchoredInterval{P}(anchor, $(repr(inc)))` is deprecated, use `AnchoredInterval{P,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
     return AnchoredInterval{P,L,R}(anchor)
 end
 
 function AnchoredInterval{P}(anchor, x::Bool, y::Bool) where P
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`AnchoredInterval{P}(anchor, $x, $y)` is deprecated, use `AnchoredInterval{P,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
     return AnchoredInterval{P,L,R}(anchor)
 end
 
 function HourEnding(anchor, x::Bool, y::Bool)
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`HourEnding(anchor, $x, $y)` is deprecated, use `HourEnding{$(repr(L)),$(repr(R))}(anchor)` instead.", :HourEnding)
     return HourEnding{L,R}(anchor)
 end
 
 function HourEnding(anchor, inc::Inclusivity)
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`HourEnding(anchor, $(repr(inc)))` is deprecated, use `HourEnding{$(repr(L)),$(repr(R))}(anchor)` instead.", :HourEnding)
     return HourEnding{L,R}(anchor)
 end
 
 function HourBeginning(anchor, x::Bool, y::Bool)
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     depwarn("`HourBeginning(anchor, $x, $y)` is deprecated, use `HourBeginning{$(repr(L)),$(repr(R))}(anchor)` instead.", :HourBeginning)
     return HourBeginning{L,R}(anchor)
 end
 
 function HourBeginning(anchor, inc::Inclusivity)
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     depwarn("`HourBeginning(anchor, $(repr(inc)))` is deprecated, use `HourBeginning{$(repr(L)),$(repr(R))}(anchor)` instead.", :HourBeginning)
     return HourBeginning{L,R}(anchor)
 end
 
 function HE(anchor, x::Bool, y::Bool)
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     if !x && y
         depwarn("`HE(anchor, $x, $y)` is deprecated, use `HE(anchor)` instead.", :HE)
     else
@@ -139,8 +139,8 @@ function HE(anchor, x::Bool, y::Bool)
 end
 
 function HE(anchor, inc::Inclusivity)
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     if !first(inc) && last(inc)
         depwarn("`HE(anchor, $(repr(inc)))` is deprecated, use `HE(anchor)` instead.", :HE)
     else
@@ -150,8 +150,8 @@ function HE(anchor, inc::Inclusivity)
 end
 
 function HB(anchor, x::Bool, y::Bool)
-    L = bound(x)
-    R = bound(y)
+    L = bound_type(x)
+    R = bound_type(y)
     if x && !y
         depwarn("`HB(anchor, $x, $y)` is deprecated, use `HB(anchor)` instead.", :HB)
     else
@@ -161,8 +161,8 @@ function HB(anchor, x::Bool, y::Bool)
 end
 
 function HB(anchor, inc::Inclusivity)
-    L = bound(first(inc))
-    R = bound(last(inc))
+    L = bound_type(first(inc))
+    R = bound_type(last(inc))
     if first(inc) && !last(inc)
         depwarn("`HB(anchor, $(repr(inc)))` is deprecated, use `HB(anchor)` instead.", :HB)
     else

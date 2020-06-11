@@ -67,8 +67,8 @@ AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(a
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
 function AnchoredInterval{P,T}(anchor) where {P,T}
-    L = bound(P ≥ zero(P))
-    R = bound(P ≤ zero(P))
+    L = bound_type(P ≥ zero(P))
+    R = bound_type(P ≤ zero(P))
     return AnchoredInterval{P,T,L,R}(anchor)
 end
 
@@ -208,7 +208,7 @@ end
 ##### EQUALITY #####
 
 function Base.:(==)(a::AnchoredInterval{P,T}, b::AnchoredInterval{P,T}) where {P,T}
-    return anchor(a) == anchor(b) && bounds(a) == bounds(b)
+    return anchor(a) == anchor(b) && bounds_types(a) == bounds_types(b)
 end
 
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
@@ -256,7 +256,7 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
         new_P = sp
     end
 
-    L, R = bounds(interval)
+    L, R = bounds_types(interval)
     return AnchoredInterval{new_P, T, L, R}(anchor)
 end
 

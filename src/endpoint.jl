@@ -24,8 +24,8 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(first(i))
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(last(i))
 
-bound(x::Endpoint{T,D,B}) where {T,D,B} = B
-isclosed(x::Endpoint) = bound(x) === Closed
+bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
+isclosed(x::Endpoint) = bound_type(x) === Closed
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     # Note: we shouldn't need to hash `T` as this is covered by the endpoint field.

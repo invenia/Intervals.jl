@@ -91,7 +91,7 @@ function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T, bound(left), bound(right)}(T(left.endpoint), T(right.endpoint))
+    Interval{T, bound_type(left), bound_type(right)}(T(left.endpoint), T(right.endpoint))
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
@@ -274,7 +274,7 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint == left.endpoint && bound(left) != bound(right)
+    return right.endpoint == left.endpoint && bound_type(left) != bound_type(right)
 end
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T

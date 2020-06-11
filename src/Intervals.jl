@@ -13,13 +13,13 @@ abstract type Bound end
 struct Closed <: Bound end
 struct Open <: Bound end
 
-bound(x::Bool) = x ? Closed : Open
+bound_type(x::Bool) = x ? Closed : Open
 
 abstract type AbstractInterval{T, L <: Bound, R <: Bound} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
-bounds(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
+bounds_types(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
 
 include("endpoint.jl")
 include("interval.jl")
@@ -40,9 +40,10 @@ export Bound,
        HB,
        first,
        last,
+       span,
+       bounds_types,
        isclosed,
        anchor,
-       span,
        merge,
        union,
        union!,

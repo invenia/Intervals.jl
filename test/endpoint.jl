@@ -1,6 +1,22 @@
-using Intervals: LeftEndpoint, RightEndpoint
+using Intervals: Endpoint, Left, Right, LeftEndpoint, RightEndpoint
 
 @testset "Endpoint" begin
+    @testset "constructors" begin
+        for D in (Left, Right)
+            @test Endpoint{Int, D, Closed}(0).endpoint == 0
+            @test Endpoint{Int, D, Open}(0).endpoint == 0
+            @test Endpoint{Int, D, Unbounded}(nothing).endpoint isa Int
+
+            @test_throws MethodError Endpoint{Int, D, Closed}(nothing)
+            @test_throws MethodError Endpoint{Int, D, Open}(nothing)
+            @test_throws MethodError Endpoint{Int, D, Unbounded}(0)
+
+            @test_throws MethodError Endpoint{Nothing, D, Closed}(nothing)
+            @test_throws MethodError Endpoint{Nothing, D, Open}(nothing)
+            @test Endpoint{Nothing, D, Unbounded}(nothing).endpoint === nothing
+        end
+    end
+
     @testset "bounded" begin
         @testset "LeftEndpoint < LeftEndpoint" begin
             @test LeftEndpoint{Open}(1) < LeftEndpoint{Open}(2.0)
@@ -293,299 +309,175 @@ using Intervals: LeftEndpoint, RightEndpoint
     # Note: The value for unbounded endpoints is irrelevant
     @testset "unbounded" begin
         @testset "LeftEndpoint < LeftEndpoint" begin
-            @test !(LeftEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test LeftEndpoint{Unbounded}(1) < LeftEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(2.0)
-            @test !(LeftEndpoint{Open}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test !(LeftEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(2.0))
-
-            @test !(LeftEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test LeftEndpoint{Unbounded}(1) < LeftEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(1.0)
-            @test !(LeftEndpoint{Open}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test !(LeftEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(1.0))
-
-            @test !(LeftEndpoint{Unbounded}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test LeftEndpoint{Unbounded}(2) < LeftEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(2) < LeftEndpoint{Closed}(1.0)
-            @test !(LeftEndpoint{Open}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test !(LeftEndpoint{Closed}(2) < LeftEndpoint{Unbounded}(1.0))
+            @test !(LeftEndpoint{Unbounded}(nothing) < LeftEndpoint{Unbounded}(nothing))
+            @test LeftEndpoint{Unbounded}(nothing) < LeftEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) < LeftEndpoint{Closed}(0.0)
+            @test !(LeftEndpoint{Open}(0) < LeftEndpoint{Unbounded}(nothing))
+            @test !(LeftEndpoint{Closed}(0) < LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "LeftEndpoint <= LeftEndpoint" begin
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Closed}(2.0)
-            @test !(LeftEndpoint{Open}(1) <= LeftEndpoint{Unbounded}(2.0))
-            @test !(LeftEndpoint{Closed}(1) <= LeftEndpoint{Unbounded}(2.0))
-
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) <= LeftEndpoint{Closed}(1.0)
-            @test !(LeftEndpoint{Open}(1) <= LeftEndpoint{Unbounded}(1.0))
-            @test !(LeftEndpoint{Closed}(1) <= LeftEndpoint{Unbounded}(1.0))
-
-            @test LeftEndpoint{Unbounded}(2) <= LeftEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(2) <= LeftEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(2) <= LeftEndpoint{Closed}(1.0)
-            @test !(LeftEndpoint{Open}(2) <= LeftEndpoint{Unbounded}(1.0))
-            @test !(LeftEndpoint{Closed}(2) <= LeftEndpoint{Unbounded}(1.0))
+            @test LeftEndpoint{Unbounded}(nothing) <= LeftEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Unbounded}(nothing) <= LeftEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) <= LeftEndpoint{Closed}(0.0)
+            @test !(LeftEndpoint{Open}(0) <= LeftEndpoint{Unbounded}(nothing))
+            @test !(LeftEndpoint{Closed}(0) <= LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "RightEndpoint < RightEndpoint" begin
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Unbounded}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Open}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Closed}(2.0))
-            @test RightEndpoint{Open}(1) < RightEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Closed}(1) < RightEndpoint{Unbounded}(2.0)
-
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < RightEndpoint{Closed}(1.0))
-            @test RightEndpoint{Open}(1) < RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(1) < RightEndpoint{Unbounded}(1.0)
-
-            @test !(RightEndpoint{Unbounded}(2) < RightEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < RightEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < RightEndpoint{Closed}(1.0))
-            @test RightEndpoint{Open}(2) < RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(2) < RightEndpoint{Unbounded}(1.0)
+            @test !(RightEndpoint{Unbounded}(nothing) < RightEndpoint{Unbounded}(nothing))
+            @test !(RightEndpoint{Unbounded}(nothing) < RightEndpoint{Open}(0.0))
+            @test !(RightEndpoint{Unbounded}(nothing) < RightEndpoint{Closed}(0.0))
+            @test RightEndpoint{Open}(0) < RightEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Closed}(0) < RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "RightEndpoint <= RightEndpoint" begin
-            @test RightEndpoint{Unbounded}(1) <= RightEndpoint{Unbounded}(2.0)
-            @test !(RightEndpoint{Unbounded}(1) <= RightEndpoint{Open}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) <= RightEndpoint{Closed}(2.0))
-            @test RightEndpoint{Open}(1) <= RightEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Closed}(1) <= RightEndpoint{Unbounded}(2.0)
-
-            @test RightEndpoint{Unbounded}(1) <= RightEndpoint{Unbounded}(1.0)
-            @test !(RightEndpoint{Unbounded}(1) <= RightEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) <= RightEndpoint{Closed}(1.0))
-            @test RightEndpoint{Open}(1) <= RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(1) <= RightEndpoint{Unbounded}(1.0)
-
-            @test RightEndpoint{Unbounded}(2) <= RightEndpoint{Unbounded}(1.0)
-            @test !(RightEndpoint{Unbounded}(2) <= RightEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) <= RightEndpoint{Closed}(1.0))
-            @test RightEndpoint{Open}(2) <= RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(2) <= RightEndpoint{Unbounded}(1.0)
+            @test RightEndpoint{Unbounded}(nothing) <= RightEndpoint{Unbounded}(nothing)
+            @test !(RightEndpoint{Unbounded}(nothing) <= RightEndpoint{Open}(0.0))
+            @test !(RightEndpoint{Unbounded}(nothing) <= RightEndpoint{Closed}(0.0))
+            @test RightEndpoint{Open}(0) <= RightEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Closed}(0) <= RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "LeftEndpoint < RightEndpoint" begin
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Closed}(2.0)
-            @test LeftEndpoint{Open}(1) < RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Closed}(1) < RightEndpoint{Unbounded}(2.0)
-
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) < RightEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(1) < RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(1) < RightEndpoint{Unbounded}(1.0)
-
-            @test LeftEndpoint{Unbounded}(2) < RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(2) < RightEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(2) < RightEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(2) < RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(2) < RightEndpoint{Unbounded}(1.0)
+            @test LeftEndpoint{Unbounded}(nothing) < RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Unbounded}(nothing) < RightEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) < RightEndpoint{Closed}(0.0)
+            @test LeftEndpoint{Open}(0) < RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Closed}(0) < RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "LeftEndpoint <= RightEndpoint" begin
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Closed}(2.0)
-            @test LeftEndpoint{Open}(1) <= RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Closed}(1) <= RightEndpoint{Unbounded}(2.0)
-
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) <= RightEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(1) <= RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(1) <= RightEndpoint{Unbounded}(1.0)
-
-            @test LeftEndpoint{Unbounded}(2) <= RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(2) <= RightEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(2) <= RightEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(2) <= RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(2) <= RightEndpoint{Unbounded}(1.0)
+            @test LeftEndpoint{Unbounded}(nothing) <= RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Unbounded}(nothing) <= RightEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) <= RightEndpoint{Closed}(0.0)
+            @test LeftEndpoint{Open}(0) <= RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Closed}(0) <= RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "RightEndpoint < LeftEndpoint" begin
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Open}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(2.0))
-            @test !(RightEndpoint{Open}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test !(RightEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(2.0))
-
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(1.0))
-            @test !(RightEndpoint{Open}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(1.0))
-
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Closed}(1.0))
-            @test !(RightEndpoint{Open}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Closed}(2) < LeftEndpoint{Unbounded}(1.0))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Unbounded}(nothing))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Open}(0.0))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Closed}(0.0))
+            @test !(RightEndpoint{Open}(0) < LeftEndpoint{Unbounded}(nothing))
+            @test !(RightEndpoint{Closed}(0) < LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "RightEndpoint <= LeftEndpoint" begin
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Open}(2.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(2.0))
-            @test !(RightEndpoint{Open}(1) < LeftEndpoint{Unbounded}(2.0))
-            @test !(RightEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(2.0))
-
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(1) < LeftEndpoint{Closed}(1.0))
-            @test !(RightEndpoint{Open}(1) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Closed}(1) < LeftEndpoint{Unbounded}(1.0))
-
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Open}(1.0))
-            @test !(RightEndpoint{Unbounded}(2) < LeftEndpoint{Closed}(1.0))
-            @test !(RightEndpoint{Open}(2) < LeftEndpoint{Unbounded}(1.0))
-            @test !(RightEndpoint{Closed}(2) < LeftEndpoint{Unbounded}(1.0))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Unbounded}(nothing))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Open}(0.0))
+            @test !(RightEndpoint{Unbounded}(nothing) < LeftEndpoint{Closed}(0.0))
+            @test !(RightEndpoint{Open}(0) < LeftEndpoint{Unbounded}(nothing))
+            @test !(RightEndpoint{Closed}(0) < LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "LeftEndpoint < Scalar" begin
-            @test LeftEndpoint{Unbounded}(0) < -Inf
-            @test LeftEndpoint{Unbounded}(0) < Inf
+            @test LeftEndpoint{Unbounded}(nothing) < -Inf
+            @test LeftEndpoint{Unbounded}(nothing) < Inf
         end
 
          @testset "LeftEndpoint <= Scalar" begin
-            @test LeftEndpoint{Unbounded}(0) <= -Inf
-            @test LeftEndpoint{Unbounded}(0) <= Inf
+            @test LeftEndpoint{Unbounded}(nothing) <= -Inf
+            @test LeftEndpoint{Unbounded}(nothing) <= Inf
         end
 
         @testset "RightEndpoint < Scalar" begin
-            @test !(RightEndpoint{Unbounded}(0) < -Inf)
-            @test !(RightEndpoint{Unbounded}(0) < Inf)
+            @test !(RightEndpoint{Unbounded}(nothing) < -Inf)
+            @test !(RightEndpoint{Unbounded}(nothing) < Inf)
         end
 
         @testset "RightEndpoint <= Scalar" begin
-            @test !(RightEndpoint{Unbounded}(0) <= -Inf)
-            @test !(RightEndpoint{Unbounded}(0) <= Inf)
+            @test !(RightEndpoint{Unbounded}(nothing) <= -Inf)
+            @test !(RightEndpoint{Unbounded}(nothing) <= Inf)
         end
 
         @testset "Scalar < LeftEndpoint" begin
-            @test !(-Inf < LeftEndpoint{Unbounded}(0))
-            @test !(Inf < LeftEndpoint{Unbounded}(0))
+            @test !(-Inf < LeftEndpoint{Unbounded}(nothing))
+            @test !(Inf < LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "Scalar <= LeftEndpoint" begin
-            @test !(-Inf <= LeftEndpoint{Unbounded}(0))
-            @test !(Inf <= LeftEndpoint{Unbounded}(0))
+            @test !(-Inf <= LeftEndpoint{Unbounded}(nothing))
+            @test !(Inf <= LeftEndpoint{Unbounded}(nothing))
         end
 
         @testset "Scalar < RightEndpoint" begin
-            @test -Inf < RightEndpoint{Unbounded}(0)
-            @test Inf < RightEndpoint{Unbounded}(0)
+            @test -Inf < RightEndpoint{Unbounded}(nothing)
+            @test Inf < RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "Scalar < RightEndpoint" begin
-            @test -Inf <= RightEndpoint{Unbounded}(0)
-            @test Inf <= RightEndpoint{Unbounded}(0)
+            @test -Inf <= RightEndpoint{Unbounded}(nothing)
+            @test Inf <= RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "LeftEndpoint == LeftEndpoint" begin
-            @test LeftEndpoint{Unbounded}(1) == LeftEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Unbounded}(1) != LeftEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) != LeftEndpoint{Closed}(2.0)
-            @test LeftEndpoint{Open}(1) != LeftEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Closed}(1) != LeftEndpoint{Unbounded}(2.0)
-
-            @test LeftEndpoint{Unbounded}(1) == LeftEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(1) != LeftEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) != LeftEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(1) != LeftEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(1) != LeftEndpoint{Unbounded}(1.0)
+            @test LeftEndpoint{Unbounded}(nothing) == LeftEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Unbounded}(nothing) != LeftEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) != LeftEndpoint{Closed}(0.0)
+            @test LeftEndpoint{Open}(0) != LeftEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Closed}(0) != LeftEndpoint{Unbounded}(nothing)
         end
 
         @testset "RightEndpoint == RightEndpoint" begin
-            @test RightEndpoint{Unbounded}(1) == RightEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Unbounded}(1) != RightEndpoint{Open}(2.0)
-            @test RightEndpoint{Unbounded}(1) != RightEndpoint{Closed}(2.0)
-            @test RightEndpoint{Open}(1) != RightEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Closed}(1) != RightEndpoint{Unbounded}(2.0)
-
-            @test RightEndpoint{Unbounded}(1) == RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Unbounded}(1) != RightEndpoint{Open}(1.0)
-            @test RightEndpoint{Unbounded}(1) != RightEndpoint{Closed}(1.0)
-            @test RightEndpoint{Open}(1) != RightEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(1) != RightEndpoint{Unbounded}(1.0)
+            @test RightEndpoint{Unbounded}(nothing) == RightEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Unbounded}(nothing) != RightEndpoint{Open}(0.0)
+            @test RightEndpoint{Unbounded}(nothing) != RightEndpoint{Closed}(0.0)
+            @test RightEndpoint{Open}(0) != RightEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Closed}(0) != RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "LeftEndpoint == RightEndpoint" begin
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Open}(2.0)
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Closed}(2.0)
-            @test LeftEndpoint{Open}(1) != RightEndpoint{Unbounded}(2.0)
-            @test LeftEndpoint{Closed}(1) != RightEndpoint{Unbounded}(2.0)
-
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Open}(1.0)
-            @test LeftEndpoint{Unbounded}(1) != RightEndpoint{Closed}(1.0)
-            @test LeftEndpoint{Open}(1) != RightEndpoint{Unbounded}(1.0)
-            @test LeftEndpoint{Closed}(1) != RightEndpoint{Unbounded}(1.0)
+            @test LeftEndpoint{Unbounded}(nothing) != RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Unbounded}(nothing) != RightEndpoint{Open}(0.0)
+            @test LeftEndpoint{Unbounded}(nothing) != RightEndpoint{Closed}(0.0)
+            @test LeftEndpoint{Open}(0) != RightEndpoint{Unbounded}(nothing)
+            @test LeftEndpoint{Closed}(0) != RightEndpoint{Unbounded}(nothing)
         end
 
         @testset "RightEndpoint == LeftEndpoint" begin
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Open}(2.0)
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Closed}(2.0)
-            @test RightEndpoint{Open}(1) != LeftEndpoint{Unbounded}(2.0)
-            @test RightEndpoint{Closed}(1) != LeftEndpoint{Unbounded}(2.0)
-
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Open}(1.0)
-            @test RightEndpoint{Unbounded}(1) != LeftEndpoint{Closed}(1.0)
-            @test RightEndpoint{Open}(1) != LeftEndpoint{Unbounded}(1.0)
-            @test RightEndpoint{Closed}(1) != LeftEndpoint{Unbounded}(1.0)
+            @test RightEndpoint{Unbounded}(nothing) != LeftEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Unbounded}(nothing) != LeftEndpoint{Open}(0.0)
+            @test RightEndpoint{Unbounded}(nothing) != LeftEndpoint{Closed}(0.0)
+            @test RightEndpoint{Open}(0) != LeftEndpoint{Unbounded}(nothing)
+            @test RightEndpoint{Closed}(0) != LeftEndpoint{Unbounded}(nothing)
         end
 
         @testset "isequal" begin
-            @test isequal(LeftEndpoint{Unbounded}(0.0), LeftEndpoint{Unbounded}(0.0))
-            @test !isequal(LeftEndpoint{Unbounded}(-0.0), LeftEndpoint{Open}(0.0))
-            @test !isequal(LeftEndpoint{Unbounded}(-0.0), LeftEndpoint{Closed}(0.0))
-            @test !isequal(LeftEndpoint{Open}(0.0), LeftEndpoint{Unbounded}(-0.0))
-            @test !isequal(LeftEndpoint{Closed}(0.0), LeftEndpoint{Unbounded}(-0.0))
+            T = Float64
 
-            @test !isequal(RightEndpoint{Unbounded}(0.0), LeftEndpoint{Unbounded}(0.0))
-            @test !isequal(LeftEndpoint{Unbounded}(0.0), RightEndpoint{Unbounded}(0.0))
+            @test isequal(LeftEndpoint{T,Unbounded}(nothing), LeftEndpoint{T,Unbounded}(nothing))
+            @test !isequal(LeftEndpoint{T,Unbounded}(nothing), LeftEndpoint{T,Open}(0.0))
+            @test !isequal(LeftEndpoint{T,Unbounded}(nothing), LeftEndpoint{T,Closed}(0.0))
+            @test !isequal(LeftEndpoint{T,Open}(-0.0), LeftEndpoint{T,Unbounded}(nothing))
+            @test !isequal(LeftEndpoint{T,Closed}(-0.0), LeftEndpoint{T,Unbounded}(nothing))
+
+            @test !isequal(RightEndpoint{Unbounded}(nothing), LeftEndpoint{Unbounded}(nothing))
+            @test !isequal(LeftEndpoint{Unbounded}(nothing), RightEndpoint{Unbounded}(nothing))
         end
 
          @testset "hash" begin
             # Note: Unbounded endpoints should ignore the value
-            a = now(tz"Europe/London")
-            b = a - Day(1)
-            @test hash(a) != hash(b)  # Double check
+            T = Int
 
-            @test hash(LeftEndpoint{Unbounded}(a)) == hash(LeftEndpoint{Unbounded}(b))
-            @test hash(LeftEndpoint{Unbounded}(a)) != hash(LeftEndpoint{Open}(b))
-            @test hash(LeftEndpoint{Unbounded}(a)) != hash(LeftEndpoint{Closed}(b))
-            @test hash(LeftEndpoint{Open}(a)) != hash(LeftEndpoint{Unbounded}(b))
-            @test hash(LeftEndpoint{Closed}(a)) != hash(LeftEndpoint{Unbounded}(b))
+            left_unbounded = LeftEndpoint{T,Unbounded}(nothing)
+            @test hash(left_unbounded) == hash(LeftEndpoint{T,Unbounded}(nothing))
+            @test hash(left_unbounded) != hash(LeftEndpoint{Unbounded}(nothing))
+            @test hash(left_unbounded) != hash(LeftEndpoint{Open}(left_unbounded.endpoint))
+            @test hash(left_unbounded) != hash(LeftEndpoint{Closed}(left_unbounded.endpoint))
 
-            @test hash(RightEndpoint{Unbounded}(a)) == hash(RightEndpoint{Unbounded}(b))
-            @test hash(RightEndpoint{Unbounded}(a)) != hash(RightEndpoint{Open}(b))
-            @test hash(RightEndpoint{Unbounded}(a)) != hash(RightEndpoint{Closed}(b))
-            @test hash(RightEndpoint{Open}(a)) != hash(RightEndpoint{Unbounded}(b))
-            @test hash(RightEndpoint{Closed}(a)) != hash(RightEndpoint{Unbounded}(b))
+            right_unbounded = RightEndpoint{T,Unbounded}(nothing)
+            @test hash(right_unbounded) == hash(RightEndpoint{T,Unbounded}(nothing))
+            @test hash(right_unbounded) != hash(RightEndpoint{Unbounded}(nothing))
+            @test hash(right_unbounded) != hash(RightEndpoint{Open}(right_unbounded.endpoint))
+            @test hash(right_unbounded) != hash(RightEndpoint{Closed}(right_unbounded.endpoint))
 
-            @test hash(LeftEndpoint{Unbounded}(a)) != hash(RightEndpoint{Unbounded}(b))
-            @test hash(LeftEndpoint{Unbounded}(a)) != hash(RightEndpoint{Open}(b))
-            @test hash(LeftEndpoint{Unbounded}(a)) != hash(RightEndpoint{Closed}(b))
-            @test hash(LeftEndpoint{Open}(a)) != hash(RightEndpoint{Unbounded}(b))
-            @test hash(LeftEndpoint{Closed}(a)) != hash(RightEndpoint{Unbounded}(b))
-
-            @test hash(LeftEndpoint{Int,Unbounded}(0)) != hash(LeftEndpoint{Float64,Unbounded}(0.0))
-            @test hash(RightEndpoint{Int,Unbounded}(0)) != hash(RightEndpoint{Float64,Unbounded}(0.0))
-            @test hash(LeftEndpoint{Int,Unbounded}(0)) != hash(RightEndpoint{Float64,Unbounded}(0.0))
+            @test hash(LeftEndpoint{T,Unbounded}(nothing)) != hash(RightEndpoint{T,Unbounded}(nothing))
+            @test hash(LeftEndpoint{T,Unbounded}(nothing)) != hash(RightEndpoint{T,Open}(0))
+            @test hash(LeftEndpoint{T,Unbounded}(nothing)) != hash(RightEndpoint{T,Closed}(0))
+            @test hash(LeftEndpoint{T,Open}(0)) != hash(RightEndpoint{T,Unbounded}(nothing))
+            @test hash(LeftEndpoint{T,Closed}(0)) != hash(RightEndpoint{T,Unbounded}(nothing))
         end
     end
 
@@ -593,10 +485,10 @@ using Intervals: LeftEndpoint, RightEndpoint
         test = [
             LeftEndpoint{Open}(0),
             LeftEndpoint{Closed}(0),
-            LeftEndpoint{Unbounded}(0),
+            LeftEndpoint{Unbounded}(nothing),
             RightEndpoint{Open}(0),
             RightEndpoint{Closed}(0),
-            RightEndpoint{Unbounded}(0),
+            RightEndpoint{Unbounded}(nothing),
         ]
 
         # Verify that Endpoint is treated as a scalar during broadcast

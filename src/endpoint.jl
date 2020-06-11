@@ -9,9 +9,18 @@ const Ending = Right
 struct Endpoint{T, D, B <: Bound}
     endpoint::T
 
-    function Endpoint{T,D,B}(ep::T) where {T,D,B}
+    function Endpoint{T,D,B}(ep::T) where {T, D, B <: Bounded}
         @assert D isa Direction
         new{T,D,B}(ep)
+    end
+
+    function Endpoint{T,D,B}(ep::Nothing) where {T, D, B <: Unbounded}
+        @assert D isa Direction
+        new{T,D,B}()
+    end
+
+    function Endpoint{T,D,B}(ep::Nothing) where {T, D, B <: Bounded}
+        throw(MethodError(Endpoint{T,D,B}, (ep,)))
     end
 end
 
@@ -21,8 +30,8 @@ const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B}
 LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)
 RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
-LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(first(i))
-RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(last(i))
+LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
+RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
 
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
 isclosed(x::Endpoint) = bound_type(x) === Closed

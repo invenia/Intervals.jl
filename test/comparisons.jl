@@ -23,16 +23,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 2),
                 Interval{Closed, Closed}(-Inf, 2),
-                Interval{Unbounded,Closed}(0, 2),
+                Interval{Unbounded,Closed}(nothing, 2),
             ],
             [
                 Interval{Closed, Closed}(4, 5),
                 Interval{Closed, Closed}(4, Inf),
-                Interval{Closed,Unbounded}(4, 0),
+                Interval{Closed,Unbounded}(4, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -78,16 +80,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
-                Interval{Unbounded,Open}(0, 3),
+                Interval{Unbounded,Open}(nothing, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
-                Interval{Open,Unbounded}(3, 0),
+                Interval{Open,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -133,16 +137,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
-                Interval{Unbounded,Open}(0, 3),
+                Interval{Unbounded,Open}(nothing, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
-                Interval{Closed,Unbounded}(3, 0),
+                Interval{Closed,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -188,16 +194,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
-                Interval{Unbounded,Closed}(0, 3),
+                Interval{Unbounded,Closed}(nothing, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
-                Interval{Open,Unbounded}(3, 0),
+                Interval{Open,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -243,16 +251,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
-                Interval{Unbounded,Closed}(0, 3),
+                Interval{Unbounded,Closed}(nothing, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
-                Interval{Closed,Unbounded}(3, 0),
+                Interval{Closed,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -298,16 +308,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 4),
                 Interval{Closed, Closed}(-Inf, 4),
-                Interval{Unbounded,Closed}(0, 4),
+                Interval{Unbounded,Closed}(nothing, 4),
             ],
             [
                 Interval{Closed, Closed}(2, 5),
                 Interval{Closed, Closed}(2, Inf),
-                Interval{Closed,Unbounded}(2, 0),
+                Interval{Closed,Unbounded}(2, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -664,10 +676,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
                 Interval{Closed,Unbounded}(l, u),
                 Interval{Open,Unbounded}(l, u),
             ]
-            for (l, u) in product((1, -Inf), 0)
+            for (l, u) in product((1, -Inf), (nothing,))
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Ending} && isunbounded(RightEndpoint(a)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
@@ -709,10 +723,12 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
                 Interval{Unbounded,Closed}(l, u),
                 Interval{Unbounded,Open}(l, u),
             ]
-            for (l, u) in product(0, (5, Inf))
+            for (l, u) in product((nothing,), (5, Inf))
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             A == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(a)) && continue
             B == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(b)) && continue
             A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
@@ -749,12 +765,10 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
     end
 
     @testset "equal unbounded" begin
-        # Note: Using different values for the unbounded endpoints as this should ensure
-        # the values are being ignored.
         test_intervals = (
             [
-                Interval{Unbounded,Unbounded}(1, 2),
-                Interval{Unbounded,Unbounded}(4, 3),
+                Interval{Int,Unbounded,Unbounded}(nothing, nothing),
+                Interval{Int,Unbounded,Unbounded}(nothing, nothing),
             ],
         )
 
@@ -841,15 +855,17 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
                 Interval{Closed, Closed}(1, Inf),
                 Interval{Closed, Closed}(-Inf, 5),
                 Interval{Closed, Closed}(-Inf, Inf),
-                Interval{Closed, Unbounded}(1, 0),
-                Interval{Closed, Unbounded}(-Inf, 0),
-                Interval{Unbounded, Closed}(0, 5),
-                Interval{Unbounded, Closed}(0, Inf),
-                Interval{Unbounded, Unbounded}(0, 0),
+                Interval{Closed, Unbounded}(1, nothing),
+                Interval{Closed, Unbounded}(-Inf, nothing),
+                Interval{Unbounded, Closed}(nothing, 5),
+                Interval{Unbounded, Closed}(nothing, Inf),
+                Interval{Unbounded, Unbounded}(nothing, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
+            A <: AnchoredInterval && !isbounded(a) && continue
+            B <: AnchoredInterval && !isbounded(b) && continue
             B == AnchoredInterval{Beginning} && isunbounded(LeftEndpoint(b)) && continue
             B == AnchoredInterval{Ending} && isunbounded(RightEndpoint(b)) && continue
             B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue

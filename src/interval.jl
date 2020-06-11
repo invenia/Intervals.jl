@@ -55,33 +55,58 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     first::T
     last::T
 
-    function Interval{T,L,R}(f::T, l::T) where {T,L,R}
+    function Interval{T,L,R}(f::T, l::T) where {T, L <: Bounded, R <: Bounded}
         # Ensure that `first` preceeds `last`.
-        if L !== Unbounded && R !== Unbounded
-            f, l, left_bound, right_bound = if f ≤ l
-                f, l, L, R
-            elseif l ≤ f
-                l, f, R, L
-            else
-                throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
-            end
+        f, l, left_bound, right_bound = if f ≤ l
+            f, l, L, R
+        elseif l ≤ f
+            l, f, R, L
         else
-            left_bound, right_bound = L, R
+            throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
         end
 
         return new{T, left_bound, right_bound}(f, l)
     end
+
+    function Interval{T,L,R}(f::Nothing, l::T) where {T, L <: Unbounded, R <: Bounded}
+        return new{T,L,R}(l, l)
+    end
+
+    function Interval{T,L,R}(f::T, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
+        return new{T,L,R}(f, f)
+    end
+
+    function Interval{T,L,R}(f::Nothing, l::Nothing) where {T, L <: Unbounded, R <: Unbounded}
+        return new{T,L,R}()
+    end
 end
 
-Interval{T,L,R}(f, l) where {T,L,R} = Interval{T,L,R}(convert(T, f), convert(T, l))
+function Interval{T,L,R}(f, l) where {T, L <: Bounded, R <: Bounded}
+    return Interval{T,L,R}(convert(T, f), convert(T, l))
+end
+function Interval{T,L,R}(f, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
+    return Interval{T,L,R}(convert(T, f), l)
+end
+function Interval{T,L,R}(f::Nothing, l) where {T, L <: Unbounded, R <: Bounded}
+    return Interval{T,L,R}(f, convert(T, l))
+end
 
 Interval{L,R}(f::T, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
 Interval{L,R}(f, l) where {L,R} = Interval{promote_type(typeof(f), typeof(l)), L, R}(f, l)
+Interval{L,R}(f::Nothing, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
+Interval{L,R}(f::T, l::Nothing) where {T,L,R} = Interval{T,L,R}(f, l)
+Interval{L,R}(f::Nothing, l::Nothing) where {L,R} = Interval{Nothing,L,R}(f, l)
 
-Interval{T}(f, l) where {T,L,R} = Interval{T, Closed, Closed}(f, l)
+Interval{T}(f, l) where T = Interval{T, Closed, Closed}(f, l)
+Interval{T}(f::Nothing, l) where T = Interval{T, Unbounded, Closed}(f, l)
+Interval{T}(f, l::Nothing) where T = Interval{T, Closed, Unbounded}(f, l)
+Interval{T}(f::Nothing, l::Nothing) where T = Interval{T, Unbounded, Unbounded}(f, l)
 
 Interval(f::T, l::T) where T = Interval{T}(f, l)
 Interval(f, l) = Interval(promote(f, l)...)
+Interval(f::Nothing, l::T) where T = Interval{T}(f, l)
+Interval(f::T, l::Nothing) where T = Interval{T}(f, l)
+Interval(f::Nothing, l::Nothing) = Interval{Nothing}(f, l)
 
 (..)(first, last) = Interval(first, last)
 
@@ -91,11 +116,18 @@ Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
 function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {T,L,R}
-    Interval{T,L,R}(left.endpoint, right.endpoint)
+    Interval{T,L,R}(
+        L !== Unbounded ? left.endpoint : nothing,
+        R !== Unbounded ? right.endpoint : nothing,
+    )
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T, bound_type(left), bound_type(right)}(left.endpoint, right.endpoint)
+    L, R = bound_type(left), bound_type(right)
+    Interval{T,L,R}(
+        L !== Unbounded ? left.endpoint : nothing,
+        R !== Unbounded ? right.endpoint : nothing,
+    )
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
@@ -156,14 +188,14 @@ Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
 
 ##### DISPLAY #####
 
-function Base.show(io::IO, interval::T) where T <: Interval
+function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
     if get(io, :compact, false)
         print(io, interval)
     else
-        print(io, "$T(")
-        show(io, interval.first)
+        print(io, "$(typeof(interval))(")
+        L === Unbounded ? print(io, "nothing") : show(io, interval.first)
         print(io, ", ")
-        show(io, interval.last)
+        R === Unbounded ? print(io, "nothing") : show(io, interval.last)
         print(io, ")")
     end
 end

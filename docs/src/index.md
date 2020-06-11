@@ -223,5 +223,6 @@ HB
 ==
 union
 union!
+span
 superset
 ```

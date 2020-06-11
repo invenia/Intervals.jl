@@ -1,4 +1,4 @@
-using Intervals: canonicalize
+using Intervals: canonicalize, isunbounded
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -32,6 +32,19 @@ using Intervals: canonicalize
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
+
+        # Unbounded AnchoredIntervals
+        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(dt)
+        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Unbounded}(dt)
+        @test isunbounded(AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(dt))
+
+        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(nothing)
+
+        @test_throws MethodError AnchoredInterval{Hour(-1),Nothing,Open,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
+        @test isunbounded(AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing))
     end
 
     @testset "non-ordered" begin

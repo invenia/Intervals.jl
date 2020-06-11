@@ -60,6 +60,17 @@ See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
 struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
+
+    function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bound, R <: Bound}
+        if P < zero(P) && R === Unbounded || P > zero(P) && L === Unbounded
+            throw(MethodError(AnchoredInterval{P,T,L,R}, (anchor,)))
+        end
+        return new{P,T,L,R}(anchor)
+    end
+end
+
+function AnchoredInterval{P,T,L,R}(anchor) where {P,T,L,R}
+    AnchoredInterval{P,T,L,R}(convert(T, anchor))
 end
 
 AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(anchor)
@@ -143,11 +154,17 @@ end
 ##### CONVERSION #####
 
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+    return Interval{T,L,R}(
+        L !== Unbounded ? first(interval) : nothing,
+        R !== Unbounded ? last(interval) : nothing,
+    )
 end
 
 function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+    return Interval{T,L,R}(
+        L !== Unbounded ? first(interval) : nothing,
+        R !== Unbounded ? last(interval) : nothing,
+    )
 end
 
 # Conversion methods which currently aren't needed but could prove useful. Commented out

@@ -118,7 +118,6 @@ end
 
 Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
-inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R} = Inclusivity(L === Closed, R === Closed)
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
 

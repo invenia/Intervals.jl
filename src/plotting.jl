@@ -1,8 +1,7 @@
-
-interval_markers(x::AbstractInterval) = interval_markers(inclusivity(x))
-interval_markers(x::Inclusivity) = interval_markers(first(x), last(x))
-interval_markers(start::Bool, stop::Bool) = interval_markers.([start, stop])
-interval_markers(x::Bool) = x ? :vline : :none
+interval_markers(x::AbstractInterval{T,L,R}) where {T,L,R} = interval_markers(L, R)
+interval_markers(L::Type{<:Bound}, R::Type{<:Bound}) = interval_marker.([L, R])
+interval_marker(x::Type{Closed}) = :vline
+interval_marker(x::Type{Open}) = :none
 
 @recipe function f(xs::AbstractVector{<:AbstractInterval{T}}, ys) where T
     new_xs = T[]

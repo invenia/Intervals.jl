@@ -1,19 +1,19 @@
 description(i::AnchoredInterval{P}) where P = description(i, P > zero(P) ? "B" : "E")
 
-function description(interval::AnchoredInterval{P, T}, s::String) where {P, T}
+function description(interval::AnchoredInterval{P,T,L,R}, s::String) where {P,T,L,R}
     return string(
-        first(inclusivity(interval)) ? '[' : '(',
+        L === Closed ? '[' : '(',
         description(anchor(interval), abs(P), s),
-        last(inclusivity(interval)) ? ']' : ')',
+        R === Closed ? ']' : ')',
     )
 end
 
-function description(interval::AnchoredInterval{P, ZonedDateTime}, s::String) where P
+function description(interval::AnchoredInterval{P, ZonedDateTime, L, R}, s::String) where {P,L,R}
     return string(
-        first(inclusivity(interval)) ? '[' : '(',
+        L === Closed ? '[' : '(',
         description(anchor(interval), abs(P), s),
         anchor(interval).zone.offset,
-        last(inclusivity(interval)) ? ']' : ')',
+        R === Closed ? ']' : ')',
     )
 end
 

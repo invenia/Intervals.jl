@@ -1,4 +1,4 @@
-using Intervals: canonicalize
+using Intervals: bounds, canonicalize
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -88,23 +88,22 @@ using Intervals: canonicalize
     end
 
     @testset "accessors" begin
-        inc = Inclusivity(true, true)
         P = Minute(-15)
         interval = AnchoredInterval{P, Closed, Closed}(dt)
 
         @test first(interval) == DateTime(2016, 8, 11, 1, 45)
         @test last(interval) == dt
+        @test bounds(interval) == (Closed, Closed)
         @test span(interval) == -P
-        @test inclusivity(interval) == inc
 
-        inc = Inclusivity(false, false)
+
         P = Day(1)
         interval = AnchoredInterval{P, Open, Open}(Date(dt))
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
+        @test bounds(interval) == (Open, Open)
         @test span(interval) == P
-        @test inclusivity(interval) == inc
 
         # DST transition
         endpoint = ZonedDateTime(2018, 3, 11, 3, tz"America/Winnipeg")
@@ -131,13 +130,13 @@ using Intervals: canonicalize
         interval = AnchoredInterval{-10}(10)
         @test first(interval) == 0
         @test last(interval) == 10
-        @test inclusivity(interval) == Inclusivity(false, true)
+        @test bounds(interval) == (Open, Closed)
         @test span(interval) == 10
 
         interval = AnchoredInterval{25}('a')
         @test first(interval) == 'a'
         @test last(interval) == 'z'
-        @test inclusivity(interval) == Inclusivity(true, false)
+        @test bounds(interval) == (Closed, Open)
         @test span(interval) == 25
     end
 

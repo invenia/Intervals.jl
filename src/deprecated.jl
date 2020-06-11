@@ -2,6 +2,9 @@ using Base: depwarn
 
 # BEGIN Intervals 1.X.Y deprecations
 
+export Inclusivity, inclusivity
+include("inclusivity.jl")
+
 function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
     depwarn("`convert($T, interval::AnchoredInterval{P,$T})` is deprecated, use `anchor(interval)` instead.", :convert)
     anchor(interval)
@@ -60,6 +63,11 @@ function Interval(f, l, x::Bool, y::Bool)
     R = bound(y)
     depwarn("`Interval(f, l, $x, $y)` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
     return Interval{L,R}(f, l)
+end
+
+function inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R}
+    depwarn("`inclusivity(interval)` is deprecated and has no direct replacement. See `bounds(interval)` for similar functionality.", :inclusivity)
+    return Inclusivity(L === Closed, R === Closed; ignore_depwarn=true)
 end
 
 # anchoredintervals.jl

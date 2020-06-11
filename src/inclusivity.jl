@@ -7,6 +7,17 @@ Defines whether an `AbstractInterval` is open, half-open, or closed.
 struct Inclusivity
     first::Bool
     last::Bool
+
+    function Inclusivity(first::Bool, last::Bool; ignore_depwarn::Bool=false)
+        if !ignore_depwarn
+            depwarn(
+                "`Inclusivity(::Bool, ::Bool)` is deprecated and has no direct replacement. " *
+                "See `Interval` or `AnchoredInterval` constructors for alternatives.",
+                :Inclusivity,
+            )
+        end
+        return new(first, last)
+    end
 end
 
 """
@@ -26,9 +37,23 @@ of the two least-significant bits of the integer. This means that `Inclusivity(5
 equivalent to `Inclusivity(1)`.
 """
 
-Inclusivity(i::Integer) = Inclusivity(i & 0b01 > 0, i & 0b10 > 0)
+function Inclusivity(i::Integer)
+    depwarn(
+        "`Inclusivity(::Integer)` is deprecated and has no direct replacement. " *
+        "See `Interval` or `AnchoredInterval` constructors for alternatives.",
+        :Inclusivity,
+    )
+    return Inclusivity(i & 0b01 > 0, i & 0b10 > 0; ignore_depwarn=true)
+end
 
-Base.copy(x::Inclusivity) = Inclusivity(x.first, x.last)
+function Base.copy(x::Inclusivity)
+    depwarn(
+        "`copy(::Inclusivity)` is deprecated and has no direct replacement. " *
+        "See `Interval` or `AnchoredInterval` constructors for alternatives.",
+        :copy,
+    )
+    return Inclusivity(x.first, x.last; ignore_depwarn=true)
+end
 
 function Base.convert(::Type{I}, x::Inclusivity) where I <: Integer
     return I(x.last << 1 + x.first)

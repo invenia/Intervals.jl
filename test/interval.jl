@@ -88,14 +88,12 @@ isinf(::TimeType) = false
         for (a, b, _) in test_values
             for (L, R) in BOUND_PERMUTATIONS
                 interval = Interval{L, R}(a, b)
-                inc = Inclusivity(L === Closed, R === Closed)
 
                 @test first(interval) == a
                 @test last(interval) == b
                 @test span(interval) == b - a
-                @test inclusivity(interval) == inc
-                @test isclosed(interval) == (first(inc) && last(inc))
-                @test isopen(interval) == !(first(inc) || last(inc))
+                @test isclosed(interval) == (L === Closed && R === Closed)
+                @test isopen(interval) == (L === Open && R === Open)
             end
         end
 
@@ -598,7 +596,7 @@ isinf(::TimeType) = false
         @test union!(intervals) == expected
         @test intervals == expected
 
-        # Inclusivity
+        # Mixing bounds
         intervals = [
             Interval{Open, Open}(-100, -1),
             Interval{Closed, Closed}(-10, -1)

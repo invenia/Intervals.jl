@@ -28,6 +28,7 @@ include("interval.jl")
 include("anchoredinterval.jl")
 include("description.jl")
 include("plotting.jl")
+include("docstrings.jl")
 include("deprecated.jl")
 
 export Bound,

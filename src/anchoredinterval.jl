@@ -155,7 +155,7 @@ function span(interval::AnchoredInterval{P}) where P
     if !isunbounded(interval)
         abs(P)
     else
-        throw(ArgumentError("Unable to determine the span of an unbounded interval"))
+        throw(SPAN_NON_BOUNDED_EXCEPTION)
     end
 end
 

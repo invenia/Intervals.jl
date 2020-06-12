@@ -23,6 +23,11 @@ Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
 bounds_types(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
 
+const SPAN_NON_BOUNDED_EXCEPTION = DomainError(
+    "unbounded endpoint(s)",
+    "Unable to determine the span of an non-bounded interval",
+)
+
 include("endpoint.jl")
 include("interval.jl")
 include("anchoredinterval.jl")

@@ -38,16 +38,16 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test AnchoredInterval{Inf,Float64,Closed,Closed}(0) == Interval(0, Inf)
 
         # Unbounded AnchoredIntervals
-        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Unbounded,Open}(dt)
-        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Open,Unbounded}(dt)
+        @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Unbounded,Open}(dt)
+        @test_throws ArgumentError AnchoredInterval{Hour(1),DateTime,Open,Unbounded}(dt)
         @test isunbounded(AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(dt))
 
         @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(nothing)
         @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Open}(nothing)
         @test_throws MethodError AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(nothing)
 
-        @test_throws MethodError AnchoredInterval{Hour(-1),Nothing,Unbounded,Unbounded}(nothing)
-        @test_throws MethodError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
+        @test_throws ArgumentError AnchoredInterval{Hour(-1),Nothing,Unbounded,Unbounded}(nothing)
+        @test_throws ArgumentError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
         @test isunbounded(AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing))
     end
 

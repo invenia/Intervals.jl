@@ -62,8 +62,16 @@ struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
 
     function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bound, R <: Bound}
-        if P < zero(P) && R === Unbounded || P > zero(P) && L === Unbounded
-            throw(MethodError(AnchoredInterval{P,T,L,R}, (anchor,)))
+        if P < zero(P) && R === Unbounded
+            throw(ArgumentError(
+                "Unable to represent a right-unbounded interval as `AnchoredInterval` " *
+                "when anchor defines the right bound"
+            ))
+        elseif P > zero(P) && L === Unbounded
+            throw(ArgumentError(
+                "Unable to represent a left-unbounded interval as `AnchoredInterval` " *
+                "when anchor defines the left bound"
+            ))
         end
         return new{P,T,L,R}(anchor)
     end

@@ -595,11 +595,12 @@ using Intervals: canonicalize, isunbounded
         @test isempty(intersect(HourEnding(dt), HourEnding(dt + Hour(1))))
 
         # Single point overlap
-        expected = AnchoredInterval{Hour(0), Closed, Closed}(dt)
-        @test intersect(
+        intersection = intersect(
             HourEnding{Closed, Closed}(dt),
             HourEnding{Closed, Closed}(dt + Hour(1)),
-        ) == expected
+        )
+        @test intersection == AnchoredInterval{Hour(0), Closed, Closed}(dt)
+        @test intersection isa AnchoredInterval
 
         # Hour overlap
         he = HourEnding(dt)
@@ -626,6 +627,25 @@ using Intervals: canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test intersect(AnchoredInterval{-2}(3), AnchoredInterval{-2}(4)) ==
             AnchoredInterval{-1}(3)
+
+        # Unbounded AnchoredIntervals
+        intersection = intersect(
+            AnchoredInterval{-2,Unbounded,Closed}(3),
+            AnchoredInterval{-2,Unbounded,Closed}(4),
+        )
+        @test intersection == AnchoredInterval{-1,Unbounded,Closed}(3)
+
+        intersection = intersect(
+            AnchoredInterval{2,Open,Unbounded}(3),
+            AnchoredInterval{2,Open,Unbounded}(4),
+        )
+        @test intersection == AnchoredInterval{1,Open,Unbounded}(4)
+
+        intersection = intersect(
+            AnchoredInterval{-2,Unbounded,Closed}(3),
+            AnchoredInterval{2,Closed,Unbounded}(4),
+        )
+        @test intersection == AnchoredInterval{0,Int,Open,Open}(0)
     end
 
     @testset "canonicalize" begin

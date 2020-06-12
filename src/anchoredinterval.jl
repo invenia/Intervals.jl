@@ -194,8 +194,8 @@ function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) w
     if isunbounded(right)
         throw(ArgumentError("Unable to represent a right-unbounded interval using a `AnchoredInterval{Ending}`"))
     end
-    s = isunbounded(left) ? _span_fallback(T) : span(interval)
-    return AnchoredInterval{-s, T, bound_type(left), bound_type(right)}(last(interval))
+    sp = isbounded(left) ? span(interval) : _span_fallback(T)
+    return AnchoredInterval{-sp, T, bound_type(left), bound_type(right)}(last(interval))
 end
 
 function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
@@ -203,8 +203,8 @@ function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}
     if isunbounded(left)
         throw(ArgumentError("Unable to represent a left-unbounded interval using a `AnchoredInterval{Beginning}`"))
     end
-    s = isunbounded(right) ? _span_fallback(T) : span(interval)
-    return AnchoredInterval{s, T, bound_type(left), bound_type(right)}(first(interval))
+    sp = isbounded(right) ? span(interval) : _span_fallback(T)
+    return AnchoredInterval{sp, T, bound_type(left), bound_type(right)}(first(interval))
 end
 
 ##### DISPLAY #####
@@ -283,24 +283,33 @@ function Base.isempty(interval::AnchoredInterval{P,T}) where {P,T}
     return P == zero(P) && !isclosed(interval)
 end
 
-# TODO: Not required but should be addressed
-#=
+# When intersecting two `AnchoredInterval`s attempt to return an `AnchoredInterval`
 function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
+    anchor_side = P ≤ zero(P) ? :right : :left
 
-    sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
-    if P ≤ zero(P)
-        anchor = last(interval)
-        new_P = -sp
+    # The endpoint which will be represented by the anchor must be bounded
+    if (
+        anchor_side === :left && isbounded(LeftEndpoint(interval)) ||
+        anchor_side === :right && isbounded(RightEndpoint(interval))
+    )
+        sp = isbounded(interval) ? span(interval) : _span_fallback(T)
+        sp = isa(P, Period) ? canonicalize(typeof(P), sp) : sp
+
+        if anchor_side === :right
+            anchor = last(interval)
+            new_P = -sp
+        else
+            anchor = first(interval)
+            new_P = sp
+        end
+
+        L, R = bounds_types(interval)
+        return AnchoredInterval{new_P, T, L, R}(anchor)
     else
-        anchor = first(interval)
-        new_P = sp
+        return interval
     end
-
-    L, R = bounds_types(interval)
-    return AnchoredInterval{new_P, T, L, R}(anchor)
 end
-=#
 
 ##### UTILITIES #####
 

@@ -157,7 +157,10 @@ function span(interval::Interval)
     if isbounded(interval)
         interval.last - interval.first
     else
-        throw(SPAN_NON_BOUNDED_EXCEPTION)
+        throw(DomainError(
+            "unbounded endpoint(s)",
+            "Unable to determine the span of an non-bounded interval",
+        ))
     end
 end
 

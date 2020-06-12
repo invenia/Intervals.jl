@@ -58,27 +58,10 @@ AnchoredInterval{5 minutes,DateTime,Closed,Closed}(2016-08-11T12:30:00)
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
+struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,L,R}
     anchor::T
 
-    function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bound, R <: Bound}
-        if sign(P) < 0 && R === Unbounded
-            throw(ArgumentError(
-                "Unable to represent a right-unbounded interval as `AnchoredInterval` " *
-                "when anchor defines the right bound"
-            ))
-        elseif sign(P) > 0 && L === Unbounded
-            throw(ArgumentError(
-                "Unable to represent a left-unbounded interval as `AnchoredInterval` " *
-                "when anchor defines the left bound"
-            ))
-        elseif sign(P) == 0 && L === Unbounded && R === Unbounded
-            throw(ArgumentError(
-                "Unable to represent a non-bounded interval as `AnchoredInterval` " *
-                "when anchor defines both the left and right bound"
-            ))
-        end
-
+    function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bounded, R <: Bounded}
         # A valid interval requires that neither endpoints or the span are nan. Typically,
         # we use `left <= right` to ensure a valid interval but for `AnchoredInterval`s
         # computing the other endpoint requires `anchor + P` which may fail with certain
@@ -103,16 +86,6 @@ struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
 
         return new{P,T,L,R}(anchor)
     end
-end
-
-# Using `nothing` as the anchor makes it impossible to compute the other endpoint if it is
-# anything other than `nothing`. Since an `AnchoredInterval` cannot represent the interval
-# `[-Inf,Inf]` (there is no way to compute the other endpoint using an `Inf` endpoint
-# with an `Inf` span) we'll also disallow support for a unbounded anchored interval.
-function AnchoredInterval{P,T,L,R}(anchor::Nothing) where {P, T <: Nothing, L <: Bound, R <: Bound}
-    throw(ArgumentError(
-        "Unable to represent `AnchoredInterval` with a unbounded anchor endpoint"
-    ))
 end
 
 _isfinite(x) = iszero(x - x)
@@ -142,7 +115,7 @@ AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 """
-const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bound, R <: Bound}
+const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
 # Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
@@ -153,7 +126,7 @@ HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 """
-const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bound, R <: Bound}
+const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """
@@ -182,31 +155,16 @@ end
 # can get unexpected behaviour if adding the span to the anchor endpoint produces a value
 # that is no longer comparable (e.g., `NaN`).
 
-function Base.first(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return if L !== Unbounded
-        P < zero(P) ? (interval.anchor + P) : (interval.anchor)
-    else
-        nothing
-    end
+function Base.first(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor + P) : (interval.anchor)
 end
 
-function Base.last(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return if R !== Unbounded
-        P < zero(P) ? (interval.anchor) : (interval.anchor + P)
-    else
-        nothing
-    end
+function Base.last(interval::AnchoredInterval{P}) where P
+    P < zero(P) ? (interval.anchor) : (interval.anchor + P)
 end
 
 anchor(interval::AnchoredInterval) = interval.anchor
-
-function span(interval::AnchoredInterval{P}) where P
-    if !isunbounded(interval)
-        abs(P)
-    else
-        throw(SPAN_NON_BOUNDED_EXCEPTION)
-    end
-end
+span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
@@ -235,25 +193,18 @@ function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where 
 end
 =#
 
-_span_fallback(::Type{T}) where T <: TimeType = eps(T)
-_span_fallback(::Type{T}) where T = one(T)
-
-function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
-    left, right = LeftEndpoint(interval), RightEndpoint(interval)
-    if isunbounded(right)
-        throw(ArgumentError("Unable to represent a right-unbounded interval using a `AnchoredInterval{Ending}`"))
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
+    if !isbounded(interval)
+        throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    sp = isbounded(left) ? span(interval) : _span_fallback(T)
-    return AnchoredInterval{-sp, T, bound_type(left), bound_type(right)}(last(interval))
+    AnchoredInterval{-span(interval), T, L, R}(last(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
-    left, right = LeftEndpoint(interval), RightEndpoint(interval)
-    if isunbounded(left)
-        throw(ArgumentError("Unable to represent a left-unbounded interval using a `AnchoredInterval{Beginning}`"))
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
+    if !isbounded(interval)
+        throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    sp = isbounded(right) ? span(interval) : _span_fallback(T)
-    return AnchoredInterval{sp, T, bound_type(left), bound_type(right)}(first(interval))
+    AnchoredInterval{span(interval), T, L, R}(first(interval))
 end
 
 ##### DISPLAY #####
@@ -335,29 +286,18 @@ end
 # When intersecting two `AnchoredInterval`s attempt to return an `AnchoredInterval`
 function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
-    anchor_side = P ≤ zero(P) ? :right : :left
 
-    # The endpoint which will be represented by the anchor must be bounded
-    if (
-        anchor_side === :left && isbounded(LeftEndpoint(interval)) ||
-        anchor_side === :right && isbounded(RightEndpoint(interval))
-    )
-        sp = isbounded(interval) ? span(interval) : _span_fallback(T)
-        sp = isa(P, Period) ? canonicalize(typeof(P), sp) : sp
-
-        if anchor_side === :right
-            anchor = last(interval)
-            new_P = -sp
-        else
-            anchor = first(interval)
-            new_P = sp
-        end
-
-        L, R = bounds_types(interval)
-        return AnchoredInterval{new_P, T, L, R}(anchor)
+    sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
+    if P ≤ zero(P)
+        anchor = last(interval)
+        new_P = -sp
     else
-        return interval
+        anchor = first(interval)
+        new_P = sp
     end
+
+    L, R = bounds_types(interval)
+    return AnchoredInterval{new_P, T, L, R}(anchor)
 end
 
 ##### UTILITIES #####

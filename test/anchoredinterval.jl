@@ -1,4 +1,4 @@
-using Intervals: Beginning, Ending, canonicalize, isunbounded
+using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -36,18 +36,6 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
 
     @testset "zero-span" begin
         @test AnchoredInterval{0}(10) == 10 .. 10
-        @test AnchoredInterval{0,Unbounded,Closed}(10) == nothing .. 10
-        @test AnchoredInterval{0,Closed,Unbounded}(10) == 10 .. nothing
-
-        # The anchor represents either endpoint. If the constructor below was allowed this
-        # would be the same as allowing `Interval{Unbounded,Unbounded}(10, 10)`.
-        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(10)
-
-        # Ignore positive/negative zero for span
-        @test AnchoredInterval{-0.0,Unbounded,Closed}(10) == nothing .. 10
-        @test AnchoredInterval{+0.0,Closed,Unbounded}(10) == 10 .. nothing
-        @test AnchoredInterval{+0.0,Unbounded,Closed}(10) == nothing .. 10
-        @test AnchoredInterval{-0.0,Closed,Unbounded}(10) == 10 .. nothing
 
         @test AnchoredInterval{+0.0}(0.0) == 0 .. 0
         @test AnchoredInterval{-0.0}(0.0) == 0 .. 0
@@ -90,43 +78,19 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
     @testset "non-bounded" begin
         x = 1  # Non-zero value representing any positive value
 
-        interval = 0 .. nothing
-        @test AnchoredInterval{+x,Closed,Unbounded}(0.0) == interval
-        @test_throws ArgumentError AnchoredInterval{-x,Closed,Unbounded}(nothing)
-        @test AnchoredInterval{0,Closed,Unbounded}(0.0) == interval
+        # Unbounded AnchoredIntervals are disallowed as most types have no span value that
+        # actually represents the span of the interval
+        @test_throws TypeError AnchoredInterval{+x,Int,Closed,Unbounded}(0)
+        @test_throws TypeError AnchoredInterval{-x,Int,Unbounded,Closed}(0)
+        @test_throws TypeError AnchoredInterval{0,Int,Unbounded,Unbounded}(0)
 
-        interval = nothing .. 0
-        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, interval)
-        @test AnchoredInterval{-x,Unbounded,Closed}(0.0) == interval
-        @test AnchoredInterval{0,Unbounded,Closed}(0.0) == interval
+        @test_throws MethodError AnchoredInterval{+x,Int}(nothing)
+        @test_throws MethodError AnchoredInterval{-x,Int}(nothing)
+        @test_throws MethodError AnchoredInterval{0,Int}(nothing)
 
-        interval = -Inf .. nothing
-        @test AnchoredInterval{+x,Closed,Unbounded}(-Inf) == interval
-        @test_throws ArgumentError AnchoredInterval{-x,Closed,Unbounded}(nothing)
-        @test AnchoredInterval{0,Closed,Unbounded}(-Inf) == interval
-
-        interval = nothing .. Inf
-        @test_throws ArgumentError AnchoredInterval{+x,Unbounded,Closed}(nothing)
-        @test AnchoredInterval{-x,Unbounded,Closed}(Inf) == interval
-        @test AnchoredInterval{0,Unbounded,Closed}(Inf) == interval
-
-        interval = nothing .. nothing
-        @test_throws ArgumentError AnchoredInterval{+x,Unbounded,Unbounded}(nothing)
-        @test_throws ArgumentError AnchoredInterval{-x,Unbounded,Unbounded}(nothing)
-        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(nothing)
-
-        # Other invalid non-bounded intervals
-        @test_throws ArgumentError AnchoredInterval{+1,Unbounded,Unbounded}(0)
-        @test_throws ArgumentError AnchoredInterval{-1,Unbounded,Unbounded}(0)
-        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(0)
-
-        @test_throws MethodError AnchoredInterval{+x,Int,Closed,Unbounded}(nothing)
-        @test_throws MethodError AnchoredInterval{-x,Int,Unbounded,Closed}(nothing)
-        @test_throws MethodError AnchoredInterval{0,Int,Unbounded,Unbounded}(nothing)
-
-        @test_throws ArgumentError AnchoredInterval{+x,Nothing,Closed,Unbounded}(nothing)
-        @test_throws ArgumentError AnchoredInterval{-x,Nothing,Unbounded,Closed}(nothing)
-        @test_throws ArgumentError AnchoredInterval{0,Nothing,Unbounded,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{+x,Nothing}(nothing)
+        @test_throws MethodError AnchoredInterval{-x,Nothing}(nothing)
+        @test_throws MethodError AnchoredInterval{0,Nothing}(nothing)
     end
 
     @testset "hash" begin
@@ -165,11 +129,11 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, Inf))
         @test convert(AnchoredInterval{Beginning}, Interval(0, Inf)) == AnchoredInterval{Inf,Float64,Closed,Closed}(0)
 
-        @test convert(AnchoredInterval{Ending}, Interval(nothing, 0)) == AnchoredInterval{-1,Int,Unbounded,Closed}(0)
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(nothing, 0))
         @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(nothing, 0))
 
         @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, nothing))
-        @test convert(AnchoredInterval{Beginning}, Interval(0, nothing)) == AnchoredInterval{1,Int,Closed,Unbounded}(0)
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(0, nothing))
     end
 
     @testset "eltype" begin
@@ -251,7 +215,7 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         # When dropping VERSION < v"1.2.0-DEV.223" (https://github.com/JuliaLang/julia/pull/30817)
         # - `repr(Period(...))`can be converted to hardcode strings
 
-        where_lr = "where R<:$Bound where L<:$Bound"
+        where_lr = "where R<:$Bounded where L<:$Bounded"
         where_tlr = "$where_lr where T"
 
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==
@@ -713,25 +677,6 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test intersect(AnchoredInterval{-2}(3), AnchoredInterval{-2}(4)) ==
             AnchoredInterval{-1}(3)
-
-        # Unbounded AnchoredIntervals
-        intersection = intersect(
-            AnchoredInterval{-2,Unbounded,Closed}(3),
-            AnchoredInterval{-2,Unbounded,Closed}(4),
-        )
-        @test intersection == AnchoredInterval{-1,Unbounded,Closed}(3)
-
-        intersection = intersect(
-            AnchoredInterval{2,Open,Unbounded}(3),
-            AnchoredInterval{2,Open,Unbounded}(4),
-        )
-        @test intersection == AnchoredInterval{1,Open,Unbounded}(4)
-
-        intersection = intersect(
-            AnchoredInterval{-2,Unbounded,Closed}(3),
-            AnchoredInterval{2,Closed,Unbounded}(4),
-        )
-        @test intersection == AnchoredInterval{0,Int,Open,Open}(0)
     end
 
     @testset "canonicalize" begin

@@ -15,17 +15,11 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 viable_convert(::Type{Interval}, interval::AbstractInterval) = true
 
 function viable_convert(::Type{AnchoredInterval{Beginning}}, interval::AbstractInterval)
-    return (
-        !isunbounded(LeftEndpoint(interval)) &&
-        (isfinite(first(interval)) || first(interval) == last(interval))
-    )
+    return isbounded(interval) && isfinite(first(interval))
 end
 
 function viable_convert(::Type{AnchoredInterval{Ending}}, interval::AbstractInterval)
-    return (
-        !isunbounded(RightEndpoint(interval)) &&
-        (isfinite(last(interval)) || first(interval) == last(interval))
-    )
+    return isbounded(interval) && isfinite(last(interval))
 end
 
 @testset "comparisons: $A vs. $B" for (A, B) in unique_paired_permutation(INTERVAL_TYPES)

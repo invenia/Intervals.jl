@@ -1,4 +1,10 @@
-using Documenter, Intervals
+using Documenter
+using Intervals
+
+# Including these modules results in printing without the module names
+# https://github.com/JuliaDocs/Documenter.jl/issues/944
+using Dates
+using TimeZones
 
 makedocs(;
     modules=[Intervals],
@@ -9,10 +15,6 @@ makedocs(;
     repo="https://github.com/invenia/Intervals.jl/blob/{commit}{path}#L{line}",
     sitename="Intervals.jl",
     authors="Invenia Technical Computing Corporation",
-    assets=[
-        "assets/invenia.css",
-        "assets/logo.png",
-    ],
     checkdocs=:exports,
     strict=true,
 )

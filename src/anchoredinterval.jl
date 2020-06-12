@@ -27,7 +27,7 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 While the user may expect an `HourEnding` or `HourBeginning` value to be anchored to a
 specific hour, the constructor makes no guarantees that the anchor provided is rounded:
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> HourEnding(DateTime(2016, 8, 11, 2, 30))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
 ```
@@ -35,7 +35,7 @@ AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
 The `HE` and `HB` pseudoconstructors round the input up or down to the nearest hour, as
 appropriate:
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> HE(DateTime(2016, 8, 11, 2, 30))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T03:00:00)
 
@@ -45,7 +45,7 @@ AnchoredInterval{1 hour,DateTime,Closed,Open}(2016-08-11T02:00:00)
 
 ### Example
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T12:00:00)
 

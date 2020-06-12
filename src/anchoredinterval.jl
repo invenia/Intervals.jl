@@ -186,15 +186,15 @@ function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where 
 end
 =#
 
-one(T::Type{<:TimeType}) = eps(T)
-one(x) = Base.one(x)
+_span_fallback(::Type{T}) where T <: TimeType = eps(T)
+_span_fallback(::Type{T}) where T = one(T)
 
 function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
     left, right = LeftEndpoint(interval), RightEndpoint(interval)
     if isunbounded(right)
         throw(ArgumentError("Unable to represent a right-unbounded interval using a `AnchoredInterval{Ending}`"))
     end
-    s = isunbounded(left) ? one(T) : span(interval)
+    s = isunbounded(left) ? _span_fallback(T) : span(interval)
     return AnchoredInterval{-s, T, bound_type(left), bound_type(right)}(last(interval))
 end
 
@@ -203,7 +203,7 @@ function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}
     if isunbounded(left)
         throw(ArgumentError("Unable to represent a left-unbounded interval using a `AnchoredInterval{Beginning}`"))
     end
-    s = isunbounded(right) ? one(T) : span(interval)
+    s = isunbounded(right) ? _span_fallback(T) : span(interval)
     return AnchoredInterval{s, T, bound_type(left), bound_type(right)}(first(interval))
 end
 

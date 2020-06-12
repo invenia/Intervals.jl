@@ -1,4 +1,4 @@
-using Intervals: canonicalize, isunbounded
+using Intervals: Beginning, Ending, canonicalize, isunbounded
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -33,16 +33,20 @@ using Intervals: canonicalize, isunbounded
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
 
+        # Infinite AnchoredIntervals
+        @test AnchoredInterval{-Inf,Float64,Closed,Closed}(0) == Interval(-Inf, 0)
+        @test AnchoredInterval{Inf,Float64,Closed,Closed}(0) == Interval(0, Inf)
+
         # Unbounded AnchoredIntervals
-        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(dt)
-        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Unbounded}(dt)
+        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Unbounded,Open}(dt)
+        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Open,Unbounded}(dt)
         @test isunbounded(AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(dt))
 
         @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(nothing)
-        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Open}(nothing)
         @test_throws MethodError AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(nothing)
 
-        @test_throws MethodError AnchoredInterval{Hour(-1),Nothing,Open,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{Hour(-1),Nothing,Unbounded,Unbounded}(nothing)
         @test_throws MethodError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
         @test isunbounded(AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing))
     end
@@ -90,6 +94,12 @@ using Intervals: canonicalize, isunbounded
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
         @test convert(Interval{DateTime}, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval{DateTime}, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
+
+        @test convert(AnchoredInterval{Ending}, Interval(nothing, 0)) == AnchoredInterval{-1,Int,Unbounded,Closed}(0)
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(nothing, 0))
+
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, nothing))
+        @test convert(AnchoredInterval{Beginning}, Interval(0, nothing)) == AnchoredInterval{1,Int,Closed,Unbounded}(0)
     end
 
     @testset "eltype" begin
@@ -165,7 +175,7 @@ using Intervals: canonicalize, isunbounded
         # When dropping VERSION < v"1.2.0-DEV.223" (https://github.com/JuliaLang/julia/pull/30817)
         # - `repr(Period(...))`can be converted to hardcode strings
 
-        where_lr = "where R<:Bound where L<:Bound"
+        where_lr = "where R<:$Bound where L<:$Bound"
         where_tlr = "$where_lr where T"
 
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==

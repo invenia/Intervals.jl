@@ -1,5 +1,46 @@
-# Note: Terminology taken from:
+# Note: Terminology overall taken from:
 # https://en.wikipedia.org/wiki/Interval_(mathematics)#Terminology
+
+"""
+    Bound <: Any
+
+Abstract type representing all possible endpoint classifications (e.g. open, closed,
+unbounded).
+"""
+:Bound
+
+"""
+    Bounded <: Bound
+
+Abstract type indicating that the endpoint of an interval is not unbounded (e.g. open or
+closed).
+"""
+:Bounded
+
+"""
+    Closed <: Bounded <: Bound
+
+Type indicating that the endpoint of an interval is closed (the endpoint value is *included*
+in the interval).
+"""
+:Closed
+
+"""
+    Open <: Bounded <: Bound
+
+Type indicating that the endpoint of an interval is open (the endpoint value is *not
+included* in the interval).
+"""
+:Open
+
+"""
+    Unbounded <: Bound
+
+Type indicating that the endpoint of an interval is unbounded (the endpoint value is
+effectively infinite).
+"""
+:Unbounded
+
 
 """
     first(interval::AbstractInterval{T}) -> Union{T,Nothing}

@@ -9,13 +9,13 @@
 
 This package defines:
 * `AbstractInterval`, along with its subtypes:
-  * `Interval{T}`, which represents a non-iterable range between two endpoints of type `T`
-  * `AnchoredInterval{P, T}`, which represents a non-iterable range defined by a single
-    value `anchor::T` and the value type `P` which represents the size of the range
+  * `Interval{T,L,R}`, which represents a non-iterable range between two endpoints of type `T`
+    with left/right bounds respectively being `L` and `R`
+  * `AnchoredInterval{P,T,L,R}`, which represents a non-iterable range defined by a single
+    value `anchor::T` and the value type `P` which represents the span of the range. Left/right bounds are specifed
+    by `L` and `R` respectively
     * `HourEnding`, a type alias for `AnchoredInterval{Hour(-1)}`
     * `HourBeginning`, a type alias for `AnchoredInterval{Hour(1)}`
     * `HE` and `HB`, pseudoconstructors for `HourEnding` and `HourBeginning` that round the
       anchor up (`HE`) or down (`HB`) to the nearest hour
-* `Inclusivity`, which represents whether an `AbstractInterval` is open, half-open, or
-  closed
 

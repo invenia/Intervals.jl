@@ -1,6 +1,5 @@
 """
-    AnchoredInterval{P, T}(anchor::T, [inclusivity::Inclusivity]) where {P, T} -> AnchoredInterval{P, T}
-    AnchoredInterval{P, T}(anchor::T, [closed_left::Bool, closed_right::Bool]) where {P, T} -> AnchoredInterval{P, T}
+    AnchoredInterval{P,T,L,R}
 
 `AnchoredInterval` is a subtype of `AbstractInterval` that represents a non-iterable range
 or span of values defined not by two endpoints but instead by a single `anchor` point and
@@ -10,8 +9,9 @@ the `anchor` represents the greater endpoint (the end of the range).
 
 The interval represented by an `AnchoredInterval` value may be closed (both endpoints are
 included in the interval), open (neither endpoint is included), or half-open. This openness
-is defined by an `Inclusivity` value, which defaults to half-open (with the lesser endpoint
-included for positive values of `P` and the greater endpoint included for negative values).
+is defined by the bounds types `L` and `R`, which defaults to half-open (with the lesser
+endpoint included for positive values of `P` and the greater endpoint included for negative
+values).
 
 ### Why?
 
@@ -27,94 +27,93 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 While the user may expect an `HourEnding` or `HourBeginning` value to be anchored to a
 specific hour, the constructor makes no guarantees that the anchor provided is rounded:
 
-```julia
+```jldoctest
 julia> HourEnding(DateTime(2016, 8, 11, 2, 30))
-HourEnding{DateTime}(2016-08-11T02:30:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
 ```
 
 The `HE` and `HB` pseudoconstructors round the input up or down to the nearest hour, as
 appropriate:
 
-```julia
+```jldoctest
 julia> HE(DateTime(2016, 8, 11, 2, 30))
-HourEnding{DateTime}(2016-08-11T03:00:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T03:00:00)
 
 julia> HB(DateTime(2016, 8, 11, 2, 30))
-HourBeginning{DateTime}(2016-08-11T02:00:00, Inclusivity(true, false))
+AnchoredInterval{1 hour,DateTime,Closed,Open}(2016-08-11T02:00:00)
 ```
 
 ### Example
 
-```julia
+```jldoctest
 julia> AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12))
-HourEnding{DateTime}(2016-08-11T12:00:00, Inclusivity(false, true))
+AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T12:00:00)
 
 julia> AnchoredInterval{Day(1)}(DateTime(2016, 8, 11))
-AnchoredInterval{1 day, DateTime}(2016-08-11T00:00:00, Inclusivity(true, false))
+AnchoredInterval{1 day,DateTime,Closed,Open}(2016-08-11T00:00:00)
 
-julia> AnchoredInterval{Minute(5)}(DateTime(2016, 8, 11, 12, 30), true, true)
-AnchoredInterval{5 minutes, DateTime}(2016-08-11T12:30:00, Inclusivity(true, true))
+julia> AnchoredInterval{Minute(5),Closed,Closed}(DateTime(2016, 8, 11, 12, 30))
+AnchoredInterval{5 minutes,DateTime,Closed,Closed}(2016-08-11T12:30:00)
 ```
 
-See also: [`Interval`](@ref), [`Inclusivity`](@ref), [`HE`](@ref), [`HB`](@ref)
+See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T} <: AbstractInterval{T}
+struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
-    inclusivity::Inclusivity
 end
 
-function AnchoredInterval{P, T}(i::T, x::Bool, y::Bool) where {P, T}
-    return AnchoredInterval{P, T}(i, Inclusivity(x, y))
-end
+AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(anchor)
 
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
-function AnchoredInterval{P, T}(i::T) where {P, T}
-    return AnchoredInterval{P, T}(i::T, Inclusivity(P ≥ zero(P), P ≤ zero(P)))
+function AnchoredInterval{P,T}(anchor) where {P,T}
+    L = bound_type(P ≥ zero(P))
+    R = bound_type(P ≤ zero(P))
+    return AnchoredInterval{P,T,L,R}(anchor)
 end
 
-function AnchoredInterval{P, T}(i, inc...) where {P, T}
-    return AnchoredInterval{P, T}(convert(T, i), inc...)
-end
+AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 
-AnchoredInterval{P}(i::T, inc...) where {P, T} = AnchoredInterval{P, T}(i, inc...)
-
+# Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
+# the `HourEnding{L,R}` constructor.
 """
-    HourEnding{T<:TimeType} <: AbstractInterval{T}
+    HourEnding{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 """
-const HourEnding{T} = AnchoredInterval{Hour(-1), T} where T <: TimeType
-HourEnding(a::T, args...) where T = HourEnding{T}(a, args...)
+const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bound, R <: Bound}
+HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
+# Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
+# the `HourBeginning{L,R}` constructor.
 """
-    HourBeginning{T<:TimeType} <: AbstractInterval{T}
+    HourBeginning{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 """
-const HourBeginning{T} = AnchoredInterval{Hour(1), T} where T <: TimeType
-HourBeginning(a::T, args...) where T = HourBeginning{T}(a, args...)
+const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bound, R <: Bound}
+HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """
-    HE(anchor, args...) -> HourEnding
+    HE(anchor) -> HourEnding
 
 `HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
-HE(a, args...) = HourEnding(ceil(a, Hour), args...)
+HE(anchor) = HourEnding(ceil(anchor, Hour))
 
 """
-    HB(anchor, args...) -> HourBeginning
+    HB(anchor) -> HourBeginning
 
 `HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
-HB(a, args...) = HourBeginning(floor(a, Hour), args...)
+HB(anchor) = HourBeginning(floor(anchor, Hour))
 
-function Base.copy(x::AnchoredInterval{P, T}) where {P, T}
-    return AnchoredInterval{P, T}(anchor(x), inclusivity(x))
+function Base.copy(x::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    return AnchoredInterval{P,T,L,R}(anchor(x))
 end
 
 ##### ACCESSORS #####
@@ -136,37 +135,37 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
-function Base.convert(::Type{Interval}, interval::AnchoredInterval{P, T}) where {P, T}
-    return Interval{T}(first(interval), last(interval), inclusivity(interval))
+function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    return Interval{T,L,R}(first(interval), last(interval))
 end
 
-function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P, T}) where {P, T}
-    return Interval{T}(first(interval), last(interval), inclusivity(interval))
+function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    return Interval{T,L,R}(first(interval), last(interval))
 end
 
 # Conversion methods which currently aren't needed but could prove useful. Commented out
 # since these are untested.
 
 #=
-function Base.convert(::Type{AnchoredInterval{P, T}}, interval::Interval{T}) where {P, T}
+function Base.convert(::Type{AnchoredInterval{P,T}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
     anchor = P < zero(P) ? last(interval) : first(interval)
-    AnchoredInterval{P, T}(last(interval), inclusivity(interval))
+    AnchoredInterval{P,T}(last(interval), inclusivity(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where {P, T}
+function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
     anchor = P < zero(P) ? last(interval) : first(interval)
-    AnchoredInterval{P, T}(anchor, inclusivity(interval))
+    AnchoredInterval{P,T}(anchor, inclusivity(interval))
 end
 =#
 
-function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T}
-    AnchoredInterval{-span(interval), T}(last(interval), inclusivity(interval))
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
+    AnchoredInterval{-span(interval), T, L, R}(last(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T}
-    AnchoredInterval{span(interval), T}(first(interval), inclusivity(interval))
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
+    AnchoredInterval{span(interval), T, L, R}(first(interval))
 end
 
 ##### DISPLAY #####
@@ -177,13 +176,11 @@ function Base.show(io::IO, interval::T) where T <: AnchoredInterval
     else
         print(io, "$T(")
         show(io, anchor(interval))
-        print(io, ", ")
-        show(io, inclusivity(interval))
         print(io, ")")
     end
 end
 
-function Base.print(io::IO, interval::AnchoredInterval{P, T}) where {P, T <: Union{Date, AbstractDateTime}}
+function Base.print(io::IO, interval::AnchoredInterval{P,T}) where {P, T <: Union{Date, AbstractDateTime}}
     # Print to io in order to keep properties like :limit and :compact
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)
@@ -194,7 +191,7 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b, inclusivity(a))
+Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b)
 
 Base.:+(a, b::AnchoredInterval) = b + a
 Base.:-(a::AnchoredInterval, b) = a + -b
@@ -202,36 +199,39 @@ Base.:-(a::AnchoredInterval, b) = a + -b
 # Required for StepRange{<:AnchoredInterval}
 Base.:-(a::AnchoredInterval, b::AnchoredInterval) = anchor(a) - anchor(b)
 
-Base.:-(a::T, b::AnchoredInterval{P, T}) where {P, T <: Number} = a + -b
+Base.:-(a::T, b::AnchoredInterval{P,T}) where {P, T <: Number} = a + -b
 
-function Base.:-(a::AnchoredInterval{P, T}) where {P, T <: Number}
-    inc = inclusivity(a)
-    AnchoredInterval{-P, T}(-anchor(a), Inclusivity(last(inc), first(inc)))
+function Base.:-(a::AnchoredInterval{P,T,L,R}) where {P, T <: Number, L, R}
+    return AnchoredInterval{-P, T, R, L}(-anchor(a))
 end
 
 ##### EQUALITY #####
 
-function Base.:(==)(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
-    return anchor(a) == anchor(b) && inclusivity(a) == inclusivity(b)
+function Base.:(==)(a::AnchoredInterval{P,T}, b::AnchoredInterval{P,T}) where {P,T}
+    return anchor(a) == anchor(b) && bounds_types(a) == bounds_types(b)
 end
 
 # Required for min/max of AnchoredInterval{LaxZonedDateTime} when the anchor is AMB or DNE
-function Base.isless(a::AnchoredInterval{P, T}, b::AnchoredInterval{P, T}) where {P, T}
+function Base.isless(a::AnchoredInterval{P,T,L1}, b::AnchoredInterval{P,T,L2}) where {P,T,L1,L2}
     return (
         anchor(a) < anchor(b) ||
-        (anchor(a) == anchor(b) && first(inclusivity(a)) && !first(inclusivity(b)))
+        (anchor(a) == anchor(b) && L1 === Closed && L2 === Open)
     )
 end
 
 ##### RANGE #####
 
-function Base.steprange_last(start::T, step, stop::T) where {T <: AnchoredInterval}
-    T(Base.steprange_last(anchor(start), step, anchor(stop)), inclusivity(start))
+function Base.:(:)(start::AnchoredInterval{P,T}, step::S, stop::AnchoredInterval{P,T}) where {P,T,S}
+    return StepRange{AnchoredInterval{P,T}, S}(start, step, stop)
 end
 
 # Infer step for two-argument StepRange{<:AnchoredInterval}
-function Base.:(:)(start::AnchoredInterval{P, T}, stop::AnchoredInterval{P, T}) where {P,T}
+function Base.:(:)(start::AnchoredInterval{P,T}, stop::AnchoredInterval{P,T}) where {P,T}
     return (:)(start, abs(P), stop)
+end
+
+function Base.steprange_last(start::T, step, stop::AnchoredInterval) where T <: AnchoredInterval
+    T(Base.steprange_last(anchor(start), step, anchor(stop)))
 end
 
 function Base.length(r::StepRange{<:AnchoredInterval})
@@ -240,11 +240,11 @@ end
 
 ##### SET OPERATIONS #####
 
-function Base.isempty(interval::AnchoredInterval{P, T}) where {P, T}
+function Base.isempty(interval::AnchoredInterval{P,T}) where {P,T}
     return P == zero(P) && !isclosed(interval)
 end
 
-function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) where {P,Q,T}
+function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
 
     sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
@@ -256,7 +256,8 @@ function Base.intersect(a::AnchoredInterval{P, T}, b::AnchoredInterval{Q, T}) wh
         new_P = sp
     end
 
-    return AnchoredInterval{new_P, T}(anchor, inclusivity(interval))
+    L, R = bounds_types(interval)
+    return AnchoredInterval{new_P, T, L, R}(anchor)
 end
 
 ##### UTILITIES #####
@@ -273,8 +274,8 @@ canonicalize(target_type::Type{P}, p::P) where P <: Period = p
 
 ##### TIME ZONES #####
 
-function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime}, tz::TimeZone) where P
-    return AnchoredInterval{P, ZonedDateTime}(astimezone(anchor(i), tz), inclusivity(i))
+function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime, L, R}, tz::TimeZone) where {P,L,R}
+    return AnchoredInterval{P, ZonedDateTime, L, R}(astimezone(anchor(i), tz))
 end
 
 TimeZones.timezone(i::AnchoredInterval{P, ZonedDateTime}) where P = timezone(anchor(i))

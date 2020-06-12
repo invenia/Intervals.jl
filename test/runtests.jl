@@ -1,7 +1,10 @@
+using Base.Iterators: product
 using Dates
 using Intervals
 using Test
 using TimeZones
+
+const BOUND_PERMUTATIONS = product((Closed, Open), (Closed, Open))
 
 @testset "Intervals" begin
     include("inclusivity.jl")

@@ -3,15 +3,15 @@ using Plots
 using VisualRegressionTests
 
 @testset "plotting" begin
-    possible_inclusivities = Iterators.product((true, false), (true, false))
-    @testset "Interval{Float64} with inclusivity=$inc" for inc in possible_inclusivities
-        intervals = [Interval(float(x), float(x + 0.5), inc...) for x in 1:11]
-        @plottest plot(intervals, 1:11) "references/interval_$(join(inc)).png" false
+    @testset "Interval{Float64,$L,$R}" for (L, R) in BOUND_PERMUTATIONS
+        intervals = [Interval{L,R}(float(x), float(x + 0.5)) for x in 1:11]
+        plot_file = "interval_$(lowercase("$(L)_$(R)")).png"
+        @plottest plot(intervals, 1:11) "references/$plot_file" false
 
         @testset "scatter" begin
             # Earlier versions of this functionality showed only end-points if plotted in
             # scatter, but for intervals the connect-line is part of the "marker"
-            @plottest scatter(intervals, 1:11) "references/interval_$(join(inc)).png" false
+            @plottest scatter(intervals, 1:11) "references/$plot_file" false
         end
     end
 

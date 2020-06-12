@@ -41,17 +41,14 @@ isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 isbounded(x::Endpoint) = bound_type(x) !== Unbounded
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
-    # Note: we shouldn't need to hash `T` as this is typically covered by the endpoint field
     h = hash(:Endpoint, h)
     h = hash(D, h)
     h = hash(B, h)
 
-    # Unbounded endpoints should ignore value.
-    if B !== Unbounded
-        h = hash(x.endpoint, h)
-    else
-        h = hash(T, h)
-    end
+    # Bounded endpoints can skip hashing `T` as this is handled by hashing the endpoint
+    # value field. Unbounded endpoints however, should ignore the stored garbage value and
+    # should hash `T`.`
+    h = B !== Unbounded ? hash(x.endpoint, h) : hash(T, h)
 
     return h
 end

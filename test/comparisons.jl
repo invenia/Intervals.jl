@@ -35,11 +35,13 @@ end
                 Interval{Closed, Closed}(1, 2),
                 Interval{Closed, Closed}(-Inf, 2),
                 Interval{Unbounded,Closed}(nothing, 2),
+                Interval{Closed, Closed}(-∞, 2),
             ],
             [
                 Interval{Closed, Closed}(4, 5),
                 Interval{Closed, Closed}(4, Inf),
                 Interval{Closed,Unbounded}(4, nothing),
+                Interval{Closed, Closed}(4, ∞),
             ],
         )
 
@@ -88,11 +90,13 @@ end
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
                 Interval{Unbounded,Open}(nothing, 3),
+                Interval{Open, Open}(-∞, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
                 Interval{Open,Unbounded}(3, nothing),
+                Interval{Open, Open}(3, ∞),
             ],
         )
 
@@ -141,11 +145,13 @@ end
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
                 Interval{Unbounded,Open}(nothing, 3),
+                Interval{Open, Open}(-∞, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
                 Interval{Closed,Unbounded}(3, nothing),
+                Interval{Closed, Closed}(3, ∞),
             ],
         )
 
@@ -194,11 +200,13 @@ end
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
                 Interval{Unbounded,Closed}(nothing, 3),
+                Interval{Closed, Closed}(-∞, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
                 Interval{Open,Unbounded}(3, nothing),
+                Interval{Open, Open}(3, ∞),
             ],
         )
 
@@ -247,11 +255,13 @@ end
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
                 Interval{Unbounded,Closed}(nothing, 3),
+                Interval{Closed, Closed}(-∞, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
                 Interval{Closed,Unbounded}(3, nothing),
+                Interval{Closed, Closed}(3, ∞),
             ],
         )
 
@@ -300,11 +310,13 @@ end
                 Interval{Closed, Closed}(1, 4),
                 Interval{Closed, Closed}(-Inf, 4),
                 Interval{Unbounded,Closed}(nothing, 4),
+                Interval{Closed, Closed}(-∞, 4),
             ],
             [
                 Interval{Closed, Closed}(2, 5),
                 Interval{Closed, Closed}(2, Inf),
                 Interval{Closed,Unbounded}(2, nothing),
+                Interval{Closed, Closed}(2, ∞),
             ],
         )
 
@@ -818,13 +830,16 @@ end
             [
                 Interval{Closed, Closed}(1, 5),
                 Interval{Closed, Closed}(1, Inf),
+                Interval{Closed, Closed}(1, ∞),
                 Interval{Closed, Closed}(-Inf, 5),
+                Interval{Closed, Closed}(-∞, 5),
                 Interval{Closed, Closed}(-Inf, Inf),
                 Interval{Closed, Unbounded}(1, nothing),
                 Interval{Closed, Unbounded}(-Inf, nothing),
                 Interval{Unbounded, Closed}(nothing, 5),
                 Interval{Unbounded, Closed}(nothing, Inf),
                 Interval{Unbounded, Unbounded}(nothing, nothing),
+                Interval{Closed, Closed}(-∞, ∞),
             ],
         )
 

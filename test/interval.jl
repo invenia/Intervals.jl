@@ -68,6 +68,7 @@ isinf(::TimeType) = false
         @test_throws DomainError convert(Int, Interval{Closed, Open}(10, 10))
         @test convert(Int, Interval{Closed, Closed}(10, 10)) == 10
         @test_throws DomainError convert(Int, Interval{Closed, Closed}(10, 11))
+        @test convert(Interval{Float64, Closed, Closed}, Interval(1,2)) == Interval{Float64, Closed, Closed}(1.0,2.0)
 
         for T in (Date, DateTime)
             dt = T(2013, 2, 13)
@@ -94,6 +95,8 @@ isinf(::TimeType) = false
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)
+                @test containsfirst(interval) == L === Closed
+                @test containslast(interval) == R === Closed
             end
         end
 

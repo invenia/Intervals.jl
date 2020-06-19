@@ -95,8 +95,8 @@ isinf(::TimeType) = false
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)
-                @test containsfirst(interval) == L === Closed
-                @test containslast(interval) == R === Closed
+                @test containsfirst(interval) == (L === Closed)
+                @test containslast(interval) == (R === Closed)
             end
         end
 

@@ -120,6 +120,8 @@ Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
+containsfirst(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed 
+containslast(interval::AbstractInterval{T,L,R}) where {T,L,R} = R === Closed 
 
 """
     span(interval::AbstractInterval)
@@ -135,6 +137,10 @@ span(interval::Interval) = interval.last - interval.first
 function Base.convert(::Type{T}, i::Interval{T}) where T
     first(i) == last(i) && isclosed(i) && return first(i)
     throw(DomainError(i, "The interval is not closed with coinciding endpoints"))
+end
+
+function Base.convert(::Type{Interval{T,L,R}}, interval::Interval{N,L,R}) where {T,N,L,R}
+    return Interval{L,R}(convert(T, first(interval)), convert(T, last(interval)))
 end
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)

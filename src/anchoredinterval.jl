@@ -62,20 +62,44 @@ struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
 
     function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bound, R <: Bound}
-        if P < zero(P) && R === Unbounded
-            throw(ArgumentError(
-                "Unable to represent a right-unbounded interval as `AnchoredInterval` " *
-                "when anchor defines the right bound"
-            ))
-        elseif P > zero(P) && L === Unbounded
-            throw(ArgumentError(
-                "Unable to represent a left-unbounded interval as `AnchoredInterval` " *
-                "when anchor defines the left bound"
-            ))
+        # A valid interval requires that neither endpoints or the span are nan. Typically,
+        # we use `left <= right` to ensure a valid interval but for `AnchoredInterval`s
+        # computing the other endpoint requires `anchor + P` which may fail with certain
+        # types (e.g. ambiguous or non-existent ZonedDateTimes).
+        #
+        # We can skip computing the other endpoint if both the anchor and span are finite as
+        # this ensures the computed endpoint is also finite.
+        if !_isfinite(anchor) || !_isfinite(P)
+            left, right = sign(P) < 0 ? (anchor + P, anchor) : (anchor, anchor + P)
+
+            if !(left <= right)
+                msg = if sign(P) < 0
+                    "Unable to represent a right-anchored interval where the " *
+                    "left ($anchor + $P) > right ($anchor)"
+                else
+                    "Unable to represent a left-anchored interval where the " *
+                    "left ($anchor) > right ($anchor + $P)"
+                end
+                throw(ArgumentError(msg))
+            end
         end
+
         return new{P,T,L,R}(anchor)
     end
 end
+
+# Using `nothing` as the anchor makes it impossible to compute the other endpoint if it is
+# anything other than `nothing`. Since an `AnchoredInterval` cannot represent the interval
+# `[-Inf,Inf]` (there is no way to compute the other endpoint using an `Inf` endpoint
+# with an `Inf` span) we'll also disallow support for a unbounded anchored interval.
+function AnchoredInterval{P,T,L,R}(anchor::Nothing) where {P, T <: Nothing, L <: Bound, R <: Bound}
+    throw(ArgumentError(
+        "Unable to represent `AnchoredInterval` with a unbounded anchor endpoint"
+    ))
+end
+
+_isfinite(x) = iszero(x - x)
+_isfinite(x::Real) = Base.isfinite(x)
 
 function AnchoredInterval{P,T,L,R}(anchor) where {P,T,L,R}
     AnchoredInterval{P,T,L,R}(convert(T, anchor))

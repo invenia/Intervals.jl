@@ -62,8 +62,10 @@ isinf(::TimeType) = false
     end
 
     @testset "non-ordered" begin
-        @test_throws ArgumentError Interval(NaN, Inf)
         @test_throws ArgumentError Interval(NaN, NaN)
+        @test_throws ArgumentError Interval(NaN, Inf)
+        @test_throws ArgumentError Interval(-Inf, NaN)
+        # @test_throws ArgumentError Interval(Inf, -Inf)  # Would result in a NaN span
     end
 
     @testset "hash" begin

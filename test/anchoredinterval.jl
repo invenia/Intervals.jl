@@ -36,6 +36,10 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         # Infinite AnchoredIntervals
         @test AnchoredInterval{-Inf,Float64,Closed,Closed}(0) == Interval(-Inf, 0)
         @test AnchoredInterval{Inf,Float64,Closed,Closed}(0) == Interval(0, Inf)
+        @test AnchoredInterval{-1.0,Float64,Closed,Closed}(Inf) == Interval(Inf, Inf)
+        @test AnchoredInterval{1.0,Float64,Closed,Closed}(Inf) == Interval(Inf, Inf)
+        @test_throws ArgumentError AnchoredInterval{-1.0,Float64,Closed,Closed}(NaN)
+        @test_throws ArgumentError AnchoredInterval{1.0,Float64,Closed,Closed}(NaN)
 
         # Unbounded AnchoredIntervals
         @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Unbounded,Open}(dt)
@@ -48,21 +52,66 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
 
         @test_throws ArgumentError AnchoredInterval{Hour(-1),Nothing,Unbounded,Unbounded}(nothing)
         @test_throws ArgumentError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
-        @test isunbounded(AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing))
+        @test_throws ArgumentError AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing)
     end
 
-    @testset "non-ordered" begin
-        ending = AnchoredInterval{-Inf}(Inf)
-        @test isequal(first(ending), NaN)
-        @test isequal(last(ending), Inf)
-        @test ending == ending
-        @test isequal(ending, ending)
+    @testset "non-finite" begin
+        x = 1
 
-        beginning = AnchoredInterval{Inf}(-Inf)
-        @test isequal(first(beginning), -Inf)
-        @test isequal(last(beginning), NaN)
-        @test beginning == beginning
-        @test isequal(beginning, beginning)
+        interval = 0 .. 0
+        @test AnchoredInterval{+0.0}(0.0) == interval
+        @test AnchoredInterval{-0.0}(0.0) == interval
+        @test AnchoredInterval{0.0}(0.0) == interval
+
+        interval = 0 .. Inf
+        @test AnchoredInterval{Inf,Closed,Closed}(0.0) == interval
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, interval)
+        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
+
+        interval = -Inf .. 0
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, interval)
+        @test AnchoredInterval{-Inf,Closed,Closed}(0.0) == interval
+        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
+
+        interval = -Inf .. Inf
+        @test_throws ArgumentError AnchoredInterval{Inf,Closed,Closed}(-Inf)
+        @test_throws ArgumentError AnchoredInterval{-Inf,Closed,Closed}(Inf)
+        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
+
+        interval = -Inf .. -Inf
+        @test AnchoredInterval{+x,Closed,Closed}(-Inf) == interval
+        @test AnchoredInterval{-x,Closed,Closed}(-Inf) == interval
+        @test AnchoredInterval{0}(-Inf) == interval
+
+        interval = Inf .. Inf
+        @test AnchoredInterval{+x,Closed,Closed}(Inf) == interval
+        @test AnchoredInterval{-x,Closed,Closed}(Inf) == interval
+        @test AnchoredInterval{0}(Inf) == interval
+
+        interval = 0 .. nothing
+        @test AnchoredInterval{+x,Closed,Unbounded}(0.0) == interval
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, interval)
+        @test AnchoredInterval{0,Closed,Unbounded}(0.0) == interval
+
+        interval = nothing .. 0
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, interval)
+        @test AnchoredInterval{-x,Unbounded,Closed}(0.0) == interval
+        @test AnchoredInterval{0,Unbounded,Closed}(0.0) == interval
+
+        interval = -Inf .. nothing
+        @test AnchoredInterval{+x,Closed,Unbounded}(-Inf) == interval
+        @test_throws ArgumentError AnchoredInterval{-x,Closed,Unbounded}(nothing)
+        @test AnchoredInterval{0,Closed,Unbounded}(-Inf) == interval
+
+        interval = nothing .. Inf
+        @test_throws ArgumentError AnchoredInterval{+x,Unbounded,Closed}(nothing)
+        @test AnchoredInterval{-x,Unbounded,Closed}(Inf) == interval
+        @test AnchoredInterval{0,Unbounded,Closed}(Inf) == interval
+
+        interval = nothing .. nothing
+        @test_throws ArgumentError AnchoredInterval{+x,Unbounded,Unbounded}(nothing)
+        @test_throws ArgumentError AnchoredInterval{-x,Unbounded,Unbounded}(nothing)
+        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(nothing)
     end
 
     @testset "hash" begin

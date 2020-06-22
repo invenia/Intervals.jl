@@ -24,6 +24,8 @@ struct Endpoint{T, D, B <: Bound}
     end
 end
 
+Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
+
 const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B}
 const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B}
 

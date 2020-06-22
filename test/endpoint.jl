@@ -14,6 +14,10 @@ using Intervals: Endpoint, Left, Right, LeftEndpoint, RightEndpoint
             @test_throws MethodError Endpoint{Nothing, D, Closed}(nothing)
             @test_throws MethodError Endpoint{Nothing, D, Open}(nothing)
             @test Endpoint{Nothing, D, Unbounded}(nothing).endpoint === nothing
+
+            @test Endpoint{Int, D, Closed}(0.0).endpoint == 0
+            @test Endpoint{Int, D, Open}(0.0).endpoint == 0
+            @test_throws MethodError Endpoint{Int, D, Unbounded}(0.0)
         end
     end
 

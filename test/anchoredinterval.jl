@@ -32,51 +32,42 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
-
-        # Infinite AnchoredIntervals
-        @test AnchoredInterval{-Inf,Float64,Closed,Closed}(0) == Interval(-Inf, 0)
-        @test AnchoredInterval{Inf,Float64,Closed,Closed}(0) == Interval(0, Inf)
-        @test AnchoredInterval{-1.0,Float64,Closed,Closed}(Inf) == Interval(Inf, Inf)
-        @test AnchoredInterval{1.0,Float64,Closed,Closed}(Inf) == Interval(Inf, Inf)
-        @test_throws ArgumentError AnchoredInterval{-1.0,Float64,Closed,Closed}(NaN)
-        @test_throws ArgumentError AnchoredInterval{1.0,Float64,Closed,Closed}(NaN)
-
-        # Unbounded AnchoredIntervals
-        @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Unbounded,Open}(dt)
-        @test_throws ArgumentError AnchoredInterval{Hour(1),DateTime,Open,Unbounded}(dt)
-        @test isunbounded(AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(dt))
-
-        @test_throws MethodError AnchoredInterval{Hour(-1),DateTime,Open,Unbounded}(nothing)
-        @test_throws MethodError AnchoredInterval{Hour(1),DateTime,Unbounded,Open}(nothing)
-        @test_throws MethodError AnchoredInterval{Hour(0),DateTime,Unbounded,Unbounded}(nothing)
-
-        @test_throws ArgumentError AnchoredInterval{Hour(-1),Nothing,Unbounded,Unbounded}(nothing)
-        @test_throws ArgumentError AnchoredInterval{Hour(1),Nothing,Unbounded,Unbounded}(nothing)
-        @test_throws ArgumentError AnchoredInterval{Hour(0),Nothing,Unbounded,Unbounded}(nothing)
     end
 
-    @testset "non-finite" begin
-        x = 1
+    @testset "zero-span" begin
+        @test AnchoredInterval{0}(10) == 10 .. 10
+        @test AnchoredInterval{0,Unbounded,Closed}(10) == nothing .. 10
+        @test AnchoredInterval{0,Closed,Unbounded}(10) == 10 .. nothing
 
-        interval = 0 .. 0
-        @test AnchoredInterval{+0.0}(0.0) == interval
-        @test AnchoredInterval{-0.0}(0.0) == interval
-        @test AnchoredInterval{0.0}(0.0) == interval
+        # The anchor represents either endpoint. If the constructor below was allowed this
+        # would be the same as allowing `Interval{Unbounded,Unbounded}(10, 10)`.
+        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(10)
+
+        # Ignore positive/negative zero for span
+        @test AnchoredInterval{-0.0,Unbounded,Closed}(10) == nothing .. 10
+        @test AnchoredInterval{+0.0,Closed,Unbounded}(10) == 10 .. nothing
+        @test AnchoredInterval{+0.0,Unbounded,Closed}(10) == nothing .. 10
+        @test AnchoredInterval{-0.0,Closed,Unbounded}(10) == 10 .. nothing
+
+        @test AnchoredInterval{+0.0}(0.0) == 0 .. 0
+        @test AnchoredInterval{-0.0}(0.0) == 0 .. 0
+        @test AnchoredInterval{0.0}(0.0) == 0 .. 0
+    end
+
+    @testset "infinite" begin
+        x = 1  # Non-zero value representing any positive value
 
         interval = 0 .. Inf
         @test AnchoredInterval{Inf,Closed,Closed}(0.0) == interval
-        @test_throws ArgumentError convert(AnchoredInterval{Ending}, interval)
-        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
+        # Not-possible: AnchoredInterval{-?,Closed,Closed}(Inf)
 
         interval = -Inf .. 0
-        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, interval)
+        # Not-possible: AnchoredInterval{+?,Closed,Closed}(-Inf)
         @test AnchoredInterval{-Inf,Closed,Closed}(0.0) == interval
-        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
 
         interval = -Inf .. Inf
         @test_throws ArgumentError AnchoredInterval{Inf,Closed,Closed}(-Inf)
         @test_throws ArgumentError AnchoredInterval{-Inf,Closed,Closed}(Inf)
-        # @test_throws ArgumentError convert(AnchoredInterval{0}, interval)
 
         interval = -Inf .. -Inf
         @test AnchoredInterval{+x,Closed,Closed}(-Inf) == interval
@@ -87,10 +78,21 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test AnchoredInterval{+x,Closed,Closed}(Inf) == interval
         @test AnchoredInterval{-x,Closed,Closed}(Inf) == interval
         @test AnchoredInterval{0}(Inf) == interval
+    end
+
+    @testset "nan" begin
+        # NaN cannot be used as an anchor or as the span
+        @test_throws ArgumentError AnchoredInterval{-1.0,Float64,Closed,Closed}(NaN)
+        @test_throws ArgumentError AnchoredInterval{1.0,Float64,Closed,Closed}(NaN)
+        @test_throws ArgumentError AnchoredInterval{NaN,Float64,Closed,Closed}(0.0)
+    end
+
+    @testset "non-bounded" begin
+        x = 1  # Non-zero value representing any positive value
 
         interval = 0 .. nothing
         @test AnchoredInterval{+x,Closed,Unbounded}(0.0) == interval
-        @test_throws ArgumentError convert(AnchoredInterval{Ending}, interval)
+        @test_throws ArgumentError AnchoredInterval{-x,Closed,Unbounded}(nothing)
         @test AnchoredInterval{0,Closed,Unbounded}(0.0) == interval
 
         interval = nothing .. 0
@@ -112,6 +114,19 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test_throws ArgumentError AnchoredInterval{+x,Unbounded,Unbounded}(nothing)
         @test_throws ArgumentError AnchoredInterval{-x,Unbounded,Unbounded}(nothing)
         @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(nothing)
+
+        # Other invalid non-bounded intervals
+        @test_throws ArgumentError AnchoredInterval{+1,Unbounded,Unbounded}(0)
+        @test_throws ArgumentError AnchoredInterval{-1,Unbounded,Unbounded}(0)
+        @test_throws ArgumentError AnchoredInterval{0,Unbounded,Unbounded}(0)
+
+        @test_throws MethodError AnchoredInterval{+x,Int,Closed,Unbounded}(nothing)
+        @test_throws MethodError AnchoredInterval{-x,Int,Unbounded,Closed}(nothing)
+        @test_throws MethodError AnchoredInterval{0,Int,Unbounded,Unbounded}(nothing)
+
+        @test_throws ArgumentError AnchoredInterval{+x,Nothing,Closed,Unbounded}(nothing)
+        @test_throws ArgumentError AnchoredInterval{-x,Nothing,Unbounded,Closed}(nothing)
+        @test_throws ArgumentError AnchoredInterval{0,Nothing,Unbounded,Unbounded}(nothing)
     end
 
     @testset "hash" begin
@@ -143,6 +158,12 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
         @test convert(Interval{DateTime}, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval{DateTime}, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
+
+        @test convert(AnchoredInterval{Ending}, Interval(-Inf, 0)) == AnchoredInterval{-Inf,Float64,Closed,Closed}(0)
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(-Inf, 0))
+
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, Inf))
+        @test convert(AnchoredInterval{Beginning}, Interval(0, Inf)) == AnchoredInterval{Inf,Float64,Closed,Closed}(0)
 
         @test convert(AnchoredInterval{Ending}, Interval(nothing, 0)) == AnchoredInterval{-1,Int,Unbounded,Closed}(0)
         @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(nothing, 0))

@@ -62,6 +62,23 @@ struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     anchor::T
 
     function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bound, R <: Bound}
+        if sign(P) < 0 && R === Unbounded
+            throw(ArgumentError(
+                "Unable to represent a right-unbounded interval as `AnchoredInterval` " *
+                "when anchor defines the right bound"
+            ))
+        elseif sign(P) > 0 && L === Unbounded
+            throw(ArgumentError(
+                "Unable to represent a left-unbounded interval as `AnchoredInterval` " *
+                "when anchor defines the left bound"
+            ))
+        elseif sign(P) == 0 && L === Unbounded && R === Unbounded
+            throw(ArgumentError(
+                "Unable to represent a non-bounded interval as `AnchoredInterval` " *
+                "when anchor defines both the left and right bound"
+            ))
+        end
+
         # A valid interval requires that neither endpoints or the span are nan. Typically,
         # we use `left <= right` to ensure a valid interval but for `AnchoredInterval`s
         # computing the other endpoint requires `anchor + P` which may fail with certain

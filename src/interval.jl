@@ -55,7 +55,7 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     first::T
     last::T
 
-    function Interval{T,L,R}(f::T, l::T) where {T,L,R}
+    function Interval{T,L,R}(f::T, l::T) where {T, L <: Bounded, R <: Bounded}
         # Ensure that `first` preceeds `last`.
         f, l, left_bound, right_bound = if f ≤ l
             f, l, L, R
@@ -67,17 +67,46 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
 
         return new{T, left_bound, right_bound}(f, l)
     end
+
+    function Interval{T,L,R}(f::Nothing, l::T) where {T, L <: Unbounded, R <: Bounded}
+        return new{T,L,R}(l, l)
+    end
+
+    function Interval{T,L,R}(f::T, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
+        return new{T,L,R}(f, f)
+    end
+
+    function Interval{T,L,R}(f::Nothing, l::Nothing) where {T, L <: Unbounded, R <: Unbounded}
+        return new{T,L,R}()
+    end
 end
 
-Interval{T,L,R}(f, l) where {T,L,R} = Interval{T,L,R}(convert(T, f), convert(T, l))
+function Interval{T,L,R}(f, l) where {T, L <: Bounded, R <: Bounded}
+    return Interval{T,L,R}(convert(T, f), convert(T, l))
+end
+function Interval{T,L,R}(f, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
+    return Interval{T,L,R}(convert(T, f), l)
+end
+function Interval{T,L,R}(f::Nothing, l) where {T, L <: Unbounded, R <: Bounded}
+    return Interval{T,L,R}(f, convert(T, l))
+end
 
 Interval{L,R}(f::T, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
 Interval{L,R}(f, l) where {L,R} = Interval{promote_type(typeof(f), typeof(l)), L, R}(f, l)
+Interval{L,R}(f::Nothing, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
+Interval{L,R}(f::T, l::Nothing) where {T,L,R} = Interval{T,L,R}(f, l)
+Interval{L,R}(f::Nothing, l::Nothing) where {L,R} = Interval{Nothing,L,R}(f, l)
 
-Interval{T}(f, l) where {T,L,R} = Interval{T, Closed, Closed}(f, l)
+Interval{T}(f, l) where T = Interval{T, Closed, Closed}(f, l)
+Interval{T}(f::Nothing, l) where T = Interval{T, Unbounded, Closed}(f, l)
+Interval{T}(f, l::Nothing) where T = Interval{T, Closed, Unbounded}(f, l)
+Interval{T}(f::Nothing, l::Nothing) where T = Interval{T, Unbounded, Unbounded}(f, l)
 
 Interval(f::T, l::T) where T = Interval{T}(f, l)
 Interval(f, l) = Interval(promote(f, l)...)
+Interval(f::Nothing, l::T) where T = Interval{T}(f, l)
+Interval(f::T, l::Nothing) where T = Interval{T}(f, l)
+Interval(f::Nothing, l::Nothing) = Interval{Nothing}(f, l)
 
 (..)(first, last) = Interval(first, last)
 
@@ -87,11 +116,11 @@ Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
 function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {T,L,R}
-    Interval{T,L,R}(left.endpoint, right.endpoint)
+    Interval{T,L,R}(endpoint(left), endpoint(right))
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T, bound_type(left), bound_type(right)}(T(left.endpoint), T(right.endpoint))
+    Interval{T, bound_type(left), bound_type(right)}(endpoint(left), endpoint(right))
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
@@ -116,19 +145,29 @@ end
 
 ##### ACCESSORS #####
 
-Base.first(interval::Interval) = interval.first
-Base.last(interval::Interval) = interval.last
+function Base.first(interval::Interval{T,L,R}) where {T,L,R}
+    return L !== Unbounded ? interval.first : nothing
+end
+
+function Base.last(interval::Interval{T,L,R}) where {T,L,R}
+    return R !== Unbounded ? interval.last : nothing
+end
+
+function span(interval::Interval)
+    if isbounded(interval)
+        interval.last - interval.first
+    else
+        throw(DomainError(
+            "unbounded endpoint(s)",
+            "Unable to determine the span of an non-bounded interval",
+        ))
+    end
+end
+
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
-
-"""
-    span(interval::AbstractInterval)
-
-Compute the span of the interval, that is `last(interval) - first(interval)`.
-"""
-span(::AbstractInterval)
-
-span(interval::Interval) = interval.last - interval.first
+isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
+isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
 
 ##### CONVERSION #####
 
@@ -143,14 +182,14 @@ Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
 
 ##### DISPLAY #####
 
-function Base.show(io::IO, interval::T) where T <: Interval
+function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
     if get(io, :compact, false)
         print(io, interval)
     else
-        print(io, "$T(")
-        show(io, interval.first)
+        print(io, "$(typeof(interval))(")
+        L === Unbounded ? print(io, "nothing") : show(io, interval.first)
         print(io, ", ")
-        show(io, interval.last)
+        R === Unbounded ? print(io, "nothing") : show(io, interval.last)
         print(io, ")")
     end
 end
@@ -164,9 +203,9 @@ function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
     print(
         io,
         L === Closed ? "[" : "(",
-        first(interval),
+        L === Unbounded ? "" : first(interval),
         " .. ",
-        last(interval),
+        R === Unbounded ? "" : last(interval),
         R === Closed ? "]" : ")",
     )
 end
@@ -274,7 +313,10 @@ function contiguous(a::AbstractInterval, b::AbstractInterval)
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
 
-    return right.endpoint == left.endpoint && bound_type(left) != bound_type(right)
+    return (
+        !isunbounded(right) && !isunbounded(left) &&
+        right.endpoint == left.endpoint && isclosed(left) != isclosed(right)
+    )
 end
 
 function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T

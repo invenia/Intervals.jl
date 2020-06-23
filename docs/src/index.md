@@ -15,14 +15,18 @@ end
 This package defines:
 * `AbstractInterval`, along with its subtypes:
   * [`Interval{T,L,R}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
-    with left/right bounds respectively being `L` and `R`
+    with left/right bounds types respectively being `L` and `R`
   * [`AnchoredInterval{P,T,L,R}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
-    value `anchor::T` and the value type `P` which represents the span of the range. Left/right bounds are specifed
+    value `anchor::T` and the value type `P` which represents the span of the range. Left/right bounds types are specifed
     by `L` and `R` respectively
     * [`HourEnding`](@ref), a type alias for `AnchoredInterval{Hour(-1)}`
     * [`HourBeginning`](@ref), a type alias for `AnchoredInterval{Hour(1)}`
     * [`HE`](@ref) and [`HB`](@ref), pseudoconstructors for `HourEnding` and `HourBeginning` that round the
       anchor up (`HE`) or down (`HB`) to the nearest hour
+* [`Bound`](@ref), abstract type for all possible bounds type classifications:
+  * [`Closed`](@ref), indicating the endpoint value of the interval is included
+  * [`Open`](@ref), indicating the endpoint value of the interval is not included
+  * [`Unbounded`](@ref), indicating the endpoint value is effectively infinite
 
 ## Example Usage
 
@@ -216,11 +220,22 @@ HourEnding
 HourBeginning
 HE
 HB
+Bound
+Intervals.Bounded
+Closed
+Open
+Unbounded
+first
+last
+span
+isclosed
+isopen
+Intervals.isunbounded
+Intervals.isbounded
 ≪
 ≫
 ==
 union
 union!
-span
 superset
 ```

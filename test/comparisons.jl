@@ -1,4 +1,5 @@
-using Intervals: Ending, Beginning, overlaps, contiguous, RightEndpoint, LeftEndpoint
+using Intervals: Beginning, Ending, LeftEndpoint, RightEndpoint, contiguous, overlaps,
+    isbounded, isunbounded
 
 function unique_paired_permutation(v::Vector{T}) where T
     results = Tuple{T, T}[]
@@ -9,6 +10,17 @@ function unique_paired_permutation(v::Vector{T}) where T
 end
 
 const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beginning}]
+
+# Defines what conversions are possible. Tests for invalid conversions will be skipped.
+viable_convert(::Type{Interval}, interval::AbstractInterval) = true
+
+function viable_convert(::Type{AnchoredInterval{Beginning}}, interval::AbstractInterval)
+    return isbounded(interval) && isfinite(first(interval))
+end
+
+function viable_convert(::Type{AnchoredInterval{Ending}}, interval::AbstractInterval)
+    return isbounded(interval) && isfinite(last(interval))
+end
 
 @testset "comparisons: $A vs. $B" for (A, B) in unique_paired_permutation(INTERVAL_TYPES)
 
@@ -22,16 +34,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 2),
                 Interval{Closed, Closed}(-Inf, 2),
+                Interval{Unbounded,Closed}(nothing, 2),
             ],
             [
                 Interval{Closed, Closed}(4, 5),
                 Interval{Closed, Closed}(4, Inf),
+                Interval{Closed,Unbounded}(4, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -73,16 +87,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
+                Interval{Unbounded,Open}(nothing, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
+                Interval{Open,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -124,16 +140,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Open, Open}(1, 3),
                 Interval{Open, Open}(-Inf, 3),
+                Interval{Unbounded,Open}(nothing, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
+                Interval{Closed,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -175,16 +193,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
+                Interval{Unbounded,Closed}(nothing, 3),
             ],
             [
                 Interval{Open, Open}(3, 5),
                 Interval{Open, Open}(3, Inf),
+                Interval{Open,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -226,16 +246,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 3),
                 Interval{Closed, Closed}(-Inf, 3),
+                Interval{Unbounded,Closed}(nothing, 3),
             ],
             [
                 Interval{Closed, Closed}(3, 5),
                 Interval{Closed, Closed}(3, Inf),
+                Interval{Closed,Unbounded}(3, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -277,16 +299,18 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
             [
                 Interval{Closed, Closed}(1, 4),
                 Interval{Closed, Closed}(-Inf, 4),
+                Interval{Unbounded,Closed}(nothing, 4),
             ],
             [
                 Interval{Closed, Closed}(2, 5),
                 Interval{Closed, Closed}(2, Inf),
+                Interval{Closed,Unbounded}(2, nothing),
             ],
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             earlier = convert(A, a)
             later = convert(B, b)
@@ -328,10 +352,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -373,10 +395,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -418,10 +438,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -463,10 +481,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -508,10 +524,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -553,10 +567,8 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -598,10 +610,136 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
-            A == AnchoredInterval{Beginning} && !isfinite(first(a)) && continue
-            A == AnchoredInterval{Ending} && !isfinite(last(a)) && continue
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
+
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+
+            @test a == b
+            @test isequal(a, b)
+            @test hash(a) == hash(b)
+
+            @test !isless(a, b)
+            @test !isless(b, a)
+
+            @test !(a < b)
+            @test !(b < a)
+
+            @test !(a ≪ b)
+            @test !(b ≪ a)
+
+            @test issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
+    end
+
+    @testset "equal [/(" begin
+        test_intervals = (
+            [
+                Interval{Closed,Unbounded}(l, u),
+                Interval{Open,Unbounded}(l, u),
+            ]
+            for (l, u) in product((1, -Inf), (nothing,))
+        )
+
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
+
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
+
+            @test isless(a, b)
+            @test !isless(b, a)
+
+            @test a < b
+            @test !(b < a)
+
+            @test !(a ≪ b)
+            @test !(b ≪ a)
+
+            @test !issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
+    end
+
+    @testset "equal ]/)" begin
+        test_intervals = (
+            [
+                Interval{Unbounded,Closed}(l, u),
+                Interval{Unbounded,Open}(l, u),
+            ]
+            for (l, u) in product((nothing,), (5, Inf))
+        )
+
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
+
+            a = convert(A, a)
+            b = convert(B, b)
+            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+
+            @test a != b
+            @test !isequal(a, b)
+            @test hash(a) != hash(b)
+
+            @test !isless(a, b)
+            @test !isless(b, a)
+
+            @test !(a < b)
+            @test !(b < a)
+
+            @test !(a ≪ b)
+            @test !(b ≪ a)
+
+            @test !issubset(a, b)
+            @test issubset(b, a)
+
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
+            @test overlaps(a, b)
+            @test !contiguous(a, b)
+            @test superset([a, b]) == expected_superset
+        end
+    end
+
+    @testset "equal unbounded" begin
+        test_intervals = (
+            [
+                Interval{Int,Unbounded,Unbounded}(nothing, nothing),
+                Interval{Int,Unbounded,Unbounded}(nothing, nothing),
+            ],
+        )
+
+        @testset "$a vs. $b" for (a, b) in test_intervals
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             a = convert(A, a)
             b = convert(B, b)
@@ -682,12 +820,17 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
                 Interval{Closed, Closed}(1, Inf),
                 Interval{Closed, Closed}(-Inf, 5),
                 Interval{Closed, Closed}(-Inf, Inf),
+                Interval{Closed, Unbounded}(1, nothing),
+                Interval{Closed, Unbounded}(-Inf, nothing),
+                Interval{Unbounded, Closed}(nothing, 5),
+                Interval{Unbounded, Closed}(nothing, Inf),
+                Interval{Unbounded, Unbounded}(nothing, nothing),
             ],
         )
 
         @testset "$a vs $b" for (a, b) in test_intervals
-            B == AnchoredInterval{Beginning} && !isfinite(first(b)) && continue
-            B == AnchoredInterval{Ending} && !isfinite(last(b)) && continue
+            viable_convert(A, a) || continue
+            viable_convert(B, b) || continue
 
             smaller = convert(A, a)
             larger = convert(B, b)

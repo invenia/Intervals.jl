@@ -1,4 +1,4 @@
-using Intervals: canonicalize
+using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
 @testset "AnchoredInterval" begin
     dt = DateTime(2016, 8, 11, 2)
@@ -34,18 +34,63 @@ using Intervals: canonicalize
         @test AnchoredInterval{25}('a') isa AnchoredInterval
     end
 
-    @testset "non-ordered" begin
-        ending = AnchoredInterval{-Inf}(Inf)
-        @test isequal(first(ending), NaN)
-        @test isequal(last(ending), Inf)
-        @test ending == ending
-        @test isequal(ending, ending)
+    @testset "zero-span" begin
+        @test AnchoredInterval{0}(10) == 10 .. 10
 
-        beginning = AnchoredInterval{Inf}(-Inf)
-        @test isequal(first(beginning), -Inf)
-        @test isequal(last(beginning), NaN)
-        @test beginning == beginning
-        @test isequal(beginning, beginning)
+        @test AnchoredInterval{+0.0}(0.0) == 0 .. 0
+        @test AnchoredInterval{-0.0}(0.0) == 0 .. 0
+        @test AnchoredInterval{0.0}(0.0) == 0 .. 0
+    end
+
+    @testset "infinite" begin
+        x = 1  # Non-zero value representing any positive value
+
+        interval = 0 .. Inf
+        @test AnchoredInterval{Inf,Closed,Closed}(0.0) == interval
+        # Not-possible: AnchoredInterval{-?,Closed,Closed}(Inf)
+
+        interval = -Inf .. 0
+        # Not-possible: AnchoredInterval{+?,Closed,Closed}(-Inf)
+        @test AnchoredInterval{-Inf,Closed,Closed}(0.0) == interval
+
+        interval = -Inf .. Inf
+        @test_throws ArgumentError AnchoredInterval{Inf,Closed,Closed}(-Inf)
+        @test_throws ArgumentError AnchoredInterval{-Inf,Closed,Closed}(Inf)
+
+        interval = -Inf .. -Inf
+        @test AnchoredInterval{+x,Closed,Closed}(-Inf) == interval
+        @test AnchoredInterval{-x,Closed,Closed}(-Inf) == interval
+        @test AnchoredInterval{0}(-Inf) == interval
+
+        interval = Inf .. Inf
+        @test AnchoredInterval{+x,Closed,Closed}(Inf) == interval
+        @test AnchoredInterval{-x,Closed,Closed}(Inf) == interval
+        @test AnchoredInterval{0}(Inf) == interval
+    end
+
+    @testset "nan" begin
+        # NaN cannot be used as an anchor or as the span
+        @test_throws ArgumentError AnchoredInterval{-1.0,Float64,Closed,Closed}(NaN)
+        @test_throws ArgumentError AnchoredInterval{1.0,Float64,Closed,Closed}(NaN)
+        @test_throws ArgumentError AnchoredInterval{NaN,Float64,Closed,Closed}(0.0)
+    end
+
+    @testset "non-bounded" begin
+        x = 1  # Non-zero value representing any positive value
+
+        # Unbounded AnchoredIntervals are disallowed as most types have no span value that
+        # actually represents the span of the interval
+        @test_throws TypeError AnchoredInterval{+x,Int,Closed,Unbounded}(0)
+        @test_throws TypeError AnchoredInterval{-x,Int,Unbounded,Closed}(0)
+        @test_throws TypeError AnchoredInterval{0,Int,Unbounded,Unbounded}(0)
+
+        @test_throws MethodError AnchoredInterval{+x,Int}(nothing)
+        @test_throws MethodError AnchoredInterval{-x,Int}(nothing)
+        @test_throws MethodError AnchoredInterval{0,Int}(nothing)
+
+        @test_throws MethodError AnchoredInterval{+x,Nothing}(nothing)
+        @test_throws MethodError AnchoredInterval{-x,Nothing}(nothing)
+        @test_throws MethodError AnchoredInterval{0,Nothing}(nothing)
     end
 
     @testset "hash" begin
@@ -77,6 +122,18 @@ using Intervals: canonicalize
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
         @test convert(Interval{DateTime}, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval{DateTime}, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
+
+        @test convert(AnchoredInterval{Ending}, Interval(-Inf, 0)) == AnchoredInterval{-Inf,Float64,Closed,Closed}(0)
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(-Inf, 0))
+
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, Inf))
+        @test convert(AnchoredInterval{Beginning}, Interval(0, Inf)) == AnchoredInterval{Inf,Float64,Closed,Closed}(0)
+
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(nothing, 0))
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(nothing, 0))
+
+        @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, nothing))
+        @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(0, nothing))
     end
 
     @testset "eltype" begin
@@ -126,6 +183,12 @@ using Intervals: canonicalize
         @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
         @test span(interval) == Day(1)
 
+        endpoint = ZonedDateTime(2020, 3, 9, 2, tz"America/Winnipeg")
+        interval = AnchoredInterval{Day(-1)}(endpoint)
+        @test_throws NonExistentTimeError first(interval)
+        @test last(interval) == endpoint
+        @test span(interval) == Day(1)
+
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
         @test first(interval) == 0
@@ -152,7 +215,7 @@ using Intervals: canonicalize
         # When dropping VERSION < v"1.2.0-DEV.223" (https://github.com/JuliaLang/julia/pull/30817)
         # - `repr(Period(...))`can be converted to hardcode strings
 
-        where_lr = "where R<:Bound where L<:Bound"
+        where_lr = "where R<:$Bounded where L<:$Bounded"
         where_tlr = "$where_lr where T"
 
         @test sprint(show, AnchoredInterval{Hour(-1)}) ==
@@ -582,11 +645,12 @@ using Intervals: canonicalize
         @test isempty(intersect(HourEnding(dt), HourEnding(dt + Hour(1))))
 
         # Single point overlap
-        expected = AnchoredInterval{Hour(0), Closed, Closed}(dt)
-        @test intersect(
+        intersection = intersect(
             HourEnding{Closed, Closed}(dt),
             HourEnding{Closed, Closed}(dt + Hour(1)),
-        ) == expected
+        )
+        @test intersection == AnchoredInterval{Hour(0), Closed, Closed}(dt)
+        @test intersection isa AnchoredInterval
 
         # Hour overlap
         he = HourEnding(dt)

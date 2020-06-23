@@ -3,7 +3,8 @@ interval_markers(L::Type{<:Bound}, R::Type{<:Bound}) = interval_marker.([L, R])
 interval_marker(x::Type{Closed}) = :vline
 interval_marker(x::Type{Open}) = :none
 
-@recipe function f(xs::AbstractVector{<:AbstractInterval{T}}, ys) where T
+# TODO: Add support for plotting unbounded intervals
+@recipe function f(xs::AbstractVector{<:AbstractInterval{T,L,R}}, ys) where {T, L <: Bounded, R <: Bounded}
     new_xs = T[]
     new_ys = []
     markers = Symbol[]

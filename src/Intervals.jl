@@ -10,8 +10,10 @@ using Dates: AbstractDateTime, value, coarserperiod
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
 abstract type Bound end
-struct Closed <: Bound end
-struct Open <: Bound end
+abstract type Bounded <: Bound end
+struct Closed <: Bounded end
+struct Open <: Bounded end
+struct Unbounded <: Bound end
 
 bound_type(x::Bool) = x ? Closed : Open
 
@@ -26,11 +28,13 @@ include("interval.jl")
 include("anchoredinterval.jl")
 include("description.jl")
 include("plotting.jl")
+include("docstrings.jl")
 include("deprecated.jl")
 
 export Bound,
        Closed,
        Open,
+       Unbounded,
        AbstractInterval,
        Interval,
        AnchoredInterval,

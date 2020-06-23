@@ -198,6 +198,12 @@ using Intervals: Beginning, Ending, canonicalize, isunbounded
         @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
         @test span(interval) == Day(1)
 
+        endpoint = ZonedDateTime(2020, 3, 9, 2, tz"America/Winnipeg")
+        interval = AnchoredInterval{Day(-1)}(endpoint)
+        @test_throws NonExistentTimeError first(interval)
+        @test last(interval) == endpoint
+        @test span(interval) == Day(1)
+
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
         @test first(interval) == 0

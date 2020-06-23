@@ -132,9 +132,14 @@ span(interval::Interval) = interval.last - interval.first
 
 ##### CONVERSION #####
 
-function Base.convert(::Type{T}, i::Interval{T}) where T
-    first(i) == last(i) && isclosed(i) && return first(i)
-    throw(DomainError(i, "The interval is not closed with coinciding endpoints"))
+# Allows an interval to be converted to a scalar when the set contained by the interval only
+# contains a single element.
+function Base.convert(::Type{T}, interval::Interval{T}) where T
+    if first(interval) == last(interval) && isclosed(interval)
+        return first(interval)
+    else
+        throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
+    end
 end
 
 ##### DISPLAY #####

@@ -57,20 +57,13 @@ using Intervals: canonicalize
     end
 
     @testset "conversion" begin
+        interval = AnchoredInterval{Hour(0)}(dt)
+        @test convert(DateTime, interval) == dt
+
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-
-        if isempty(methods(convert, Tuple{Type{DateTime}, AnchoredInterval{Hour,DateTime}}))
-            @warn "Deprecation has been removed, cleanup tests appropriately"
-
-            # Disallow lossy conversions
-            @test_throws MethodError convert(DateTime, he)
-            @test_throws MethodError convert(DateTime, hb)
-        else
-            @test convert(DateTime, he) == dt
-            @test convert(DateTime, hb) == dt
-        end
-
+        @test_throws DomainError convert(DateTime, he)
+        @test_throws DomainError convert(DateTime, hb)
         @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
         @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)

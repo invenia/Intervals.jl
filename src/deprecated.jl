@@ -6,11 +6,6 @@ import Dates: Date, DateTime
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
-    depwarn("`convert($T, interval::AnchoredInterval{P,$T})` is deprecated, use `anchor(interval)` instead.", :convert)
-    anchor(interval)
-end
-
 @deprecate Date(interval::Interval{Date}) convert(Date, interval)
 @deprecate DateTime(interval::Interval{DateTime}) convert(DateTime, interval)
 @deprecate Date(interval::AnchoredInterval{P, Date} where P) convert(Date, interval)

@@ -41,7 +41,6 @@ isinf(::TimeType) = false
             @test Interval(a, b) == Interval{T, Closed, Closed}(a, b)
             @test Interval{T}(a, b) == Interval{T, Closed, Closed}(a, b)
             @test Interval{Open, Closed}(a, b) == Interval{T, Open, Closed}(a, b)
-            @test Interval{Closed, Open}(b, a) == Interval{T, Open, Closed}(a, b)
             @test Interval(LeftEndpoint{Closed}(a), RightEndpoint{Closed}(b)) ==
                 Interval{T, Closed, Closed}(a, b)
 

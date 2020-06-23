@@ -3,12 +3,6 @@
 ```@meta
 DocTestSetup = quote
     using Intervals, Dates, TimeZones
-
-    # This is a hack to have nice printing that doesn't include module names.
-    # https://github.com/JuliaDocs/Documenter.jl/issues/944
-    @eval Main begin
-        using Dates, TimeZones
-    end
 end
 ```
 

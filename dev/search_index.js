@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Intervals",
     "category": "section",
-    "text": "DocTestSetup = quote\n    using Intervals, Dates, TimeZones\n\n    # This is a hack to have nice printing that doesn\'t include module names.\n    # https://github.com/JuliaDocs/Documenter.jl/issues/944\n    @eval Main begin\n        using Dates, TimeZones\n    end\nendThis package defines:AbstractInterval, along with its subtypes:\nInterval{T,L,R}, which represents a non-iterable range between two endpoints of type T with left/right bounds respectively being L and R\nAnchoredInterval{P,T,L,R}, which represents a non-iterable range defined by a single value anchor::T and the value type P which represents the span of the range. Left/right bounds are specifed by L and R respectively\nHourEnding, a type alias for AnchoredInterval{Hour(-1)}\nHourBeginning, a type alias for AnchoredInterval{Hour(1)}\nHE and HB, pseudoconstructors for HourEnding and HourBeginning that round the anchor up (HE) or down (HB) to the nearest hour"
+    "text": "DocTestSetup = quote\n    using Intervals, Dates, TimeZones\n\n    # This is a hack to have nice printing that doesn\'t include module names.\n    # https://github.com/JuliaDocs/Documenter.jl/issues/944\n    @eval Main begin\n        using Dates, TimeZones\n    end\nendThis package defines:AbstractInterval, along with its subtypes:\nInterval{T,L,R}, which represents a non-iterable range between two endpoints of type T with left/right bounds types respectively being L and R\nAnchoredInterval{P,T,L,R}, which represents a non-iterable range defined by a single value anchor::T and the value type P which represents the span of the range. Left/right bounds types are specifed by L and R respectively\nHourEnding, a type alias for AnchoredInterval{Hour(-1)}\nHourBeginning, a type alias for AnchoredInterval{Hour(1)}\nHE and HB, pseudoconstructors for HourEnding and HourBeginning that round the anchor up (HE) or down (HB) to the nearest hour\nBound, abstract type for all possible bounds type classifications:\nClosed, indicating the endpoint value of the interval is included\nOpen, indicating the endpoint value of the interval is not included\nUnbounded, indicating the endpoint value is effectively infinite"
 },
 
 {
@@ -137,6 +137,102 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "#Intervals.Bound",
+    "page": "Home",
+    "title": "Intervals.Bound",
+    "category": "type",
+    "text": "Bound <: Any\n\nAbstract type representing all possible endpoint classifications (e.g. open, closed, unbounded).\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.Bounded",
+    "page": "Home",
+    "title": "Intervals.Bounded",
+    "category": "type",
+    "text": "Bounded <: Bound\n\nAbstract type indicating that the endpoint of an interval is not unbounded (e.g. open or closed).\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.Closed",
+    "page": "Home",
+    "title": "Intervals.Closed",
+    "category": "type",
+    "text": "Closed <: Bounded <: Bound\n\nType indicating that the endpoint of an interval is closed (the endpoint value is included in the interval).\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.Open",
+    "page": "Home",
+    "title": "Intervals.Open",
+    "category": "type",
+    "text": "Open <: Bounded <: Bound\n\nType indicating that the endpoint of an interval is open (the endpoint value is not included in the interval).\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.Unbounded",
+    "page": "Home",
+    "title": "Intervals.Unbounded",
+    "category": "type",
+    "text": "Unbounded <: Bound\n\nType indicating that the endpoint of an interval is unbounded (the endpoint value is effectively infinite).\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Base.first",
+    "page": "Home",
+    "title": "Base.first",
+    "category": "function",
+    "text": "first(interval::AbstractInterval{T}) -> Union{T,Nothing}\n\nThe value of the lower endpoint. When the lower endpoint is unbounded nothing will be returned.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Base.last",
+    "page": "Home",
+    "title": "Base.last",
+    "category": "function",
+    "text": "last(interval::AbstractInterval{T}) -> Union{T,Nothing}\n\nThe value of the upper endpoint. When the upper endpoint is unbounded nothing will be returned.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.span",
+    "page": "Home",
+    "title": "Intervals.span",
+    "category": "function",
+    "text": "span(interval::AbstractInterval) -> Any\n\nThe delta between the upper and lower endpoints. For bounded intervals returns a non-negative value while intervals with any unbounded endpoints will throw an ArgumentError.\n\nTo avoid having to capture the exception use the pattern:\n\n!isbounded(interval) ? span(interval) : infinity`\n\nWhere infinity is a variable representing the value you wish to use to represent an unbounded, or infinite, span.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.isclosed",
+    "page": "Home",
+    "title": "Intervals.isclosed",
+    "category": "function",
+    "text": "isclosed(interval) -> Bool\n\nIs a closed-interval: includes both of its endpoints.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Base.isopen",
+    "page": "Home",
+    "title": "Base.isopen",
+    "category": "function",
+    "text": "isopen(interval) -> Bool\n\nIs an open-interval: excludes both of its endpoints.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.isunbounded",
+    "page": "Home",
+    "title": "Intervals.isunbounded",
+    "category": "function",
+    "text": "isunbounded(interval) -> Bool\n\nIs an unbounded-interval: unbounded at both ends.\n\n\n\n\n\n"
+},
+
+{
+    "location": "#Intervals.isbounded",
+    "page": "Home",
+    "title": "Intervals.isbounded",
+    "category": "function",
+    "text": "isbounded(interval) -> Bool\n\nIs a bounded-interval: either open, closed, left-closed/right-open, or left-open/right-closed.\n\nNote using !isbounded is commonly used to determine if any end of the interval is unbounded.\n\n\n\n\n\n"
+},
+
+{
     "location": "#Intervals.:≪",
     "page": "Home",
     "title": "Intervals.:≪",
@@ -177,14 +273,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#Intervals.span",
-    "page": "Home",
-    "title": "Intervals.span",
-    "category": "function",
-    "text": "span(interval::AbstractInterval)\n\nCompute the span of the interval, that is last(interval) - first(interval).\n\n\n\n\n\n"
-},
-
-{
     "location": "#Intervals.superset",
     "page": "Home",
     "title": "Intervals.superset",
@@ -197,7 +285,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "API",
     "category": "section",
-    "text": "Interval\nAnchoredInterval\nHourEnding\nHourBeginning\nHE\nHB\n≪\n≫\n==\nunion\nunion!\nspan\nsuperset"
+    "text": "Interval\nAnchoredInterval\nHourEnding\nHourBeginning\nHE\nHB\nBound\nIntervals.Bounded\nClosed\nOpen\nUnbounded\nfirst\nlast\nspan\nisclosed\nisopen\nIntervals.isunbounded\nIntervals.isbounded\n≪\n≫\n==\nunion\nunion!\nsuperset"
 },
 
 ]}

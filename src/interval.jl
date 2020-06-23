@@ -137,10 +137,6 @@ function Base.convert(::Type{T}, i::Interval{T}) where T
     throw(DomainError(i, "The interval is not closed with coinciding endpoints"))
 end
 
-# Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Dates.Date(interval::Interval{Date}) = convert(Date, interval)
-Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
-
 ##### DISPLAY #####
 
 function Base.show(io::IO, interval::T) where T <: Interval

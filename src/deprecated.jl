@@ -1,21 +1,15 @@
-using Base: depwarn
+using Base: @deprecate, depwarn
+import Dates: Date, DateTime
 
 # BEGIN Intervals 1.X.Y deprecations
 
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
-    depwarn("`convert($T, interval::AnchoredInterval{P,$T})` is deprecated, use `anchor(interval)` instead.", :convert)
-    anchor(interval)
-end
-
-for T in (:Date, :DateTime)
-    @eval function Dates.$T(interval::AnchoredInterval{P, $T}) where P
-        depwarn("`$($T)(interval::AnchoredInterval{P,$($T)})` is deprecated, use `anchor(interval)` instead.", $(QuoteNode(T)))
-        return anchor(interval)
-    end
-end
+@deprecate Date(interval::Interval{Date}) convert(Date, interval)
+@deprecate DateTime(interval::Interval{DateTime}) convert(DateTime, interval)
+@deprecate Date(interval::AnchoredInterval{P, Date} where P) convert(Date, interval)
+@deprecate DateTime(interval::AnchoredInterval{P, DateTime} where P) convert(DateTime, interval)
 
 
 function Endpoint{T,D}(ep::T, included::Bool) where {T,D}

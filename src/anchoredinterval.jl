@@ -168,6 +168,16 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
+# Allows an interval to be converted to a scalar when the set contained by the interval only
+# contains a single element.
+function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
+    if isclosed(interval) && (iszero(P) || first(interval) == last(interval))
+        return first(interval)
+    else
+        throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
+    end
+end
+
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
     return Interval{T,L,R}(first(interval), last(interval))
 end

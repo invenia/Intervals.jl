@@ -58,6 +58,10 @@ isinf(::TimeType) = false
         @test_throws MethodError Interval{Int, Unbounded, Closed}(1, 2)
         @test_throws MethodError Interval{Int, Closed, Unbounded}(1, 2)
         @test_throws MethodError Interval{Int, Unbounded, Unbounded}(1, 2)
+
+        # Deprecated
+        @test_deprecated Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(false, true))
+        @test_throws ArgumentError Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(true, true))
     end
 
     @testset "non-ordered" begin

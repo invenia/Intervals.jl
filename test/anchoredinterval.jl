@@ -107,8 +107,14 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         he = HourEnding(dt)
         hb = HourBeginning(dt)
-        @test_throws DomainError convert(DateTime, he)
-        @test_throws DomainError convert(DateTime, hb)
+
+        # Note: When the deprecation is dropped remove the deprecated tests and uncomment
+        # the DomainError tests
+        @test (@test_deprecated convert(DateTime, he)) == anchor(he)
+        @test (@test_deprecated convert(DateTime, hb)) == anchor(hb)
+        # @test_throws DomainError convert(DateTime, he)
+        # @test_throws DomainError convert(DateTime, hb)
+
         @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
         @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)

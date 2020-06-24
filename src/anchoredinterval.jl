@@ -174,7 +174,17 @@ function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
     if isclosed(interval) && (iszero(P) || first(interval) == last(interval))
         return first(interval)
     else
-        throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
+        # Remove deprecation in version 2.0.0
+        depwarn(
+            "`convert(T, interval::AnchoredInterval{P,T})` is deprecated for " *
+            "intervals which are not closed with coinciding endpoints. " *
+            "Use `anchor(interval)` instead.",
+            :convert,
+        )
+        return anchor(interval)
+
+        # TODO: For when deprecation is removed
+        # throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
     end
 end
 

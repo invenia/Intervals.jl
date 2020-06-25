@@ -29,6 +29,8 @@ const TESTS = let
     setdiff(includes, excludes)
 end
 
+@show get(ENV, "TESTS", "") TESTS
+
 @testset "Intervals" begin
     :inclusivity in TESTS && include("inclusivity.jl")
     :endpoint in TESTS && include("endpoint.jl")

@@ -1,11 +1,12 @@
 environment:
+  TESTS: plotting  # Limit Appveyor testing to just plotting as Travis is faster
   matrix:
-  - julia_version: 1.0  # latest LTS
-  - julia_version: 1  # latest stable
-  - julia_version: nightly
+    - julia_version: 1.0  # Latest LTS
+    - julia_version: 1    # Latest stable
+    - julia_version: nightly
 
 platform:
-  - x64 # 64-bit
+  - x64  # 64-bit
 
 matrix:
   allow_failures:

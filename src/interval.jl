@@ -120,8 +120,6 @@ Base.first(interval::Interval) = interval.first
 Base.last(interval::Interval) = interval.last
 isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
 Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
-containsfirst(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed 
-containslast(interval::AbstractInterval{T,L,R}) where {T,L,R} = R === Closed 
 
 """
     span(interval::AbstractInterval)
@@ -139,9 +137,12 @@ function Base.convert(::Type{T}, i::Interval{T}) where T
     throw(DomainError(i, "The interval is not closed with coinciding endpoints"))
 end
 
-function Base.convert(::Type{Interval{T,L,R}}, interval::Interval{N,L,R}) where {T,N,L,R}
-    return Interval{L,R}(convert(T, first(interval)), convert(T, last(interval)))
+function Base.convert(::Type{<:Interval{T}}, interval::Interval{S,L,R}) where {T,S,L,R}
+    return Interval{T,L,R}(first(interval), last(interval))
 end
+
+Base.promote_rule(::Type{Interval{T,L1,R1}}, ::Type{Interval{S,L2,R2}}) where {T,S,L1,R1,L2,R2} = Interval{promote_type(T,S), <:Union{L1,L2}, <:Union{R1,R2}}
+
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
 Dates.Date(interval::Interval{Date}) = convert(Date, interval)
@@ -291,13 +292,7 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return Interval{T}(left, right)
 end
 
-function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S,T}
-    !overlaps(a, b) && return Interval{promote_type(S, T)}()
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return Interval(left, right)
-end
+Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S,T} = intersect(promote(a,b))
 
 # There is power in a union.
 """

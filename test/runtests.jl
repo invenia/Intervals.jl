@@ -18,12 +18,15 @@ const ALL_TESTS = (
 )
 
 const TESTS = let
-    tests = Symbol.(split(get(ENV, "TESTS", ""), r"\s+", keepempty=false))
-    if isempty(tests)
-        ALL_TESTS
-    else
-        tests
-    end
+    # e.g. `TESTS="interval comparisons"` or `TEST="-plotting"`
+    tests = split(get(ENV, "TESTS", ""), r"\s+", keepempty=false)
+
+    isexclude(x) = startswith(x, '-')
+    includes = Symbol.(filter(!isexclude, tests))
+    excludes = Symbol.(replace.(filter(isexclude, tests), Ref(r"^-" => "")))
+
+    isempty(includes) && (includes = ALL_TESTS)
+    setdiff(includes, excludes)
 end
 
 @testset "Intervals" begin

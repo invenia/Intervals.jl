@@ -41,6 +41,11 @@ function Interval{T,L,R}(f::T, l::T, inc::Inclusivity) where {T,L,R}
     return Interval{T,L,R}(f, l)
 end
 
+function Interval{T,L,R}(f, l, inc::Inclusivity) where {T,L,R}
+    # Using depwarn from next call
+    return Interval{T,L,R}(convert(T, f), convert(T, l), inc)
+end
+
 function Interval{T}(f, l, inc::Inclusivity) where T
     L = bound_type(first(inc))
     R = bound_type(last(inc))
@@ -83,6 +88,11 @@ function AnchoredInterval{P,T,L,R}(anchor::T, inc::Inclusivity) where {P,T,L,R}
     end
     depwarn("`AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor, $(repr(inc)))` is deprecated, use `AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
     return AnchoredInterval{P,T,L,R}(anchor)
+end
+
+function AnchoredInterval{P,T,L,R}(anchor, inc::Inclusivity) where {P,T,L,R}
+    # Using depwarn from next call
+    return AnchoredInterval{P,T,L,R}(convert(T, anchor), inc)
 end
 
 function AnchoredInterval{P,T}(anchor, inc::Inclusivity) where {P,T}

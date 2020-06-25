@@ -1,21 +1,15 @@
-using Base: depwarn
+using Base: @deprecate, depwarn
+import Dates: Date, DateTime
 
 # BEGIN Intervals 1.X.Y deprecations
 
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
-    depwarn("`convert($T, interval::AnchoredInterval{P,$T})` is deprecated, use `anchor(interval)` instead.", :convert)
-    anchor(interval)
-end
-
-for T in (:Date, :DateTime)
-    @eval function Dates.$T(interval::AnchoredInterval{P, $T}) where P
-        depwarn("`$($T)(interval::AnchoredInterval{P,$($T)})` is deprecated, use `anchor(interval)` instead.", $(QuoteNode(T)))
-        return anchor(interval)
-    end
-end
+@deprecate Date(interval::Interval{Date}) convert(Date, interval)
+@deprecate DateTime(interval::Interval{DateTime}) convert(DateTime, interval)
+@deprecate Date(interval::AnchoredInterval{P, Date} where P) convert(Date, interval)
+@deprecate DateTime(interval::AnchoredInterval{P, DateTime} where P) convert(DateTime, interval)
 
 
 function Endpoint{T,D}(ep::T, included::Bool) where {T,D}
@@ -37,6 +31,16 @@ function RightEndpoint(ep, included::Bool)
 end
 
 # intervals.jl
+function Interval{T,L,R}(f::T, l::T, inc::Inclusivity) where {T,L,R}
+    left_inc = bound_type(first(inc))
+    right_inc = bound_type(last(inc))
+    if L !== left_inc || R !== right_inc
+        throw(ArgumentError("Specified inclusivity ($(repr(left_inc)), $(repr(right_inc))) doesn't match bound types ($(repr(L)), $(repr(R)))"))
+    end
+    depwarn("`Interval{T,$(repr(L)),$(repr(R))}(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
+    return Interval{T,L,R}(f, l)
+end
+
 function Interval{T}(f, l, inc::Inclusivity) where T
     L = bound_type(first(inc))
     R = bound_type(last(inc))
@@ -71,6 +75,16 @@ function inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R}
 end
 
 # anchoredintervals.jl
+function AnchoredInterval{P,T,L,R}(anchor::T, inc::Inclusivity) where {P,T,L,R}
+    left_inc = bound_type(first(inc))
+    right_inc = bound_type(last(inc))
+    if L !== left_inc || R !== right_inc
+        throw(ArgumentError("Specified inclusivity ($(repr(left_inc)), $(repr(right_inc))) doesn't match bound types ($(repr(L)), $(repr(R)))"))
+    end
+    depwarn("`AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor, $(repr(inc)))` is deprecated, use `AnchoredInterval{P,T,$(repr(L)),$(repr(R))}(anchor)` instead.", :AnchoredInterval)
+    return AnchoredInterval{P,T,L,R}(anchor)
+end
+
 function AnchoredInterval{P,T}(anchor, inc::Inclusivity) where {P,T}
     L = bound_type(first(inc))
     R = bound_type(last(inc))

@@ -27,7 +27,7 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 While the user may expect an `HourEnding` or `HourBeginning` value to be anchored to a
 specific hour, the constructor makes no guarantees that the anchor provided is rounded:
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> HourEnding(DateTime(2016, 8, 11, 2, 30))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
 ```
@@ -35,7 +35,7 @@ AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
 The `HE` and `HB` pseudoconstructors round the input up or down to the nearest hour, as
 appropriate:
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> HE(DateTime(2016, 8, 11, 2, 30))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T03:00:00)
 
@@ -45,7 +45,7 @@ AnchoredInterval{1 hour,DateTime,Closed,Open}(2016-08-11T02:00:00)
 
 ### Example
 
-```jldoctest
+```jldoctest; setup = :(using Intervals, Dates)
 julia> AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12))
 AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T12:00:00)
 
@@ -58,8 +58,41 @@ AnchoredInterval{5 minutes,DateTime,Closed,Closed}(2016-08-11T12:30:00)
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
+struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,L,R}
     anchor::T
+
+    function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bounded, R <: Bounded}
+        # A valid interval requires that neither endpoints or the span are nan. Typically,
+        # we use `left <= right` to ensure a valid interval but for `AnchoredInterval`s
+        # computing the other endpoint requires `anchor + P` which may fail with certain
+        # types (e.g. ambiguous or non-existent ZonedDateTimes).
+        #
+        # We can skip computing the other endpoint if both the anchor and span are finite as
+        # this ensures the computed endpoint is also finite.
+        if !_isfinite(anchor) || !_isfinite(P)
+            left, right = sign(P) < 0 ? (anchor + P, anchor) : (anchor, anchor + P)
+
+            if !(left <= right)
+                msg = if sign(P) < 0
+                    "Unable to represent a right-anchored interval where the " *
+                    "left ($anchor + $P) > right ($anchor)"
+                else
+                    "Unable to represent a left-anchored interval where the " *
+                    "left ($anchor) > right ($anchor + $P)"
+                end
+                throw(ArgumentError(msg))
+            end
+        end
+
+        return new{P,T,L,R}(anchor)
+    end
+end
+
+_isfinite(x) = iszero(x - x)
+_isfinite(x::Real) = Base.isfinite(x)
+
+function AnchoredInterval{P,T,L,R}(anchor) where {P,T,L,R}
+    AnchoredInterval{P,T,L,R}(convert(T, anchor))
 end
 
 AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(anchor)
@@ -82,7 +115,7 @@ AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 """
-const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bound, R <: Bound}
+const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
 # Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
@@ -93,7 +126,7 @@ HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 """
-const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bound, R <: Bound}
+const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """
@@ -135,6 +168,26 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
+# Allows an interval to be converted to a scalar when the set contained by the interval only
+# contains a single element.
+function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
+    if isclosed(interval) && (iszero(P) || first(interval) == last(interval))
+        return first(interval)
+    else
+        # Remove deprecation in version 2.0.0
+        depwarn(
+            "`convert(T, interval::AnchoredInterval{P,T})` is deprecated for " *
+            "intervals which are not closed with coinciding endpoints. " *
+            "Use `anchor(interval)` instead.",
+            :convert,
+        )
+        return anchor(interval)
+
+        # TODO: For when deprecation is removed
+        # throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
+    end
+end
+
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
     return Interval{T,L,R}(first(interval), last(interval))
 end
@@ -161,10 +214,16 @@ end
 =#
 
 function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
+    if !isbounded(interval)
+        throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
+    end
     AnchoredInterval{-span(interval), T, L, R}(last(interval))
 end
 
 function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
+    if !isbounded(interval)
+        throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
+    end
     AnchoredInterval{span(interval), T, L, R}(first(interval))
 end
 
@@ -244,6 +303,7 @@ function Base.isempty(interval::AnchoredInterval{P,T}) where {P,T}
     return P == zero(P) && !isclosed(interval)
 end
 
+# When intersecting two `AnchoredInterval`s attempt to return an `AnchoredInterval`
 function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) where {P,Q,T}
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
 

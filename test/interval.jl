@@ -32,6 +32,8 @@ isinf(::TimeType) = false
             ZonedDateTime(0, tz"UTC"), ZonedDateTime(0, tz"UTC")
         )
 
+        @test Interval(nothing, nothing) == Interval{Nothing, Unbounded, Unbounded}(nothing, nothing)
+
         for (a, b, _) in test_values
             T = promote_type(typeof(a), typeof(b))
 
@@ -39,19 +41,34 @@ isinf(::TimeType) = false
             @test Interval(a, b) == Interval{T, Closed, Closed}(a, b)
             @test Interval{T}(a, b) == Interval{T, Closed, Closed}(a, b)
             @test Interval{Open, Closed}(a, b) == Interval{T, Open, Closed}(a, b)
-            @test Interval{Closed, Open}(b, a) == Interval{T, Open, Closed}(a, b)
             @test Interval(LeftEndpoint{Closed}(a), RightEndpoint{Closed}(b)) ==
                 Interval{T, Closed, Closed}(a, b)
+
+            @test Interval(a, nothing) == Interval{T, Closed, Unbounded}(a, nothing)
+            @test Interval(nothing, b) == Interval{T, Unbounded, Closed}(nothing, b)
+            @test Interval{T}(a, nothing) == Interval{T, Closed, Unbounded}(a, nothing)
+            @test Interval{T}(nothing, b) == Interval{T, Unbounded, Closed}(nothing, b)
+            @test Interval{T}(nothing, nothing) == Interval{T, Unbounded, Unbounded}(nothing, nothing)
+            @test Interval{Open, Unbounded}(a, nothing) == Interval{T, Open, Unbounded}(a, nothing)
+            @test Interval{Unbounded, Open}(nothing, b) == Interval{T, Unbounded, Open}(nothing, b)
         end
 
-        # The three-argument Interval constructor can generate a StackOverflow if we aren't
-        # careful
-        @test_throws MethodError Interval(1, 2, 3)
+        # If we aren't careful in how we define our Interval constructors we could end up
+        # causing a StackOverflow
+        @test_throws MethodError Interval{Int, Unbounded, Closed}(1, 2)
+        @test_throws MethodError Interval{Int, Closed, Unbounded}(1, 2)
+        @test_throws MethodError Interval{Int, Unbounded, Unbounded}(1, 2)
+
+        # Deprecated
+        @test_deprecated Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(false, true))
+        @test_throws ArgumentError Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(true, true))
     end
 
     @testset "non-ordered" begin
-        @test_throws ArgumentError Interval(NaN, Inf)
         @test_throws ArgumentError Interval(NaN, NaN)
+        @test_throws ArgumentError Interval(NaN, Inf)
+        @test_throws ArgumentError Interval(-Inf, NaN)
+        # @test_throws ArgumentError Interval(Inf, -Inf)  # Would result in a NaN span
     end
 
     @testset "hash" begin

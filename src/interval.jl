@@ -197,10 +197,6 @@ Base.promote_rule(::Type{Interval{T,L1,R1}}, ::Type{Interval{S,L2,R2}}) where {T
 # hacky way to fix situations where T and S are the same but L and R are different
 Base.not_sametype(x::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}, y::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}) where {T,L1,R1,L2,R2} = nothing
 
-# Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
-Dates.Date(interval::Interval{Date}) = convert(Date, interval)
-Dates.DateTime(interval::Interval{DateTime}) = convert(DateTime, interval)
-
 ##### DISPLAY #####
 
 function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}

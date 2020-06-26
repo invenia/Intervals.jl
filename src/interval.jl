@@ -77,10 +77,22 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     end
 
     function Interval{T,L,R}(f::Nothing, l::T) where {T, L <: Unbounded, R <: Bounded}
+        # Note: Using `<` enforces that the type `T` defines `isless`
+        if !(l ≤ l)
+            throw(ArgumentError(
+                "Unable to determine an ordering between $l and other values of type $T"
+            ))
+        end
         return new{T,L,R}(l, l)
     end
 
     function Interval{T,L,R}(f::T, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
+        # Note: Using `<` enforces that the type `T` defines `isless`
+        if !(f ≤ f)
+            throw(ArgumentError(
+                "Unable to determine an ordering between $f and other values of type $T"
+            ))
+        end
         return new{T,L,R}(f, f)
     end
 

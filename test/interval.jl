@@ -33,6 +33,8 @@ isinf(::TimeType) = false
         )
 
         @test Interval(nothing, nothing) == Interval{Nothing, Unbounded, Unbounded}(nothing, nothing)
+        @test_throws MethodError Interval{Nothing, Open, Unbounded}(nothing, nothing)
+        @test_throws MethodError Interval{Nothing, Unbounded, Closed}(nothing, nothing)
 
         for (a, b, _) in test_values
             T = promote_type(typeof(a), typeof(b))
@@ -75,6 +77,9 @@ isinf(::TimeType) = false
         @test_throws ArgumentError Interval(NaN, Inf)
         @test_throws ArgumentError Interval(-Inf, NaN)
         # @test_throws ArgumentError Interval(Inf, -Inf)  # Would result in a NaN span
+
+        @test_throws ArgumentError Interval{Float64, Open, Unbounded}(NaN, nothing)
+        @test_throws ArgumentError Interval{Float64, Unbounded, Closed}(nothing, NaN)
     end
 
     @testset "hash" begin

@@ -1,3 +1,5 @@
+Inclusivity(args...) = @test_deprecated Intervals.Inclusivity(args...)
+
 @testset "Inclusivity" begin
     @testset "constructor" begin
         for (s, f) in [(false, false), (false, true), (true, false), (true, true)]
@@ -41,7 +43,7 @@
 
     @testset "equality" begin
         inc = Inclusivity(false, true)
-        cp = copy(inc)
+        cp = @test_deprecated copy(inc)
         diff = Inclusivity(true, false)
         @test isequal(inc, cp)
         @test hash(inc) == hash(cp)
@@ -56,22 +58,22 @@
         inc = Inclusivity(false, false)
         @test string(inc) == "Inclusivity (Open)"
         @test sprint(show, inc, context=:compact=>true) == string(inc)
-        @test sprint(show, inc) == "Inclusivity(false, false)"
+        @test sprint(show, inc) == "$(Intervals.Inclusivity)(false, false)"
 
         inc = Inclusivity(false, true)
         @test string(inc) == "Inclusivity (Right]"
         @test sprint(show, inc, context=:compact=>true) == string(inc)
-        @test sprint(show, inc) == "Inclusivity(false, true)"
+        @test sprint(show, inc) == "$(Intervals.Inclusivity)(false, true)"
 
         inc = Inclusivity(true, false)
         @test string(inc) == "Inclusivity [Left)"
         @test sprint(show, inc, context=:compact=>true) == string(inc)
-        @test sprint(show, inc) == "Inclusivity(true, false)"
+        @test sprint(show, inc) == "$(Intervals.Inclusivity)(true, false)"
 
         inc = Inclusivity(true, true)
         @test string(inc) == "Inclusivity [Closed]"
         @test sprint(show, inc, context=:compact=>true) == string(inc)
-        @test sprint(show, inc) == "Inclusivity(true, true)"
+        @test sprint(show, inc) == "$(Intervals.Inclusivity)(true, true)"
     end
 
     @testset "isless" begin

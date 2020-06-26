@@ -102,6 +102,20 @@ isinf(::TimeType) = false
         @test eltype(Interval{Float64}(1,2)) == Float64
     end
 
+    @testset "promotion" begin
+        for (a1, b1, _) in test_values
+            for (a2, b2, _) in test_values
+                for (L1, R1) in BOUND_PERMUTATIONS
+                    for (L2, R2) in BOUND_PERMUTATIONS
+                        interval1 = Interval{L1, R1}(a1, b1)
+                        interval2 = Interval{L2, R2}(a2, b2)
+                        @test promote(interval1, interval2) == (Interval{L1,R1}(promote(a1, b1)...), Interval{L2,R2}(promote(a2, b2)...))
+                    end
+                end
+            end
+        end
+    end
+
     @testset "accessors" begin
         for (a, b, _) in test_values
             for (L, R) in BOUND_PERMUTATIONS

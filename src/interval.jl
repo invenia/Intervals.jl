@@ -194,7 +194,8 @@ function Base.convert(::Type{<:Interval{T}}, interval::Interval{S,L,R}) where {T
 end
 
 Base.promote_rule(::Type{Interval{T,L1,R1}}, ::Type{Interval{S,L2,R2}}) where {T,S,L1,R1,L2,R2} = Interval{promote_type(T,S), <:Union{L1,L2}, <:Union{R1,R2}}
-
+# hacky way to fix situations where T and S are the same but L and R are different
+Base.not_sametype(x::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}, y::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}) where {T,L1,R1,L2,R2} = nothing
 
 # Date/DateTime attempt to convert to Int64 instead of falling back to convert(T, ...)
 Dates.Date(interval::Interval{Date}) = convert(Date, interval)
@@ -347,7 +348,13 @@ function Base.intersect(a::AbstractInterval{T}, b::AbstractInterval{T}) where T
     return Interval{T}(left, right)
 end
 
-Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S,T} = intersect(promote(a,b))
+function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S,T}
+    !overlaps(a, b) && return Interval{promote_type(S, T)}()
+    left = max(LeftEndpoint(a), LeftEndpoint(b))
+    right = min(RightEndpoint(a), RightEndpoint(b))
+
+    return Interval(left, right)
+end
 
 # There is power in a union.
 """

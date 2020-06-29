@@ -280,6 +280,10 @@ end
 
 ##### RANGE #####
 
+function Base.:(:)(start::T, step::S, stop::T) where {T <: AnchoredInterval, S}
+    return StepRange{T,S}(start, step, stop)
+end
+
 function Base.:(:)(start::AnchoredInterval{P,T}, step::S, stop::AnchoredInterval{P,T}) where {P,T,S}
     return StepRange{AnchoredInterval{P,T}, S}(start, step, stop)
 end

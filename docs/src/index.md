@@ -150,7 +150,7 @@ julia> intervals = HE.(datetimes);
 julia> plot(intervals, 1:11)
 ```
 
-![plot](/test/references/HE.png)
+![Example Plot](assets/HE.png)
 
 In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
 

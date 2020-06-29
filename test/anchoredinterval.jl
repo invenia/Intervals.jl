@@ -574,10 +574,14 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         r2 = HourEnding(dt):Hour(2):HourEnding(dt + Day(7))
 
         @test r1 isa StepRange
+        @test eltype(r1) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
+        @test isconcretetype(eltype(r1))
         @test length(r1) == 25
         @test collect(r1) == map(HourEnding, dt:Hour(1):dt + Day(1))
 
         @test r2 isa StepRange
+        @test eltype(r2) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
+        @test isconcretetype(eltype(r2))
         @test length(r2) == 12 * 7 + 1
         @test collect(r2) == map(HourEnding, dt:Hour(2):dt + Day(7))
 
@@ -588,14 +592,20 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         r4 = HourEnding(fall):Hour(1):HourEnding(fall + Day(1))
 
         @test r3 isa StepRange
+        @test eltype(r3) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
+        @test isconcretetype(eltype(r3))
         @test length(r3) == 24
         @test collect(r3) == map(HourEnding, spring:Hour(1):spring + Day(1))
 
         @test r4 isa StepRange
+        @test eltype(r4) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
+        @test isconcretetype(eltype(r4))
         @test length(r4) == 26
         @test collect(r4) == map(HourEnding, fall:Hour(1):fall + Day(1))
 
         r5 = AnchoredInterval{-1, Open, Closed}(3):2:AnchoredInterval{-1, Closed, Closed}(7)
+        @test eltype(r5) === AnchoredInterval{-1, Int}
+        @test !isconcretetype(eltype(r5))
         @test length(r5) == 3
         @test collect(r5) == [
             AnchoredInterval{-1, Open, Closed}(3),

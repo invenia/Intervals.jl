@@ -2,11 +2,11 @@
 language: julia
 julia:
   - 1.0  # Latest LTS release
-  - 1  # Latest stable release
+  - 1    # Latest stable release
   - nightly
 os:
   - linux
-# - windows  # Can't use Travis to test windows because https://github.com/JuliaIO/FFMPEG.jl/issues/14
+  - windows
 arch:
   - x64
   - x86
@@ -25,6 +25,10 @@ jobs:
     - os: windows
       arch: x64
   include:
+    # Windows plotting tests fail on Travis CI due to: https://github.com/JuliaIO/FFMPEG.jl/issues/14
+    # Additionally, the build of FFMPEG.jl will fail but testing will still proceed
+    - os: windows
+      env: TESTS="-plotting"
     - stage: Documentation
       julia: 1.0
       script: julia --project=docs -e '

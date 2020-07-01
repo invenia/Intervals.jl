@@ -67,7 +67,7 @@ non-negative value while intervals with any unbounded endpoints will throw an
 
 To avoid having to capture the exception use the pattern:
 ```julia
-$isbounded(interval) ? $span(interval) : infinity
+Intervals.isbounded(interval) ? span(interval) : infinity
 ```
 Where `infinity` is a variable representing the value you wish to use to represent an
 unbounded, or infinite, span.

@@ -60,12 +60,12 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
         if f ≤ l
             return new{T,L,R}(f, l)
         elseif l ≤ f
-            # Note: Including the full stacktrace in this deprecation warning as most calls
-            # to this inner constructor will be from other constructors.
+            # Note: Most calls to this inner constructor will be from other constructors
+            # which may make it hard to identify the source of this deprecation. Use
+            # `--depwarn=error` to see a full stack trace.
             Base.depwarn(
                 "Constructing an `Interval{T,X,Y}(x, y)` " *
-                "where `x > y` is deprecated, use `Interval{T,Y,X}(y, x)` instead." *
-                sprint(Base.show_backtrace, stacktrace()),
+                "where `x > y` is deprecated, use `Interval{T,Y,X}(y, x)` instead.",
                 :Interval,
             )
             return new{T,R,L}(l, f)

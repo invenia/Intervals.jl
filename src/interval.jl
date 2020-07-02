@@ -57,8 +57,8 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
 
     function Interval{T,L,R}(f::T, l::T) where {T, L <: Bounded, R <: Bounded}
         # Ensure that `first` preceeds `last`.
-        f, l, left_bound, right_bound = if f ≤ l
-            f, l, L, R
+        if f ≤ l
+            return new{T,L,R}(f, l)
         elseif l ≤ f
             # Note: Including the full stacktrace in this deprecation warning as most calls
             # to this inner constructor will be from other constructors.
@@ -68,12 +68,10 @@ struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
                 sprint(Base.show_backtrace, stacktrace()),
                 :Interval,
             )
-            l, f, R, L
+            return new{T,R,L}(l, f)
         else
             throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
         end
-
-        return new{T, left_bound, right_bound}(f, l)
     end
 
     function Interval{T,L,R}(f::Nothing, l::T) where {T, L <: Unbounded, R <: Bounded}

@@ -667,14 +667,17 @@ isinf(::TimeType) = false
             @test parse(Interval{Int}, "(1, ]") == Interval{Open,Unbounded}(1, nothing)
         end
 
-        @testset "parse arguments" begin
-            @test parse(Interval{Date}, "[2000/1/2,2001/2/3]", dateformat"yyyy/mm/dd") ==
+        @testset "custom parser" begin
+            parser = (T, str) -> parse(T, str, dateformat"yyyy/mm/dd")
+            @test_throws ArgumentError parse(Interval{Date}, "[2000/1/2,2001/2/3]")
+            @test parse(Interval{Date}, "[2000/1/2,2001/2/3]", element_parser=parser) ==
                 Date(2000, 1, 2) .. Date(2001, 2, 3)
         end
 
         @testset "quoting" begin
-            @test_throws ArgumentError parse(Interval{Date}, "[2000,1,2,2001,2,3]", dateformat"yyyy,mm,dd")
-            @test parse(Interval{Date}, "[\"2000,1,2\",\"2001,2,3\"]", dateformat"yyyy,mm,dd") ==
+            parser = (T, str) -> parse(T, str, dateformat"yyyy,mm,dd")
+            @test_throws ArgumentError parse(Interval{Date}, "[2000,1,2,2001,2,3]", element_parser=parser)
+            @test parse(Interval{Date}, "[\"2000,1,2\",\"2001,2,3\"]", element_parser=parser) ==
                 Date(2000, 1, 2) .. Date(2001, 2, 3)
         end
 

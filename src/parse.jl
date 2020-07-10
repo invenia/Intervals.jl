@@ -6,7 +6,7 @@ const INTERVAL_REGEX = r"""
     (\]|\))                # Right bound type (4)
     """x
 
-function Base.parse(::Type{Interval{T}}, str::AbstractString, args...; kwargs...) where T
+function Base.parse(::Type{Interval{T}}, str::AbstractString; element_parser=parse) where T
     m = match(INTERVAL_REGEX, str)
 
     if m === nothing
@@ -18,7 +18,7 @@ function Base.parse(::Type{Interval{T}}, str::AbstractString, args...; kwargs...
         left = nothing
     else
         L = m[1] == "[" ? Closed : Open
-        left = parse(T, m[2], args...; kwargs...)
+        left = element_parser(T, m[2])
     end
 
     if isempty(m[3])
@@ -26,7 +26,7 @@ function Base.parse(::Type{Interval{T}}, str::AbstractString, args...; kwargs...
         right = nothing
     else
         R = m[4] == "]" ? Closed : Open
-        right = parse(T, m[3], args...; kwargs...)
+        right = element_parser(T, m[3])
     end
 
     return Interval{T,L,R}(left, right)

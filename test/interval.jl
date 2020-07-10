@@ -653,6 +653,9 @@ isinf(::TimeType) = false
             @test parse(Interval{Int}, "(1,2]") == Interval{Open,Closed}(1, 2)
             @test parse(Interval{Int}, "[1,2)") == Interval{Closed,Open}(1, 2)
             @test parse(Interval{Int}, "(1,2)") == Interval{Open,Open}(1, 2)
+
+            @test_throws ArgumentError parse(Interval{Int}, "a[1,2]")
+            @test_throws ArgumentError parse(Interval{Int}, "[1,2]b")
         end
 
         @testset "unbounded" begin

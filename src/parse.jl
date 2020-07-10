@@ -1,9 +1,11 @@
 const INTERVAL_REGEX = r"""
+    ^
     (\[|\()                # Left bound type (1)
     (?|"([^"]*)"|([^,]*))  # Left bound value (2)
     ,\ ?
     (?|"([^"]*)"|([^,]*))  # Right bound value (3)
     (\]|\))                # Right bound type (4)
+    $
     """x
 
 function Base.parse(::Type{Interval{T}}, str::AbstractString; element_parser=parse) where T

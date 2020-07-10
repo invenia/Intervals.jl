@@ -631,4 +631,19 @@ isinf(::TimeType) = false
         ]
         @test union(intervals) == [Interval{Open, Closed}(-100, -1)]
     end
+
+    @testset "legacy deserialization" begin
+        # Serialized string generated on Intervals@1.2 with:
+        # `julia --project -E 'using Serialization, Intervals; sprint(serialize, Interval(1, 2, true, false))'`.
+        buffer = IOBuffer(
+            SERIALIZED_HEADER *
+            "\x004\x10\x01\bInterval\x1f\v՞\x84\xec\xf7-`\x87\xbbS\xe1Á\x88A\xd8\x01\t" *
+            "IntervalsD\x01\0\0\0\0\b\xe0\xe14\x10\x01\vInclusivity\x1f\v՞\x84\xec\xf7" *
+            "-`\x87\xbbS\xe1Á\x88A\xd8,\x02\0DML"
+        )
+
+        interval = deserialize(buffer)
+        @test interval isa Interval
+        @test interval == Interval{Closed,Open}(1, 2)
+    end
 end

@@ -2,10 +2,13 @@ using Base.Iterators: product
 using Dates
 using Documenter: doctest
 using Intervals
+using Serialization: deserialize
 using Test
 using TimeZones
 
 const BOUND_PERMUTATIONS = product((Closed, Open), (Closed, Open))
+
+include("test_utils.jl")
 
 @testset "Intervals" begin
     include("inclusivity.jl")

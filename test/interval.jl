@@ -646,4 +646,51 @@ isinf(::TimeType) = false
         @test interval isa Interval
         @test interval == Interval{Closed,Open}(1, 2)
     end
+
+    @testset "parse" begin
+        @testset "basic" begin
+            @test parse(Interval{Int}, "[1,2]") == Interval{Closed,Closed}(1, 2)
+            @test parse(Interval{Int}, "(1,2]") == Interval{Open,Closed}(1, 2)
+            @test parse(Interval{Int}, "[1,2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1,2)") == Interval{Open,Open}(1, 2)
+        end
+
+        @testset "unbounded" begin
+            @test parse(Interval{Nothing}, "[,]") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "(,]") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "[,)") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "(,)") == Interval{Unbounded,Unbounded}(nothing, nothing)
+        end
+
+        @testset "space" begin
+            @test parse(Interval{Int}, "[1, 2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1, ]") == Interval{Open,Unbounded}(1, nothing)
+        end
+
+        @testset "parse arguments" begin
+            @test parse(Interval{Date}, "[2000/1/2,2001/2/3]", dateformat"yyyy/mm/dd") ==
+                Date(2000, 1, 2) .. Date(2001, 2, 3)
+        end
+
+        @testset "quoting" begin
+            @test_throws ArgumentError parse(Interval{Date}, "[2000,1,2,2001,2,3]", dateformat"yyyy,mm,dd")
+            @test parse(Interval{Date}, "[\"2000,1,2\",\"2001,2,3\"]", dateformat"yyyy,mm,dd") ==
+                Date(2000, 1, 2) .. Date(2001, 2, 3)
+        end
+
+        @testset "test values" begin
+            for (left, right, _) in test_values, (lb, rb) in product(('[', '('), (']', ')'))
+                T = promote_type(typeof(left), typeof(right))
+
+                # Skip certain types that cannot be parsed at this time
+                T == Char && continue
+
+                str = "$lb$left,$right$rb"
+                L = lb == '[' ? Closed : Open
+                R = rb == ']' ? Closed : Open
+
+                @test parse(Interval{T}, str) == Interval{T,L,R}(left, right)
+            end
+        end
+    end
 end

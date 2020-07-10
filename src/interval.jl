@@ -223,7 +223,7 @@ function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
         io,
         L === Closed ? "[" : "(",
         L === Unbounded ? "" : first(interval),
-        " .. ",
+        ", ",
         R === Unbounded ? "" : last(interval),
         R === Closed ? "]" : ")",
     )

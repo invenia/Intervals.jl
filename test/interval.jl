@@ -139,12 +139,12 @@ isinf(::TimeType) = false
 
     @testset "display" begin
         interval = Interval{Open, Open}(1, 2)
-        @test string(interval) == "(1 .. 2)"
+        @test string(interval) == "(1, 2)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == "Interval{$Int,Open,Open}(1, 2)"
 
         interval = Interval{Open, Closed}('a', 'b')
-        @test string(interval) == "(a .. b]"
+        @test string(interval) == "(a, b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == "Interval{Char,Open,Closed}('a', 'b')"
 
@@ -157,12 +157,12 @@ isinf(::TimeType) = false
             ")",
         )
 
-        @test string(interval) == "[2012-01-01 .. 2013-01-01)"
+        @test string(interval) == "[2012-01-01, 2013-01-01)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) == shown
 
         interval = Interval{Closed, Closed}("a", "b")
-        @test string(interval) == "[a .. b]"
+        @test string(interval) == "[a, b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "Interval{String,Closed,Closed}(\"a\", \"b\")"

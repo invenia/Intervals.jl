@@ -4,6 +4,10 @@
 DocTestSetup = quote
     using Intervals, Dates, TimeZones
 end
+DocTestFilters = [
+    r"AnchoredInterval\{(Day|Hour|Minute)\(-\d+\),|HourEnding\{",
+    r"AnchoredInterval\{(Day|Hour|Minute)\(\d+\),|HourBeginning\{",
+]
 ```
 
 This package defines:
@@ -74,13 +78,13 @@ julia> string(a)
 julia> using Dates
 
 julia> b = Interval{Closed,Open}(Date(2013), Date(2016))
-Interval{Date,Closed,Open}(2013-01-01, 2016-01-01)
+Interval{Date,Closed,Open}(Date("2013-01-01"), Date("2016-01-01"))
 
 julia> string(b)
 "[2013-01-01 .. 2016-01-01)"
 
 julia> c = HourEnding(DateTime(2016, 8, 11))
-AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T00:00:00)
+AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T00:00:00"))
 
 julia> string(c)
 "(2016-08-10 HE24]"
@@ -92,13 +96,13 @@ julia> string(c)
 julia> using TimeZones, Dates
 
 julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
 
 julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{-1 hour,ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
 
 julia> he + Hour(1)
-AnchoredInterval{-1 hour,ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
 
 julia> foreach(println, he:he + Day(1))
 (2013-02-13 HE01-06:00]
@@ -143,7 +147,7 @@ julia> start_dt = DateTime(2017,1,1,0,0,0);
 julia> end_dt = DateTime(2017,1,1,10,30,0);
 
 julia> datetimes = start_dt:Hour(1):end_dt
-2017-01-01T00:00:00:1 hour:2017-01-01T10:00:00
+DateTime("2017-01-01T00:00:00"):Hour(1):DateTime("2017-01-01T10:00:00")
 
 julia> intervals = HE.(datetimes);
 
@@ -165,13 +169,13 @@ endpoints (taking bounds into account):
 
 ```jldoctest
 julia> a = Interval{Closed,Open}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime,Closed,Open}(2013-02-13T00:00:00, 2013-02-13T01:00:00)
+Interval{DateTime,Closed,Open}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
 
 julia> b = Interval{Open,Closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime,Open,Closed}(2013-02-13T00:00:00, 2013-02-13T01:00:00)
+Interval{DateTime,Open,Closed}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
 
 julia> c = HourEnding(DateTime(2013, 2, 13, 1))
-AnchoredInterval{-1 hour,DateTime,Open,Closed}(2013-02-13T01:00:00)
+AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2013-02-13T01:00:00"))
 
 julia> a == b
 false

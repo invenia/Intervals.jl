@@ -225,10 +225,17 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         where_lr = "where R<:$Bounded where L<:$Bounded"
         where_tlr = "$where_lr where T"
 
-        @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-            "AnchoredInterval{$(repr(Hour(-1))),T,L,R} $where_tlr"
-        @test sprint(show, AnchoredInterval{Hour(1)}) ==
-            "AnchoredInterval{$(repr(Hour(1))),T,L,R} $where_tlr"
+        if VERSION >= v"1.6.0-DEV.347"
+            @test sprint(show, AnchoredInterval{Hour(-1)}) ==
+                "HourEnding{T,L,R} $where_tlr"
+            @test sprint(show, AnchoredInterval{Hour(1)}) ==
+                "HourBeginning{T,L,R} $where_tlr"
+        else
+            @test sprint(show, AnchoredInterval{Hour(-1)}) ==
+                "AnchoredInterval{$(repr(Hour(-1))),T,L,R} $where_tlr"
+            @test sprint(show, AnchoredInterval{Hour(1)}) ==
+                "AnchoredInterval{$(repr(Hour(1))),T,L,R} $where_tlr"
+        end
 
         @test sprint(show, AnchoredInterval{Day(-1)}) ==
             "AnchoredInterval{$(repr(Day(-1))),T,L,R} $where_tlr"
@@ -245,7 +252,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding(dt),
                 "(2016-08-11 HE02]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{DateTime,Open,Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
+                    end,
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
@@ -253,7 +264,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13)),
                 "[2013-02-12 HE24)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{DateTime,Closed,Open}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}"
+                    end,
                     "($(repr(DateTime(2013, 2, 13))))",
                 ),
             ),
@@ -261,7 +276,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding(dt + Minute(15) + Second(30)),
                 "(2016-08-11 HE02:15:30]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{DateTime,Open,Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
+                    end,
                     "($(repr(DateTime(2016, 8, 11, 2, 15, 30))))",
                 ),
             ),
@@ -269,7 +288,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding(dt + Millisecond(2)),
                 "(2016-08-11 HE02:00:00.002]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{DateTime,Open,Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
+                    end,
                     "($(repr(DateTime(2016, 8, 11, 2, 0, 0, 2))))",
                 ),
             ),
@@ -277,7 +300,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13, 0, 1)),
                 "[2013-02-13 HE00:01:00)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{DateTime,Closed,Open}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}"
+                    end,
                     "($(repr(DateTime(2013, 2, 13, 0, 1))))",
                 ),
             ),
@@ -285,7 +312,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourBeginning(dt),
                 "[2016-08-11 HB02)",
                 string(
-                    "AnchoredInterval{$(repr(Hour(1))),DateTime,Closed,Open}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourBeginning{DateTime,Closed,Open}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(1))),DateTime,Closed,Open}"
+                    end,
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
@@ -293,7 +324,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourBeginning{Open, Closed}(DateTime(2013, 2, 13)),
                 "(2013-02-13 HB00]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(1))),DateTime,Open,Closed}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourBeginning{DateTime,Open,Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(1))),DateTime,Open,Closed}"
+                    end,
                     "($(repr(DateTime(2013, 2, 13))))",
                 ),
             ),
@@ -301,7 +336,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 HourEnding(ZonedDateTime(dt, tz"America/Winnipeg")),
                 "(2016-08-11 HE02-05:00]",
                 string(
-                    "AnchoredInterval{$(repr(Hour(-1))),$ZonedDateTime,Open,Closed}",
+                    if VERSION >= v"1.6.0-DEV.347"
+                        "HourEnding{$ZonedDateTime,Open,Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Hour(-1))),$ZonedDateTime,Open,Closed}"
+                    end,
                     "($(repr(ZonedDateTime(dt, tz"America/Winnipeg"))))",
                 ),
             ),

@@ -230,6 +230,7 @@ isclosed
 isopen
 Intervals.isunbounded
 Intervals.isbounded
+Base.parse(::Type{Interval{T}}, ::AbstractString) where T
 ≪
 ≫
 ==

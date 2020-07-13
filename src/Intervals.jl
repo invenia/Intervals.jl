@@ -3,6 +3,7 @@ module Intervals
 using Dates
 using Printf
 using RecipesBase
+using Serialization: Serialization, AbstractSerializer, deserialize
 using TimeZones
 
 using Dates: AbstractDateTime, value, coarserperiod
@@ -30,6 +31,7 @@ include("description.jl")
 include("plotting.jl")
 include("docstrings.jl")
 include("deprecated.jl")
+include("serialization.jl")
 
 export Bound,
        Closed,

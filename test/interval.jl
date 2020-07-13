@@ -677,9 +677,27 @@ isinf(::TimeType) = false
         @testset "space" begin
             @test parse(Interval{Int}, "[1 .. 2)") == Interval{Closed,Open}(1, 2)
             @test parse(Interval{Int}, "(1 .. )") == Interval{Open,Unbounded}(1, nothing)
+            @test parse(Interval{Int}, "( .. 2)") == Interval{Unbounded,Open}(nothing, 2)
+            @test parse(Interval{Int}, "( .. )") == Interval{Unbounded,Unbounded}(nothing, nothing)
+
+            # TODO: Should probably not be allowed
+            @test parse(Interval{Int}, "[ 1..2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1..2 ]") == 1 .. 2
+            @test parse(Interval{Int}, "[1  ..2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1..  2]") == 1 .. 2
 
             @test parse(Interval{Int}, "[1, 2)") == Interval{Closed,Open}(1, 2)
-            @test parse(Interval{Int}, "(1, ]") == Interval{Open,Unbounded}(1, nothing)
+            @test parse(Interval{Int}, "(1, )") == Interval{Open,Unbounded}(1, nothing)
+            @test parse(Interval{Int}, "(, 2)") == Interval{Unbounded,Open}(nothing, 2)
+            @test parse(Interval{Int}, "(, )") == Interval{Unbounded,Unbounded}(nothing, nothing)
+
+            # TODO: Should probably not be allowed
+            @test parse(Interval{Int}, "[ 1,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1,2 ]") == 1 .. 2
+            @test parse(Interval{Int}, "[1  ,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1,  2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1 ,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1 , 2]") == 1 .. 2
         end
 
         @testset "custom parser" begin

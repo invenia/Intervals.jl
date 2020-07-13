@@ -27,33 +27,33 @@ To this end, `HourEnding` is a type alias for `AnchoredInterval{Hour(-1)}`. Simi
 While the user may expect an `HourEnding` or `HourBeginning` value to be anchored to a
 specific hour, the constructor makes no guarantees that the anchor provided is rounded:
 
-```jldoctest; setup = :(using Intervals, Dates)
+```jldoctest; setup = :(using Intervals, Dates), filter = r"AnchoredInterval\\{(Day|Hour|Minute)\\(-?\\d+\\),|Hour(Ending|Beginning)\\{"
 julia> HourEnding(DateTime(2016, 8, 11, 2, 30))
-AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T02:30:00)
+AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T02:30:00"))
 ```
 
 The `HE` and `HB` pseudoconstructors round the input up or down to the nearest hour, as
 appropriate:
 
-```jldoctest; setup = :(using Intervals, Dates)
+```jldoctest; setup = :(using Intervals, Dates), filter = r"AnchoredInterval\\{(Day|Hour|Minute)\\(-?\\d+\\),|Hour(Ending|Beginning)\\{"
 julia> HE(DateTime(2016, 8, 11, 2, 30))
-AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T03:00:00)
+AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T03:00:00"))
 
 julia> HB(DateTime(2016, 8, 11, 2, 30))
-AnchoredInterval{1 hour,DateTime,Closed,Open}(2016-08-11T02:00:00)
+AnchoredInterval{Hour(1),DateTime,Closed,Open}(DateTime("2016-08-11T02:00:00"))
 ```
 
 ### Example
 
-```jldoctest; setup = :(using Intervals, Dates)
+```jldoctest; setup = :(using Intervals, Dates), filter = r"AnchoredInterval\\{(Day|Hour|Minute)\\(-?\\d+\\),|Hour(Ending|Beginning)\\{"
 julia> AnchoredInterval{Hour(-1)}(DateTime(2016, 8, 11, 12))
-AnchoredInterval{-1 hour,DateTime,Open,Closed}(2016-08-11T12:00:00)
+AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T12:00:00"))
 
 julia> AnchoredInterval{Day(1)}(DateTime(2016, 8, 11))
-AnchoredInterval{1 day,DateTime,Closed,Open}(2016-08-11T00:00:00)
+AnchoredInterval{Day(1),DateTime,Closed,Open}(DateTime("2016-08-11T00:00:00"))
 
 julia> AnchoredInterval{Minute(5),Closed,Closed}(DateTime(2016, 8, 11, 12, 30))
-AnchoredInterval{5 minutes,DateTime,Closed,Closed}(2016-08-11T12:30:00)
+AnchoredInterval{Minute(5),DateTime,Closed,Closed}(DateTime("2016-08-11T12:30:00"))
 ```
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)

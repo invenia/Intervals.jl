@@ -18,5 +18,11 @@ include("test_utils.jl")
     include("comparisons.jl")
     include("plotting.jl")
 
-    doctest(Intervals)
+    # Note: The output of the doctests currently requires a newer version of Julia
+    # https://github.com/JuliaLang/julia/pull/34387
+    if VERSION >= v"1.5.0-DEV.163"
+        doctest(Intervals)
+    else
+        @warn "Skipping doctests"
+    end
 end

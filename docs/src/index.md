@@ -73,7 +73,7 @@ julia> a = Interval('a', 'z')
 Interval{Char,Closed,Closed}('a', 'z')
 
 julia> string(a)
-"[a, z]"
+"[a .. z]"
 
 julia> using Dates
 
@@ -81,7 +81,7 @@ julia> b = Interval{Closed,Open}(Date(2013), Date(2016))
 Interval{Date,Closed,Open}(Date("2013-01-01"), Date("2016-01-01"))
 
 julia> string(b)
-"[2013-01-01, 2016-01-01)"
+"[2013-01-01 .. 2016-01-01)"
 
 julia> c = HourEnding(DateTime(2016, 8, 11))
 AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T00:00:00"))

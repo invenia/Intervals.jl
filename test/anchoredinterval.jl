@@ -452,13 +452,13 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
-        @test string(interval) == "(0, 10]"
+        @test string(interval) == "(0 .. 10]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "AnchoredInterval{-10,$Int,Open,Closed}(10)"
 
         interval = AnchoredInterval{25}('a')
-        @test string(interval) == "[a, z)"
+        @test string(interval) == "[a .. z)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
         @test sprint(show, interval) ==
             "AnchoredInterval{25,Char,Closed,Open}('a')"

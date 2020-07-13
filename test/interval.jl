@@ -648,12 +648,21 @@ isinf(::TimeType) = false
     end
 
     @testset "parse" begin
-        @testset "basic" begin
+        @testset "double-dot" begin
+            @test parse(Interval{Int}, "[1..2]") == Interval{Closed,Closed}(1, 2)
+            @test parse(Interval{Int}, "(1..2]") == Interval{Open,Closed}(1, 2)
+            @test parse(Interval{Int}, "[1..2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1..2)") == Interval{Open,Open}(1, 2)
+        end
+
+        @testset "comma" begin
             @test parse(Interval{Int}, "[1,2]") == Interval{Closed,Closed}(1, 2)
             @test parse(Interval{Int}, "(1,2]") == Interval{Open,Closed}(1, 2)
             @test parse(Interval{Int}, "[1,2)") == Interval{Closed,Open}(1, 2)
             @test parse(Interval{Int}, "(1,2)") == Interval{Open,Open}(1, 2)
+        end
 
+        @testset "entire string" begin
             @test_throws ArgumentError parse(Interval{Int}, "a[1,2]")
             @test_throws ArgumentError parse(Interval{Int}, "[1,2]b")
         end
@@ -666,6 +675,9 @@ isinf(::TimeType) = false
         end
 
         @testset "space" begin
+            @test parse(Interval{Int}, "[1 .. 2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1 .. )") == Interval{Open,Unbounded}(1, nothing)
+
             @test parse(Interval{Int}, "[1, 2)") == Interval{Closed,Open}(1, 2)
             @test parse(Interval{Int}, "(1, ]") == Interval{Open,Unbounded}(1, nothing)
         end
@@ -678,10 +690,23 @@ isinf(::TimeType) = false
         end
 
         @testset "quoting" begin
-            parser = (T, str) -> parse(T, str, dateformat"yyyy,mm,dd")
-            @test_throws ArgumentError parse(Interval{Date}, "[2000,1,2,2001,2,3]", element_parser=parser)
-            @test parse(Interval{Date}, "[\"2000,1,2\",\"2001,2,3\"]", element_parser=parser) ==
-                Date(2000, 1, 2) .. Date(2001, 2, 3)
+            parser = (T, str) -> str
+            @test_throws ArgumentError parse(Interval{String}, "[a,b,c,d]", element_parser=parser)
+            @test parse(Interval{String}, "[\"a,b\",\"c,d\"]", element_parser=parser) ==
+                Interval("a,b", "c,d")
+
+            @test_throws ArgumentError parse(Interval{String}, "[a..b..c..d]", element_parser=parser)
+            @test parse(Interval{String}, "[\"a..b\"..\"c..d\"]", element_parser=parser) ==
+                Interval("a..b", "c..d")
+
+            @test_throws ArgumentError parse(Interval{Interval{Int}}, "[[1..2]..[3..4]]")
+            @test parse(Interval{Interval{Int}}, "[\"[1..2]\"..\"[3..4]\"]") ==
+                (1 .. 2) .. (3 .. 4)
+        end
+
+        # Ensure format used by LibPQ can be successfully parsed
+        @testset "libpq" begin
+            parse(Interval{Int}, "[\"1\",\"\")") == Interval(1, nothing)
         end
 
         @testset "test values" begin
@@ -691,7 +716,7 @@ isinf(::TimeType) = false
                 # Skip certain types that cannot be parsed at this time
                 T == Char && continue
 
-                str = "$lb$left,$right$rb"
+                str = "$lb$left .. $right$rb"
                 L = lb == '[' ? Closed : Open
                 R = rb == ']' ? Closed : Open
 

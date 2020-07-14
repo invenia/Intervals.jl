@@ -646,4 +646,104 @@ isinf(::TimeType) = false
         @test interval isa Interval
         @test interval == Interval{Closed,Open}(1, 2)
     end
+
+    @testset "parse" begin
+        @testset "double-dot" begin
+            @test parse(Interval{Int}, "[1..2]") == Interval{Closed,Closed}(1, 2)
+            @test parse(Interval{Int}, "(1..2]") == Interval{Open,Closed}(1, 2)
+            @test parse(Interval{Int}, "[1..2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1..2)") == Interval{Open,Open}(1, 2)
+        end
+
+        @testset "comma" begin
+            @test parse(Interval{Int}, "[1,2]") == Interval{Closed,Closed}(1, 2)
+            @test parse(Interval{Int}, "(1,2]") == Interval{Open,Closed}(1, 2)
+            @test parse(Interval{Int}, "[1,2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1,2)") == Interval{Open,Open}(1, 2)
+        end
+
+        @testset "entire string" begin
+            @test_throws ArgumentError parse(Interval{Int}, "a[1,2]")
+            @test_throws ArgumentError parse(Interval{Int}, "[1,2]b")
+        end
+
+        @testset "unbounded" begin
+            @test parse(Interval{Nothing}, "[,]") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "(,]") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "[,)") == Interval{Unbounded,Unbounded}(nothing, nothing)
+            @test parse(Interval{Nothing}, "(,)") == Interval{Unbounded,Unbounded}(nothing, nothing)
+        end
+
+        @testset "space" begin
+            @test parse(Interval{Int}, "[1 .. 2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1 .. )") == Interval{Open,Unbounded}(1, nothing)
+            @test parse(Interval{Int}, "( .. 2)") == Interval{Unbounded,Open}(nothing, 2)
+            @test parse(Interval{Int}, "( .. )") == Interval{Unbounded,Unbounded}(nothing, nothing)
+
+            # TODO: Should probably not be allowed
+            @test parse(Interval{Int}, "[ 1..2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1..2 ]") == 1 .. 2
+            @test parse(Interval{Int}, "[1  ..2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1..  2]") == 1 .. 2
+
+            @test parse(Interval{Int}, "[1, 2)") == Interval{Closed,Open}(1, 2)
+            @test parse(Interval{Int}, "(1, )") == Interval{Open,Unbounded}(1, nothing)
+            @test parse(Interval{Int}, "(, 2)") == Interval{Unbounded,Open}(nothing, 2)
+            @test parse(Interval{Int}, "(, )") == Interval{Unbounded,Unbounded}(nothing, nothing)
+
+            # TODO: Should probably not be allowed
+            @test parse(Interval{Int}, "[ 1,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1,2 ]") == 1 .. 2
+            @test parse(Interval{Int}, "[1  ,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1,  2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1 ,2]") == 1 .. 2
+            @test parse(Interval{Int}, "[1 , 2]") == 1 .. 2
+        end
+
+        @testset "custom parser" begin
+            parser = (T, str) -> parse(T, str, dateformat"yyyy/mm/dd")
+            @test_throws ArgumentError parse(Interval{Date}, "[2000/1/2,2001/2/3]")
+            @test parse(Interval{Date}, "[2000/1/2,2001/2/3]", element_parser=parser) ==
+                Date(2000, 1, 2) .. Date(2001, 2, 3)
+        end
+
+        @testset "quoting" begin
+            parser = (T, str) -> str
+            @test_throws ArgumentError parse(Interval{String}, "[a,b,c,d]", element_parser=parser)
+            @test parse(Interval{String}, "[\"a,b\",\"c,d\"]", element_parser=parser) ==
+                Interval("a,b", "c,d")
+
+            @test_throws ArgumentError parse(Interval{String}, "[a..b..c..d]", element_parser=parser)
+            @test parse(Interval{String}, "[\"a..b\"..\"c..d\"]", element_parser=parser) ==
+                Interval("a..b", "c..d")
+
+            @test_throws ArgumentError parse(Interval{Interval{Int}}, "[[1..2]..[3..4]]")
+            @test parse(Interval{Interval{Int}}, "[\"[1..2]\"..\"[3..4]\"]") ==
+                (1 .. 2) .. (3 .. 4)
+        end
+
+        # Ensure format used by LibPQ can be successfully parsed
+        @testset "libpq" begin
+            parse(Interval{Int}, "[\"1\",\"\")") == Interval(1, nothing)
+        end
+
+        @testset "test values" begin
+            function parser(::Type{Char}, str)
+                @assert length(str) == 1
+                return first(str)
+            end
+            parser(::Type{T}, str) where T = parse(T, str)
+
+            for (left, right, _) in test_values, (lb, rb) in product(('[', '('), (']', ')'))
+                T = promote_type(typeof(left), typeof(right))
+
+                str = "$lb$left .. $right$rb"
+                L = lb == '[' ? Closed : Open
+                R = rb == ']' ? Closed : Open
+
+                result = parse(Interval{T}, str, element_parser=parser)
+                @test result == Interval{T,L,R}(left, right)
+            end
+        end
+    end
 end

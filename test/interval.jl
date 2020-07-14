@@ -728,17 +728,21 @@ isinf(::TimeType) = false
         end
 
         @testset "test values" begin
+            function parser(::Type{Char}, str)
+                @assert length(str) == 1
+                return first(str)
+            end
+            parser(::Type{T}, str) where T = parse(T, str)
+
             for (left, right, _) in test_values, (lb, rb) in product(('[', '('), (']', ')'))
                 T = promote_type(typeof(left), typeof(right))
-
-                # Skip certain types that cannot be parsed at this time
-                T == Char && continue
 
                 str = "$lb$left .. $right$rb"
                 L = lb == '[' ? Closed : Open
                 R = rb == ']' ? Closed : Open
 
-                @test parse(Interval{T}, str) == Interval{T,L,R}(left, right)
+                result = parse(Interval{T}, str, element_parser=parser)
+                @test result == Interval{T,L,R}(left, right)
             end
         end
     end

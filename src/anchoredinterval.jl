@@ -91,6 +91,10 @@ end
 _isfinite(x) = iszero(x - x)
 _isfinite(x::Real) = Base.isfinite(x)
 
+function AnchoredInterval{P,T,L,R}(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
+    AnchoredInterval{P,T,L,R}(interval.anchor)
+end
+
 function AnchoredInterval{P,T,L,R}(anchor) where {P,T,L,R}
     AnchoredInterval{P,T,L,R}(convert(T, anchor))
 end

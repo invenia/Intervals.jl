@@ -609,6 +609,26 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "range" begin
+        @testset "StepRange" begin
+            r = AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
+
+            @test r isa StepRange
+            @test first(r) == AnchoredInterval{-1}(1)
+            @test step(r) == 1
+            @test last(r) == AnchoredInterval{-1}(5)
+        end
+
+        @testset "StepRangeLen" begin
+            r = AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
+            r = r[1:5]
+
+            # https://github.com/JuliaLang/julia/issues/33882
+            @test r isa StepRangeLen
+            @test first(r) == AnchoredInterval{-1}(1)
+            @test step(r) == 1
+            @test last(r) == AnchoredInterval{-1}(5)
+        end
+
         @testset "hourly, implicit" begin
             r = HourEnding(dt):HourEnding(dt + Day(1))
 

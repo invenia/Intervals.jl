@@ -32,7 +32,7 @@ include("description.jl")
 include("plotting.jl")
 include("docstrings.jl")
 include("deprecated.jl")
-include("serialization.jl")
+include("compat.jl")
 
 export Bound,
        Closed,

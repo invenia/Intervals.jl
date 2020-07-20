@@ -609,48 +609,77 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "range" begin
-        r1 = HourEnding(dt):HourEnding(dt + Day(1))
-        r2 = HourEnding(dt):Hour(2):HourEnding(dt + Day(7))
+        @testset "StepRange" begin
+            r = AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
 
-        @test r1 isa StepRange
-        @test eltype(r1) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
-        @test isconcretetype(eltype(r1))
-        @test length(r1) == 25
-        @test collect(r1) == map(HourEnding, dt:Hour(1):dt + Day(1))
+            @test r isa StepRange
+            @test first(r) == AnchoredInterval{-1}(1)
+            @test step(r) == 1
+            @test last(r) == AnchoredInterval{-1}(5)
+        end
 
-        @test r2 isa StepRange
-        @test eltype(r2) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
-        @test isconcretetype(eltype(r2))
-        @test length(r2) == 12 * 7 + 1
-        @test collect(r2) == map(HourEnding, dt:Hour(2):dt + Day(7))
+        @testset "StepRangeLen" begin
+            r = AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
+            r = r[1:5]
 
-        # DST transition
-        spring = ZonedDateTime(2018, 3, 11, tz"America/Winnipeg")
-        fall = ZonedDateTime(2018, 11, 4, tz"America/Winnipeg")
-        r3 = HourEnding(spring):HourEnding(spring + Day(1))
-        r4 = HourEnding(fall):Hour(1):HourEnding(fall + Day(1))
+            # https://github.com/JuliaLang/julia/issues/33882
+            @test r isa StepRangeLen
+            @test first(r) == AnchoredInterval{-1}(1)
+            @test step(r) == 1
+            @test last(r) == AnchoredInterval{-1}(5)
+        end
 
-        @test r3 isa StepRange
-        @test eltype(r3) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
-        @test isconcretetype(eltype(r3))
-        @test length(r3) == 24
-        @test collect(r3) == map(HourEnding, spring:Hour(1):spring + Day(1))
+        @testset "hourly, implicit" begin
+            r = HourEnding(dt):HourEnding(dt + Day(1))
 
-        @test r4 isa StepRange
-        @test eltype(r4) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
-        @test isconcretetype(eltype(r4))
-        @test length(r4) == 26
-        @test collect(r4) == map(HourEnding, fall:Hour(1):fall + Day(1))
+            @test r isa StepRange
+            @test eltype(r) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
+            @test isconcretetype(eltype(r))
+            @test length(r) == 25
+            @test collect(r) == map(HourEnding, dt:Hour(1):dt + Day(1))
+        end
 
-        r5 = AnchoredInterval{-1, Open, Closed}(3):2:AnchoredInterval{-1, Closed, Closed}(7)
-        @test eltype(r5) === AnchoredInterval{-1, Int}
-        @test !isconcretetype(eltype(r5))
-        @test length(r5) == 3
-        @test collect(r5) == [
-            AnchoredInterval{-1, Open, Closed}(3),
-            AnchoredInterval{-1, Open, Closed}(5),
-            AnchoredInterval{-1, Open, Closed}(7),
-        ]
+        @testset "every 2 hours" begin
+            r = HourEnding(dt):Hour(2):HourEnding(dt + Day(7))
+
+            @test r isa StepRange
+            @test eltype(r) === AnchoredInterval{Hour(-1), DateTime, Open, Closed}
+            @test isconcretetype(eltype(r))
+            @test length(r) == 12 * 7 + 1
+            @test collect(r) == map(HourEnding, dt:Hour(2):dt + Day(7))
+        end
+
+        @testset "DST transition" begin
+            spring = ZonedDateTime(2018, 3, 11, tz"America/Winnipeg")
+            fall = ZonedDateTime(2018, 11, 4, tz"America/Winnipeg")
+            r_spring = HourEnding(spring):HourEnding(spring + Day(1))
+            r_fall = HourEnding(fall):Hour(1):HourEnding(fall + Day(1))
+
+            @test r_spring isa StepRange
+            @test eltype(r_spring) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
+            @test isconcretetype(eltype(r_spring))
+            @test length(r_spring) == 24
+            @test collect(r_spring) == map(HourEnding, spring:Hour(1):spring + Day(1))
+
+            @test r_fall isa StepRange
+            @test eltype(r_fall) === AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}
+            @test isconcretetype(eltype(r_fall))
+            @test length(r_fall) == 26
+            @test collect(r_fall) == map(HourEnding, fall:Hour(1):fall + Day(1))
+        end
+
+        @testset "mixed bounds" begin
+            r = AnchoredInterval{-1, Open, Closed}(3):2:AnchoredInterval{-1, Closed, Closed}(7)
+
+            @test eltype(r) === AnchoredInterval{-1, Int}
+            @test !isconcretetype(eltype(r))
+            @test length(r) == 3
+            @test collect(r) == [
+                AnchoredInterval{-1, Open, Closed}(3),
+                AnchoredInterval{-1, Open, Closed}(5),
+                AnchoredInterval{-1, Open, Closed}(7),
+            ]
+        end
     end
 
     @testset "isempty" begin

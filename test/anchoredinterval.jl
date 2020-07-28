@@ -53,27 +53,30 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     @testset "infinite" begin
         x = 1  # Non-zero value representing any positive value
 
-        interval = 0 .. Inf
-        @test AnchoredInterval{Inf,Closed,Closed}(0.0) == interval
-        # Not-possible: AnchoredInterval{-?,Closed,Closed}(Inf)
+        # Note: Ideally the exception raised would always be `ArgumentError`.
+        @testset "$inf" for (inf, Error) in zip((Inf, ∞), (ArgumentError, InfMinusInfError))
+            interval = 0 .. inf
+            @test AnchoredInterval{inf,Closed,Closed}(0.0) == interval
+            # Not-possible: AnchoredInterval{-?,Closed,Closed}(inf)
 
-        interval = -Inf .. 0
-        # Not-possible: AnchoredInterval{+?,Closed,Closed}(-Inf)
-        @test AnchoredInterval{-Inf,Closed,Closed}(0.0) == interval
+            interval = -inf .. 0
+            # Not-possible: AnchoredInterval{+?,Closed,Closed}(-inf)
+            @test AnchoredInterval{-inf,Closed,Closed}(0.0) == interval
 
-        interval = -Inf .. Inf
-        @test_throws ArgumentError AnchoredInterval{Inf,Closed,Closed}(-Inf)
-        @test_throws ArgumentError AnchoredInterval{-Inf,Closed,Closed}(Inf)
+            interval = -inf .. inf
+            @test_throws Error AnchoredInterval{inf,Closed,Closed}(-inf)
+            @test_throws Error AnchoredInterval{-inf,Closed,Closed}(inf)
 
-        interval = -Inf .. -Inf
-        @test AnchoredInterval{+x,Closed,Closed}(-Inf) == interval
-        @test AnchoredInterval{-x,Closed,Closed}(-Inf) == interval
-        @test AnchoredInterval{0}(-Inf) == interval
+            interval = -inf .. -inf
+            @test AnchoredInterval{+x,Closed,Closed}(-inf) == interval
+            @test AnchoredInterval{-x,Closed,Closed}(-inf) == interval
+            @test AnchoredInterval{0}(-inf) == interval
 
-        interval = Inf .. Inf
-        @test AnchoredInterval{+x,Closed,Closed}(Inf) == interval
-        @test AnchoredInterval{-x,Closed,Closed}(Inf) == interval
-        @test AnchoredInterval{0}(Inf) == interval
+            interval = inf .. inf
+            @test AnchoredInterval{+x,Closed,Closed}(inf) == interval
+            @test AnchoredInterval{-x,Closed,Closed}(inf) == interval
+            @test AnchoredInterval{0}(inf) == interval
+        end
     end
 
     @testset "nan" begin
@@ -135,6 +138,12 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(0, Inf))
         @test convert(AnchoredInterval{Beginning}, Interval(0, Inf)) == AnchoredInterval{Inf,Float64,Closed,Closed}(0)
+
+        @test convert(AnchoredInterval{Ending}, Interval(-∞, 0)) == AnchoredInterval{-∞,Float64,Closed,Closed}(0)
+        @test_throws InfMinusInfError convert(AnchoredInterval{Beginning}, Interval(-∞, 0))
+
+        @test_throws InfMinusInfError convert(AnchoredInterval{Ending}, Interval(0, ∞))
+        @test convert(AnchoredInterval{Beginning}, Interval(0, ∞)) == AnchoredInterval{∞,Float64,Closed,Closed}(0)
 
         @test_throws ArgumentError convert(AnchoredInterval{Ending}, Interval(nothing, 0))
         @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(nothing, 0))

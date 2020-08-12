@@ -746,38 +746,6 @@ isinf(::TimeType) = false
             end
             parser(::Type{T}, str) where T = parse(T, str)
 
-            # Workaround until Infinity.jl supports parsing
-            # https://github.com/cjdoris/Infinity.jl/pull/22
-            function parser(::Type{Infinite}, str)
-                if str == "∞"
-                    ∞
-                elseif str == "-∞"
-                    -∞
-                else
-                    throw(ArgumentError("cannot parse \"$str\" as Infinity"))
-                end
-            end
-
-            function parser(::Type{InfExtendedReal{T}}, str) where T
-                if str == "∞"
-                    InfExtendedReal{T}(∞)
-                elseif str == "-∞"
-                    InfExtendedReal{T}(-∞)
-                else
-                    InfExtendedReal{T}(parse(T, str))
-                end
-            end
-
-            function parser(::Type{InfExtendedTime{T}}, str) where T
-                if str == "∞"
-                    InfExtendedTime{T}(∞)
-                elseif str == "-∞"
-                    InfExtendedTime{T}(-∞)
-                else
-                    InfExtendedTime{T}(parse(T, str))
-                end
-            end
-
             for (left, right, _) in test_values, (lb, rb) in product(('[', '('), (']', ')'))
                 T = promote_type(typeof(left), typeof(right))
 

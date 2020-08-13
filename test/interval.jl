@@ -17,6 +17,18 @@ isinf(::TimeType) = false
         (-Inf, Inf, 1),
         (-Inf, 1.0, 0.01),
         (0.0, Inf, 0.01),
+
+        # Using Infinity.jl
+        (-∞, 10, 1),
+        (10, ∞, 1),
+        (-∞, ∞, 1),
+        (-∞, 1.0, 0.01),
+        (-∞, Date(2013, 3, 13), Day(1)),
+        (Date(2013, 2, 13), ∞, Day(1)),
+        (-∞, DateTime(2016, 8, 11, 1), Millisecond(1)),
+        (DateTime(2016, 8, 11, 0, 30), ∞, Millisecond(1)),
+        (-∞, Time(1), Millisecond(1)),
+        (Time(1), ∞, Millisecond(1)),
     ]
 
     @testset "constructor" begin
@@ -362,7 +374,7 @@ isinf(::TimeType) = false
                 @test unit + interval == Interval{L, R}(a + unit, b + unit)
                 @test interval - unit == Interval{L, R}(a - unit, b - unit)
 
-                if a isa Number
+                if a isa Number && b isa Number
                     @test -interval == Interval{R, L}(-b, -a)
                     @test unit - interval == Interval{R, L}(unit - b, unit - a)
                 else

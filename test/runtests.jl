@@ -1,6 +1,7 @@
 using Base.Iterators: product
 using Dates
 using Documenter: doctest
+using Infinity: Infinite, InfExtendedReal, InfExtendedTime, InfMinusInfError, ∞
 using Intervals
 using Serialization: deserialize
 using Test

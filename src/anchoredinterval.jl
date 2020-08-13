@@ -104,8 +104,9 @@ AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(a
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
 function AnchoredInterval{P,T}(anchor) where {P,T}
-    L = bound_type(P ≥ zero(P))
-    R = bound_type(P ≤ zero(P))
+    s = sign(P)
+    L = bound_type(s ≥ 0)
+    R = bound_type(s ≤ 0)
     return AnchoredInterval{P,T,L,R}(anchor)
 end
 
@@ -160,11 +161,11 @@ end
 # that is no longer comparable (e.g., `NaN`).
 
 function Base.first(interval::AnchoredInterval{P}) where P
-    P < zero(P) ? (interval.anchor + P) : (interval.anchor)
+    sign(P) < 0 ? (interval.anchor + P) : (interval.anchor)
 end
 
 function Base.last(interval::AnchoredInterval{P}) where P
-    P < zero(P) ? (interval.anchor) : (interval.anchor + P)
+    sign(P) < 0 ? (interval.anchor) : (interval.anchor + P)
 end
 
 anchor(interval::AnchoredInterval) = interval.anchor
@@ -175,7 +176,7 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 # Allows an interval to be converted to a scalar when the set contained by the interval only
 # contains a single element.
 function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
-    if isclosed(interval) && (iszero(P) || first(interval) == last(interval))
+    if isclosed(interval) && (sign(P) == 0 || first(interval) == last(interval))
         return first(interval)
     else
         # Remove deprecation in version 2.0.0
@@ -206,13 +207,13 @@ end
 #=
 function Base.convert(::Type{AnchoredInterval{P,T}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
-    anchor = P < zero(P) ? last(interval) : first(interval)
+    anchor = sign(P) < 0 ? last(interval) : first(interval)
     AnchoredInterval{P,T}(last(interval), inclusivity(interval))
 end
 
 function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
-    anchor = P < zero(P) ? last(interval) : first(interval)
+    anchor = sign(P) < 0 ? last(interval) : first(interval)
     AnchoredInterval{P,T}(anchor, inclusivity(interval))
 end
 =#
@@ -308,7 +309,7 @@ end
 ##### SET OPERATIONS #####
 
 function Base.isempty(interval::AnchoredInterval{P,T}) where {P,T}
-    return P == zero(P) && !isclosed(interval)
+    return sign(P) == 0 && !isclosed(interval)
 end
 
 # When intersecting two `AnchoredInterval`s attempt to return an `AnchoredInterval`
@@ -316,7 +317,7 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
     interval = invoke(intersect, Tuple{AbstractInterval{T}, AbstractInterval{T}}, a, b)
 
     sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
-    if P ≤ zero(P)
+    if sign(P) ≤ 0
         anchor = last(interval)
         new_P = -sp
     else

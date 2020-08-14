@@ -118,7 +118,7 @@ AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
     HourEnding{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
-time which ends at a time instant (of type `T`).
+time which ends at a time instant (of type `T`). Inclusivity defaults to {Open, Closed}.
 """
 const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourEnding(anchor::T) where T = HourEnding{T}(anchor)
@@ -129,7 +129,7 @@ HourEnding(anchor::T) where T = HourEnding{T}(anchor)
     HourBeginning{T<:TimeType, L, R} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
-time which begins at a time instant (of type `T`).
+time which begins at a time instant (of type `T`). Inclusivity defaults to {Closed, Open}.
 """
 const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bounded, R <: Bounded}
 HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)

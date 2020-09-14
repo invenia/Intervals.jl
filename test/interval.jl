@@ -120,12 +120,17 @@
     end
 
     @testset "accessors" begin
-        for (a, b, _) in test_values
+        for (a, b, p) in test_values
             for (L, R) in BOUND_PERMUTATIONS
                 interval = Interval{L, R}(a, b)
 
                 @test first(interval) == a
                 @test last(interval) == b
+                # the value we compare to min/max depends on if the bound is open/closed
+                min_comp = a in interval ? first(interval) : first(interval) + p
+                max_comp = b in interval ? last(interval) : last(interval) - p
+                @test min(interval; precision=p) == min_comp
+                @test max(interval; precision=p) == max_comp
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)

@@ -105,3 +105,31 @@ Note using `!isbounded` is commonly used to determine if any end of the interval
 unbounded.
 """
 isbounded(::AbstractInterval)
+
+"""
+    minimum(interval::AbstractInterval{T}; [increment]) -> T
+
+The minimum value contained within the `interval`.
+
+If left-closed, returns `first(interval)`.
+If left-open, returns `first(interval) + eps(first(interval))`
+If left-unbounded, returns minimum value possible for type `T`.
+
+A `BoundsError` is thrown for empty intervals or when the increment results in a minimum value
+not-contained by the interval.
+"""
+minimum(::AbstractInterval; increment)
+
+"""
+    maximum(interval::AbstractInterval{T}; [increment]) -> T
+
+The maximum value contained within the `interval`.
+
+If right-closed, returns `last(interval)`.
+If right-open, returns `first(interval) + eps(first(interval))`
+If right-unbounded, returns maximum value possible for type `T`.
+
+A `BoundsError` is thrown for empty intervals or when the increment results in a maximum value
+not-contained by the interval.
+"""
+maximum(::AbstractInterval; increment)

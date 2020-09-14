@@ -187,6 +187,65 @@ Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R =
 isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
 isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
 
+function Base.minimum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
+    return L === Unbounded ? typemin(T) : first(interval)
+end
+
+function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) where {T,R}
+    isempty(interval) && throw(BoundsError(interval, 0))
+    min_val = first(interval) + increment
+    # Since intervals can't have NaN, we can just use !isfinite to check if infinite
+    !isfinite(min_val) && return typemin(T)
+    min_val ∈ interval && return min_val
+    throw(BoundsError(interval, min_val))
+end
+
+function Base.minimum(interval::AbstractInterval{T,Open,R}) where {T<:Integer,R}
+    return minimum(interval, increment=one(T))
+end
+
+function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
+    isempty(interval) && throw(BoundsError(interval, 0))
+    min_val = first(interval)
+    # Since intervals can't have NaN, we can just use !isfinite to check if infinite
+    next_val = if !isfinite(min_val) || increment === nothing
+        nextfloat(min_val)
+    else
+        min_val + increment
+    end
+    next_val ∈ interval && return next_val
+    throw(BoundsError(interval, next_val))
+end
+
+function Base.maximum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
+    return R === Unbounded ? typemax(T) : last(interval)
+end
+
+function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) where {T,L}
+    isempty(interval) && throw(BoundsError(interval, 0))
+    max_val = last(interval) - increment
+    # Since intervals can't have NaN, we can just use !isfinite to check if infinite
+    !isfinite(max_val) && return typemax(T)
+    max_val ∈ interval && return max_val
+    throw(BoundsError(interval, max_val))
+end
+
+function Base.maximum(interval::AbstractInterval{T,L,Open}) where {T<:Integer,L}
+    return maximum(interval, increment=one(T))
+end
+
+function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
+    isempty(interval) && throw(BoundsError(interval, 0))
+    max_val = last(interval)
+    next_val = if !isfinite(max_val) || increment === nothing
+        prevfloat(max_val)
+    else
+        max_val - increment
+    end
+    next_val ∈ interval && return next_val
+    throw(BoundsError(interval, next_val))
+end
+
 ##### CONVERSION #####
 
 # Allows an interval to be converted to a scalar when the set contained by the interval only
@@ -200,6 +259,7 @@ function Base.convert(::Type{T}, interval::Interval{T}) where T
 end
 
 ##### DISPLAY #####
+
 
 function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
     if get(io, :compact, false)

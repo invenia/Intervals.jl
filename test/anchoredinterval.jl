@@ -166,6 +166,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test first(interval) == DateTime(2016, 8, 11, 1, 45)
         @test last(interval) == dt
+        @test minimum(interval) == first(interval)
+        @test maximum(interval) == last(interval)
         @test bounds_types(interval) == (Closed, Closed)
         @test span(interval) == -P
 
@@ -175,6 +177,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
+        @test_throws BoundsError minimum(interval, increment=Day(1))
+        @test_throws BoundsError maximum(interval, increment=Day(1))
         @test bounds_types(interval) == (Open, Open)
         @test span(interval) == P
 
@@ -187,6 +191,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         interval = AnchoredInterval{Day(1)}(startpoint)
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 3, 12, tz"America/Winnipeg")
+        @test minimum(interval) == startpoint
+        @test maximum(interval, increment=Hour(1)) == last(interval) - Hour(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
@@ -197,24 +203,32 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         interval = AnchoredInterval{Day(1)}(startpoint)
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
+        @test minimum(interval) == startpoint
+        @test maximum(interval, increment=Millisecond(1)) == last(interval) - Millisecond(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2020, 3, 9, 2, tz"America/Winnipeg")
         interval = AnchoredInterval{Day(-1)}(endpoint)
         @test_throws NonExistentTimeError first(interval)
         @test last(interval) == endpoint
+        @test_throws NonExistentTimeError minimum(interval, increment=Hour(1))
+        @test maximum(interval) == endpoint
         @test span(interval) == Day(1)
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
         @test first(interval) == 0
         @test last(interval) == 10
+        @test minimum(interval) == 1
+        @test maximum(interval) == 10
         @test bounds_types(interval) == (Open, Closed)
         @test span(interval) == 10
 
         interval = AnchoredInterval{25}('a')
         @test first(interval) == 'a'
         @test last(interval) == 'z'
+        @test minimum(interval) == 'a'
+        @test maximum(interval, increment=1) == 'y'
         @test bounds_types(interval) == (Closed, Open)
         @test span(interval) == 25
     end

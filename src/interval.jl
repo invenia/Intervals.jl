@@ -171,6 +171,22 @@ function Base.last(interval::Interval{T,L,R}) where {T,L,R}
     return R !== Unbounded ? interval.last : nothing
 end
 
+function Base.min(interval::Interval{T,L,R}; precision) where {T,L,R}
+    return Base.first(interval)
+end
+
+function Base.min(interval::Interval{T,Open,R}; precision) where {T,R}
+    return interval.first + precision
+end
+
+function Base.max(interval::Interval{T,L,R}; precision) where {T,L,R}
+    return Base.last(interval)
+end
+
+function Base.max(interval::Interval{T,L,Open}; precision) where {T,L}
+    return interval.last - precision
+end
+
 function span(interval::Interval)
     if isbounded(interval)
         interval.last - interval.first

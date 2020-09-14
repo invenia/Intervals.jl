@@ -2,6 +2,7 @@ using Base.Iterators: product
 using Dates
 using Documenter: doctest
 using Intervals
+using Intervals: isfinite
 using Serialization: deserialize
 using Test
 using TimeZones

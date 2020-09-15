@@ -120,33 +120,43 @@
     end
 
     @testset "accessors" begin
-        for (a, b, p) in test_values
+        accessor_specific_vals = [
+            # test adding eps()
+            (-10.0, 10.0, nothing),
+            (-10.0, 10.0, eps(Float64)),
+
+            ('c', 'd', 2),
+            (Date(2004, 2, 13), Date(2020, 3, 13), Hour(1)),
+        ]
+        for (a, b, p) in append!(accessor_specific_vals, test_values)
             for (L, R) in BOUND_PERMUTATIONS
                 interval = Interval{L, R}(a, b)
 
                 @test first(interval) == a
                 @test last(interval) == b
-                # the value we compare to min/max depends on if the bound is open/closed
-                # for floats, adding/subtracting eps(Float) is inaccurate for large vals
-                # so we must use next/prev float
 
-                min_comp = if a in interval
+                # If p=eps(Float64) then we treat it as if p=nothing.
+                # This is because adding eps to floats is not accurate and we must use nextfloat and prevfloat.
+                p = p == eps() ? nothing : p
+
+                # The value we compare to min/max depends on if the bound is open/closed.
+                # we can determine if a bound is open/closed by checking if the edge in the interval
+                mi = if a ∉ interval
+                    v = first(interval)
+                    p === nothing && eltype(interval) <: AbstractFloat ? nextfloat(v) : v + p
+                else
                     first(interval)
-                else
-                    typeof(first(interval)) <: AbstractFloat ?
-                        nextfloat(first(interval)) :
-                        first(interval) + p
-                end
-                max_comp = if b in interval
-                    last(interval)
-                else
-                    typeof(last(interval)) <: AbstractFloat ?
-                        prevfloat(last(interval)) :
-                        last(interval) - p
                 end
 
-                @test minimum(interval; increment=p) == min_comp
-                @test maximum(interval; increment=p) == max_comp
+                ma = if b ∉ interval
+                    v = last(interval)
+                    p === nothing && eltype(interval) <: AbstractFloat ? prevfloat(v) : v - p
+                else
+                    last(interval)
+                end
+
+                @test minimum(interval; increment=p) == mi
+                @test maximum(interval; increment=p) == ma
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)

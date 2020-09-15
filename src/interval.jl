@@ -171,6 +171,22 @@ function Base.last(interval::Interval{T,L,R}) where {T,L,R}
     return R !== Unbounded ? interval.last : nothing
 end
 
+function span(interval::Interval)
+    if isbounded(interval)
+        interval.last - interval.first
+    else
+        throw(DomainError(
+            "unbounded endpoint(s)",
+            "Unable to determine the span of an non-bounded interval",
+        ))
+    end
+end
+
+isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
+Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
+isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
+isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
+
 function Base.minimum(interval::Interval{T,Closed,R}; increment=nothing) where {T,R}
     return first(interval)
 end
@@ -204,22 +220,6 @@ function Base.maximum(interval::Interval{T,L,Open}; increment=nothing) where {T<
     max_val = last(interval)
     return increment !== nothing ? max_val - increment : prevfloat(max_val)
 end
-
-function span(interval::Interval)
-    if isbounded(interval)
-        interval.last - interval.first
-    else
-        throw(DomainError(
-            "unbounded endpoint(s)",
-            "Unable to determine the span of an non-bounded interval",
-        ))
-    end
-end
-
-isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
-Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
-isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
-isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
 
 ##### CONVERSION #####
 

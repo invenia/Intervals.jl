@@ -179,6 +179,10 @@ function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T,R
     return first(interval) + increment
 end
 
+function Base.minimum(interval::Interval{T,L,R}; precision=one(T)) where {T <: Integer, L, R}
+    return minimum(interval; precision=precision)
+end
+
 function Base.maximum(interval::Interval{T,L,Closed}; increment=nothing) where {T,L}
     return last(interval)
 end

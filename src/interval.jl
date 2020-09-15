@@ -171,20 +171,20 @@ function Base.last(interval::Interval{T,L,R}) where {T,L,R}
     return R !== Unbounded ? interval.last : nothing
 end
 
-function Base.minimum(interval::Interval{T,Closed,R}; precision=nothing) where {T,R}
+function Base.minimum(interval::Interval{T,Closed,R}; increment=nothing) where {T,R}
     return first(interval)
 end
 
-function Base.minimum(interval::Interval{T,Open,R}; precision=eps(T)) where {T,R}
-    return first(interval) + precision
+function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T,R}
+    return first(interval) + increment
 end
 
-function Base.maximum(interval::Interval{T,L,Closed}; precision=nothing) where {T,L}
+function Base.maximum(interval::Interval{T,L,Closed}; increment=nothing) where {T,L}
     return last(interval)
 end
 
-function Base.maximum(interval::Interval{T,L,Open}; precision=eps(T)) where {T,L}
-    return last(interval) - precision
+function Base.maximum(interval::Interval{T,L,Open}; increment=eps(T)) where {T,L}
+    return last(interval) - increment
 end
 
 function span(interval::Interval)

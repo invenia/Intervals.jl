@@ -187,36 +187,43 @@ Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R =
 isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
 isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
 
-function Base.minimum(interval::Interval{T,Closed,R}; increment=nothing) where {T,R}
+# Minimum and maximum calls for Closed and Unbounded Intervals, just return first and last.
+function Base.minimum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
     return first(interval)
 end
 
-function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T,R}
-    return first(interval) + increment
-end
-
-function Base.maximum(interval::Interval{T,L,Closed}; increment=nothing) where {T,L}
+function Base.maximum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
     return last(interval)
 end
 
-function Base.maximum(interval::Interval{T,L,Open}; increment=eps(T)) where {T,L}
-    return last(interval) - increment
-end
-
-function Base.minimum(interval::Interval{T,Open,R}; increment=one(T)) where {T<:Integer,R}
+# Minimum and maximum calls for open bounds and ambigous types, return open side +- increment
+# Default increment val is eps(T)
+function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) where {T,R}
     return first(interval) + increment
 end
 
-function Base.maximum(interval::Interval{T,L,Open}; increment=one(T)) where {T<:Integer,L}
+function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) where {T,L}
     return last(interval) - increment
 end
 
-function Base.minimum(interval::Interval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
+# Minimum and maximum calls for open bounds and Integer types, return open side +- increment
+# Default increment val for Integers is one(T)
+function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=one(T)) where {T<:Integer,R}
+    return first(interval) + increment
+end
+
+function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=one(T)) where {T<:Integer,L}
+    return last(interval) - increment
+end
+
+# Minimum and maximum calls for open bounds and Float types, return open side +- increment
+# Default increment val for Floats is nothing, which returns nextfloat or prevfloat (i.e., +- eps())
+function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
     min_val = first(interval)
     return increment !== nothing ? min_val + increment : nextfloat(min_val)
 end
 
-function Base.maximum(interval::Interval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
+function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
     max_val = last(interval)
     return increment !== nothing ? max_val - increment : prevfloat(max_val)
 end

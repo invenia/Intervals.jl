@@ -195,12 +195,14 @@ function Base.maximum(interval::Interval{T,L,Open}; increment=one(T)) where {T<:
     return last(interval) - increment
 end
 
-function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T<:AbstractFloat,R}
-    return nextfloat(first(interval))
+function Base.minimum(interval::Interval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
+    min_val = first(interval)
+    return increment !== nothing ? min_val + increment : nextfloat(min_val)
 end
 
-function Base.maximum(interval::Interval{T,L,Open}; increment=eps(T)) where {T<:AbstractFloat,L}
-    return prevfloat(last(interval))
+function Base.maximum(interval::Interval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
+    max_val = last(interval)
+    return increment !== nothing ? max_val - increment : prevfloat(max_val)
 end
 
 function span(interval::Interval)

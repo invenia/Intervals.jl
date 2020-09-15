@@ -129,8 +129,8 @@
                 # the value we compare to min/max depends on if the bound is open/closed
                 min_comp = a in interval ? first(interval) : first(interval) + p
                 max_comp = b in interval ? last(interval) : last(interval) - p
-                @test min(interval; precision=p) == min_comp
-                @test max(interval; precision=p) == max_comp
+                @test minimum(interval; precision=p) == min_comp
+                @test maximum(interval; precision=p) == max_comp
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)

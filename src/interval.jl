@@ -179,16 +179,28 @@ function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T,R
     return first(interval) + increment
 end
 
-function Base.minimum(interval::Interval{T,L,R}; precision=one(T)) where {T <: Integer, L, R}
-    return minimum(interval; precision=precision)
-end
-
 function Base.maximum(interval::Interval{T,L,Closed}; increment=nothing) where {T,L}
     return last(interval)
 end
 
 function Base.maximum(interval::Interval{T,L,Open}; increment=eps(T)) where {T,L}
     return last(interval) - increment
+end
+
+function Base.minimum(interval::Interval{T,Open,R}; increment=one(T)) where {T<:Integer,R}
+    return first(interval) + increment
+end
+
+function Base.maximum(interval::Interval{T,L,Open}; increment=one(T)) where {T<:Integer,L}
+    return last(interval) - increment
+end
+
+function Base.minimum(interval::Interval{T,Open,R}; increment=eps(T)) where {T<:AbstractFloat,R}
+    return nextfloat(first(interval))
+end
+
+function Base.maximum(interval::Interval{T,L,Open}; increment=eps(T)) where {T<:AbstractFloat,L}
+    return prevfloat(last(interval))
 end
 
 function span(interval::Interval)

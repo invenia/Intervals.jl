@@ -127,8 +127,24 @@
                 @test first(interval) == a
                 @test last(interval) == b
                 # the value we compare to min/max depends on if the bound is open/closed
-                min_comp = a in interval ? first(interval) : first(interval) + p
-                max_comp = b in interval ? last(interval) : last(interval) - p
+                # for floats, adding/subtracting eps(Float) is inaccurate for large vals
+                # so we must use next/prev float
+
+                min_comp = if a in interval
+                    first(interval)
+                else
+                    typeof(first(interval)) <: AbstractFloat ?
+                        nextfloat(first(interval)) :
+                        first(interval) + p
+                end
+                max_comp = if b in interval
+                    last(interval)
+                else
+                    typeof(last(interval)) <: AbstractFloat ?
+                        prevfloat(last(interval)) :
+                        last(interval) - p
+                end
+
                 @test minimum(interval; increment=p) == min_comp
                 @test maximum(interval; increment=p) == max_comp
                 @test span(interval) == b - a

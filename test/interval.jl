@@ -119,46 +119,17 @@
         @test eltype(Interval{Float64}(1,2)) == Float64
     end
 
-    @testset "accessors - bounded intervals" begin
-        accessor_specific_vals = [
-            # test adding eps()
-            (-10.0, 10.0, nothing),
-            (-10.0, 10.0, eps(Float64)),
-
-            ('c', 'd', 2),
-            (Date(2004, 2, 13), Date(2020, 3, 13), Day(1)),
-        ]
-        for (a, b, unit) in append!(accessor_specific_vals, test_values)
+    @testset "accessors" begin
+        for (a, b, _) in test_values
             for (L, R) in BOUND_PERMUTATIONS
                 interval = Interval{L, R}(a, b)
-
                 @test first(interval) == a
                 @test last(interval) == b
-
-                # The value we compare to min/max depends on if the bound is open/closed.
-                # we can determine if a bound is open/closed by checking if the edge in the interval
-                mi = if a ∈ interval
-                    first(interval)
-                else
-                    v = first(interval)
-                    unit === nothing && eltype(interval) <: AbstractFloat ? nextfloat(v) : v + unit
-                end
-
-                ma = if b ∈ interval
-                    last(interval)
-                else
-                    v = last(interval)
-                    unit === nothing && eltype(interval) <: AbstractFloat ? prevfloat(v) : v - unit
-                end
-
-                @test minimum(interval; increment=unit) == mi
-                @test maximum(interval; increment=unit) == ma
                 @test span(interval) == b - a
                 @test isclosed(interval) == (L === Closed && R === Closed)
                 @test isopen(interval) == (L === Open && R === Open)
             end
         end
-
 
         # DST transition
         firstpoint = ZonedDateTime(2018, 3, 11, 1, tz"America/Winnipeg")
@@ -172,58 +143,90 @@
         @test span(interval) == Hour(3)
     end
 
-    @testset "accessors - unbounded intervals" begin
-        unbounded_test_values = [
-            # one side unbounded with different types
-            (-10, nothing, 1, typeof(1), Open, Unbounded),
-            (nothing, 1, 0.01, Float64, Unbounded, Closed),
-            (nothing, 'z', 1, Char, Unbounded, Open),
-            (Date(2013, 2, 13), nothing, Day(1), Date, Closed, Unbounded),
-            (DateTime(2016, 8, 11, 0, 30), nothing, Millisecond(1), DateTime, Open, Unbounded),
+    @testset "maximum/minimum" begin
+        @testset "bounded intervals" begin
+            bounded_test_vals = [
+                # test adding eps()
+                (-10.0, 10.0, nothing),
+                (-Inf, Inf, eps(Float64)),
 
-            #both sides unbounded different types
-            (nothing, nothing, 1, typeof(1), Unbounded, Unbounded),
-            (nothing, nothing, 0.01, Float64, Unbounded, Unbounded),
-            (nothing, nothing, 1, Char, Unbounded, Unbounded),
-            (nothing, nothing, Day(1), Day, Unbounded, Unbounded),
-            (nothing, nothing, Millisecond(1), DateTime, Unbounded, Unbounded),
+                ('c', 'x', 2),
+                (Date(2004, 2, 13), Date(2020, 3, 13), Day(1)),
+            ]
+            for (a, b, unit) in append!(bounded_test_vals, test_values)
+                for (L, R) in BOUND_PERMUTATIONS
+                    interval = Interval{L, R}(a, b)
+                    t = eltype(interval)
+                    # The value we compare to min/max depends on if the bound is open/closed.
+                    # we can determine if a bound is open/closed by checking if the edge in the interval
+                    mi = if a ∈ interval
+                        first(interval)
+                    else
+                        v = first(interval)
+                        t  <: AbstractFloat && unit === nothing ? nextfloat(v) : v + unit
+                    end
 
-            # test adding eps() with unbounded
-            (-10.0, nothing, nothing, Float64, Open, Unbounded),
-            (nothing, 10.0, eps(Float64), Float64, Unbounded, Open),
-        ]
-        for (a, b, unit, T, L, R) in unbounded_test_values
-            interval = Interval{T,L,R}(a, b)
+                    ma = if b ∈ interval
+                        last(interval)
+                    else
+                        v = last(interval)
+                        t <: AbstractFloat && unit === nothing ? prevfloat(v) : v - unit
+                    end
 
-            @test first(interval) == a
-            @test last(interval) == b
-
-            # The value we compare to min/max depends on if the bound is open/closed.
-            # we can determine if a bound is open/closed by checking if the edge in the interval
-            mi = if a === nothing
-                nothing
-            elseif a ∈ interval
-                first(interval)
-            else
-                v = first(interval)
-                unit === nothing && eltype(interval) <: AbstractFloat ? nextfloat(v) : v + unit
+                    @test minimum(interval; increment=unit) == mi
+                    @test maximum(interval; increment=unit) == ma
+                end
             end
+        end
 
-            ma = if b === nothing
-                nothing
-            elseif b ∈ interval
-                last(interval)
-            else
-                v = last(interval)
-                unit === nothing && eltype(interval) <: AbstractFloat ? prevfloat(v) : v - unit
+        @testset "unbounded intervals" begin
+            unbounded_test_values = [
+                # one side unbounded with different types
+                (Interval{Open,Unbounded}(-10, nothing), 1),
+                (Interval{Unbounded,Closed}(nothing, 1.0), 0.01),
+                (Interval{Unbounded,Open}(nothing, 'z'), 1),
+                (Interval{Closed,Unbounded}(Date(2013, 2, 13), nothing), Day(1)),
+                (Interval{Open,Unbounded}(DateTime(2016, 8, 11, 0, 30), nothing), Millisecond(1)),
+                # both sides unbounded different types
+                (Interval{Int}(nothing, nothing), 1),
+                (Interval{Float64}(nothing, nothing), 0.01),
+                (Interval{Char}(nothing, nothing), 1),
+                (Interval{Day}(nothing, nothing), Day(1)),
+                (Interval{DateTime}(nothing, nothing), Millisecond(1)),
+                # test adding eps() with unbounded
+                (Interval{Open,Unbounded}(-10.0, nothing), nothing),
+                (Interval{Unbounded,Open}(nothing, 10.0), eps(Float64)),
+            ]
+            for (interval, unit) in unbounded_test_values
+                a, b = first(interval), last(interval)
+                t = eltype(interval)
+                # The value we compare to min/max depends on if the bound is open/closed.
+                # we can determine if a bound is open/closed by checking if the edge in the interval
+                mi = if a === nothing
+                    typemin(t)
+                elseif a ∈ interval
+                    first(interval)
+                else
+                    v = first(interval)
+                    t  <: AbstractFloat && unit === nothing ? nextfloat(v) : v + unit
+                end
+
+                ma = if b === nothing
+                    typemax(t)
+                elseif b ∈ interval
+                    last(interval)
+                else
+                    v = last(interval)
+                    t <: AbstractFloat && unit === nothing ? prevfloat(v) : v - unit
+                end
+
+                @test minimum(interval; increment=unit) == mi
+                @test maximum(interval; increment=unit) == ma
+                @test_throws DomainError span(interval)
+
             end
-
-            @test minimum(interval; increment=unit) == mi
-            @test maximum(interval; increment=unit) == ma
-            @test_throws DomainError span(interval)
         end
     end
-
     @testset "display" begin
         interval = Interval{Open, Open}(1, 2)
         @test string(interval) == "(1 .. 2)"

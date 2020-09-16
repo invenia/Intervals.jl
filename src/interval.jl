@@ -189,10 +189,12 @@ isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && 
 
 # Minimum and maximum calls for Closed and Unbounded Intervals, just return first and last.
 function Base.minimum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
+    first(interval) === nothing && return typemin(T)
     return first(interval)
 end
 
 function Base.maximum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
+    last(interval) === nothing && return typemax(T)
     return last(interval)
 end
 
@@ -208,12 +210,12 @@ end
 
 # Minimum and maximum calls for open bounds and Integer types, return open side +- increment
 # Default increment val for Integers is one(T)
-function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=one(T)) where {T<:Integer,R}
-    return first(interval) + increment
+function Base.minimum(interval::AbstractInterval{T,Open,R}) where {T<:Integer,R}
+    return minimum(interval, increment=one(T))
 end
 
-function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=one(T)) where {T<:Integer,L}
-    return last(interval) - increment
+function Base.maximum(interval::AbstractInterval{T,L,Open}) where {T<:Integer,L}
+    return maximum(interval, increment=one(T))
 end
 
 # Minimum and maximum calls for open bounds and Float types, return open side +- increment

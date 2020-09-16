@@ -177,8 +177,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
-        @test minimum(interval) == first(interval) + eps(Date) #eps(Date) = Day(1)
-        @test maximum(interval) == last(interval) - eps(Date)
+        @test minimum(interval, increment=Day(1)) == first(interval) + Day(1)
+        @test maximum(interval, increment=Day(1)) == last(interval) - Day(1)
         @test bounds_types(interval) == (Open, Open)
         @test span(interval) == P
 

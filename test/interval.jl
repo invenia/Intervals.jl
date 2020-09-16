@@ -119,7 +119,7 @@
         @test eltype(Interval{Float64}(1,2)) == Float64
     end
 
-    @testset "bounded accessors" begin
+    @testset "accessors - bounded intervals" begin
         accessor_specific_vals = [
             # test adding eps()
             (-10.0, 10.0, nothing),
@@ -134,10 +134,6 @@
 
                 @test first(interval) == a
                 @test last(interval) == b
-
-                # If unit=eps(Float64) then we treat it as if unit=nothing.
-                # This is because adding eps to floats is not accurate and we must use nextfloat and prevfloat.
-                unit = unit == eps() ? nothing : unit
 
                 # The value we compare to min/max depends on if the bound is open/closed.
                 # we can determine if a bound is open/closed by checking if the edge in the interval
@@ -176,7 +172,7 @@
         @test span(interval) == Hour(3)
     end
 
-    @testset "unbounded accessors" begin
+    @testset "accessors - unbounded intervals" begin
         unbounded_test_values = [
             # one side unbounded with different types
             (-10, nothing, 1, typeof(1), Open, Unbounded),
@@ -202,10 +198,6 @@
             @test first(interval) == a
             @test last(interval) == b
 
-            # If unit=eps(Float64) then we treat it as if unit=nothing.
-            # This is because adding eps to floats is not accurate and we must use nextfloat and prevfloat.
-            unit = unit == eps() ? nothing : unit
-
             # The value we compare to min/max depends on if the bound is open/closed.
             # we can determine if a bound is open/closed by checking if the edge in the interval
             mi = if a === nothing
@@ -228,6 +220,7 @@
 
             @test minimum(interval; increment=unit) == mi
             @test maximum(interval; increment=unit) == ma
+            @test_throws DomainError span(interval)
         end
     end
 

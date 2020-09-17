@@ -69,7 +69,7 @@ struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,
         #
         # We can skip computing the other endpoint if both the anchor and span are finite as
         # this ensures the computed endpoint is also finite.
-        if !_isfinite(anchor) || !_isfinite(P)
+        if !isfinite(anchor) || !isfinite(P)
             left, right = sign(P) < 0 ? (anchor + P, anchor) : (anchor, anchor + P)
 
             if !(left <= right)
@@ -87,9 +87,6 @@ struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,
         return new{P,T,L,R}(anchor)
     end
 end
-
-_isfinite(x) = iszero(x - x)
-_isfinite(x::Real) = Base.isfinite(x)
 
 function AnchoredInterval{P,T,L,R}(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
     AnchoredInterval{P,T,L,R}(interval.anchor)

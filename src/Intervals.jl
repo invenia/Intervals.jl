@@ -24,6 +24,7 @@ Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
 bounds_types(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
 
+include("isfinite.jl")
 include("endpoint.jl")
 include("interval.jl")
 include("anchoredinterval.jl")

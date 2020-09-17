@@ -11,3 +11,12 @@ elseif VERSION >= v"1.0"
 else
     error("Julia versions earlier than 1.0 are unsupported")
 end
+
+# Declare a new `isnan` and `isinf` functions to avoid type piracy. These new function work
+# with `Char` and `Period` types as well as other types.
+# Note: A generic `isfinite` is declared in Intervals.
+isnan(x) = (x != x)::Bool
+isnan(x::Real) = Base.isnan(x)
+
+isinf(x) = !isnan(x) && !isfinite(x)
+isinf(x::Real) = Base.isinf(x)

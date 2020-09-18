@@ -144,34 +144,96 @@
     end
 
     @testset "maximum/minimum" begin
+        # Helper functions that manage the value we should be expecting from min and max.
+        function _min_val_helper(interval, a, unit)
+            t = eltype(interval)
+            # If the interal is empty, min is nothing
+            isempty(interval) && return nothing
+
+            # If a is in the interval, it is closed/unbounded and min is the first value.
+            # If a is nothing then it is unbounded and min is typemin(T)
+            a === nothing && return typemin(t)
+            a ∈ interval && return first(interval)
+
+            # From this point on, b ∉ interval so the bound is Open
+            # Also, if a is infinite we return typemin
+            # If it's an abstractfloat, we can't return just typemin since typemin IS Inf and
+            # since the bound is open at this point, Inf ∉ interval So we return the one after INF
+            !isfinite(a) && t <: AbstractFloat && return nextfloat(a)
+            !isfinite(a) && return typemin(t)
+
+            f = first(interval)
+            nv = if t <: AbstractFloat && (unit === nothing || unit == eps(t))
+                nextfloat(f)
+            else
+                f + unit
+            end
+
+            nv ∈ interval && return nv
+
+            # If we get to this point, the min/max functions throw a DomainError
+            # Since we want our tests to be predictable, we will not throw an error in this helper.
+        end
+
+        function _max_val_helper(interval, b, unit)
+            t = eltype(interval)
+            # If the interal is empty, min is nothing
+            isempty(interval) && return nothing
+
+            # If a is in the interval, it is closed/unbounded and min is the first value.
+            # If a is nothing then it is unbounded and min is typemin(T)
+            b === nothing && return typemax(t)
+            b ∈ interval && return last(interval)
+
+            # From this point on, b ∉ interval so the bound is Open
+            # Also, if a is infinite we return typemin
+            # If it's an abstractfloat, we can't return just typemin since typemin IS Inf and
+            # since the bound is open at this point, Inf ∉ interval So we return the one after INF
+            !isfinite(b) && t <: AbstractFloat && return prevfloat(b)
+            !isfinite(b) && return typemax(t)
+
+            l = last(interval)
+            nv = if t <: AbstractFloat && (unit === nothing || unit == eps(t))
+                prevfloat(l)
+            else
+                l - unit
+            end
+
+            nv ∈ interval && return nv
+
+            # If we get to this point, the min/max functions throw a DomainError
+            # Since we want our tests to be predictable, we will not throw an error in this helper.
+        end
         @testset "bounded intervals" begin
             bounded_test_vals = [
+                (-10, 1000, 1),
+                (0.0, 1, 0.01),  # Use different types to test promotion
+                ('a', 'z', 1),
+                (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
+                (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
+
+                # Infinite endpoints
+                (-Inf, 10, 1),
+                (10, Inf, 1),
+                (-Inf, Inf, 1),
+                (-Inf, 1.0, 0.01),
+                (0.0, Inf, 0.01),
+
                 # test adding eps()
                 (-10.0, 10.0, nothing),
-                (-Inf, Inf, eps(Float64)),
+
+                #test inf with nextfloat and prevfloat
+                (-Inf, Inf, nothing),
 
                 ('c', 'x', 2),
                 (Date(2004, 2, 13), Date(2020, 3, 13), Day(1)),
             ]
-            for (a, b, unit) in append!(bounded_test_vals, test_values)
+            for (a, b, unit) in bounded_test_vals
                 for (L, R) in BOUND_PERMUTATIONS
                     interval = Interval{L, R}(a, b)
-                    t = eltype(interval)
-                    # The value we compare to min/max depends on if the bound is open/closed.
-                    # we can determine if a bound is open/closed by checking if the edge in the interval
-                    mi = if a ∈ interval
-                        first(interval)
-                    else
-                        v = first(interval)
-                        t  <: AbstractFloat && unit === nothing ? nextfloat(v) : v + unit
-                    end
 
-                    ma = if b ∈ interval
-                        last(interval)
-                    else
-                        v = last(interval)
-                        t <: AbstractFloat && unit === nothing ? prevfloat(v) : v - unit
-                    end
+                    mi = _min_val_helper(interval, a, unit)
+                    ma = _max_val_helper(interval, b, unit)
 
                     @test minimum(interval; increment=unit) == mi
                     @test maximum(interval; increment=unit) == ma
@@ -190,35 +252,21 @@
                 # both sides unbounded different types
                 (Interval{Int}(nothing, nothing), 1),
                 (Interval{Float64}(nothing, nothing), 0.01),
-                (Interval{Char}(nothing, nothing), 1),
+                (Interval{Char}(nothing , nothing), 1),
                 (Interval{Day}(nothing, nothing), Day(1)),
                 (Interval{DateTime}(nothing, nothing), Millisecond(1)),
                 # test adding eps() with unbounded
                 (Interval{Open,Unbounded}(-10.0, nothing), nothing),
-                (Interval{Unbounded,Open}(nothing, 10.0), eps(Float64)),
+                (Interval{Unbounded,Open}(nothing, 10.0), nothing),
+                # test infinity
+                (Interval{Open,Unbounded}(-Inf, nothing), nothing),
+                (Interval{Unbounded,Open}(nothing, Inf), nothing),
             ]
             for (interval, unit) in unbounded_test_values
                 a, b = first(interval), last(interval)
-                t = eltype(interval)
-                # The value we compare to min/max depends on if the bound is open/closed.
-                # we can determine if a bound is open/closed by checking if the edge in the interval
-                mi = if a === nothing
-                    typemin(t)
-                elseif a ∈ interval
-                    first(interval)
-                else
-                    v = first(interval)
-                    t  <: AbstractFloat && unit === nothing ? nextfloat(v) : v + unit
-                end
 
-                ma = if b === nothing
-                    typemax(t)
-                elseif b ∈ interval
-                    last(interval)
-                else
-                    v = last(interval)
-                    t <: AbstractFloat && unit === nothing ? prevfloat(v) : v - unit
-                end
+                mi = _min_val_helper(interval, a, unit)
+                ma = _max_val_helper(interval, b, unit)
 
                 @test minimum(interval; increment=unit) == mi
                 @test maximum(interval; increment=unit) == ma
@@ -226,6 +274,32 @@
 
             end
         end
+        @testset "empty intervals in min/max" begin
+            error_test_vals = [
+                # Different types
+                (Interval{Open,Open}(-10, -10), 1),
+                (Interval{Open,Open}(0.0, 0.0), 60),
+                (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 13)), Day(1)),
+                (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 0, 30)), Day(1)),
+            ]
+            for (interval, unit) in error_test_vals
+                @test minimum(interval; increment=unit) === nothing
+                @test maximum(interval; increment=unit) === nothing
+            end
+        end
+        @testset "domain errors in min/max" begin
+        error_test_vals = [
+            # Different types
+            (Interval{Open,Open}(-10, 15), 60),
+            (Interval{Open,Open}(0.0, 25), 60.0),
+            (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 14)), Day(5)),
+            (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 5, 30)), Day(5)),
+        ]
+        for (interval, unit) in error_test_vals
+            @test_throws DomainError minimum(interval; increment=unit)
+            @test_throws DomainError maximum(interval; increment=unit)
+        end
+    end
     end
     @testset "display" begin
         interval = Interval{Open, Open}(1, 2)

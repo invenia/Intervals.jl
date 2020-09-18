@@ -201,11 +201,19 @@ end
 # Minimum and maximum calls for open bounds and ambigous types, return open side +- increment
 # Default increment val is eps(T)
 function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) where {T,R}
-    return first(interval) + increment
+    isempty(interval) && return nothing
+    min_val = first(interval)
+    !isfinite(min_val) && return typemin(T)
+    min_val + increment ∈ interval && return min_val + increment
+    throw(DomainError(interval, "The increment is too large, $(min_val + increment) is not in the interval"))
 end
 
 function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) where {T,L}
-    return last(interval) - increment
+    isempty(interval) && return nothing
+    max_val = last(interval)
+    !isfinite(max_val) && return typemax(T)
+    max_val - increment ∈ interval && return max_val - increment
+    throw(DomainError(interval, "The increment is too large, $(max_val - increment) is not in the interval"))
 end
 
 # Minimum and maximum calls for open bounds and Integer types, return open side +- increment
@@ -221,13 +229,28 @@ end
 # Minimum and maximum calls for open bounds and Float types, return open side +- increment
 # Default increment val for Floats is nothing, which returns nextfloat or prevfloat (i.e., +- eps())
 function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
+    isempty(interval) && return nothing
     min_val = first(interval)
-    return increment !== nothing ? min_val + increment : nextfloat(min_val)
+    # Since intervals can't have NaN, we can just use !isfinite to check if infinite
+    next_val = if !isfinite(min_val) || increment === nothing || increment == eps(T)
+        nextfloat(min_val)
+    else
+        min_val + increment
+    end
+    next_val ∈ interval && return next_val
+    throw(DomainError(interval, "The increment is too large, $next_val is not in the interval"))
 end
 
 function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
+    isempty(interval) && return nothing
     max_val = last(interval)
-    return increment !== nothing ? max_val - increment : prevfloat(max_val)
+    next_val = if !isfinite(max_val) || increment === nothing || increment == eps(T)
+        prevfloat(max_val)
+    else
+        max_val - increment
+    end
+    next_val ∈ interval && return next_val
+    throw(DomainError(interval, "The increment is too large, $next_val is not in the interval"))
 end
 
 ##### CONVERSION #####
@@ -243,6 +266,7 @@ function Base.convert(::Type{T}, interval::Interval{T}) where T
 end
 
 ##### DISPLAY #####
+
 
 function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
     if get(io, :compact, false)

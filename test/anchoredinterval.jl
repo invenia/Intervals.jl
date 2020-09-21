@@ -178,8 +178,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
         # throws domain error
-        @test_throws DomainError minimum(interval, increment=Day(1)) == first(interval) + Day(1)
-        @test_throws DomainError maximum(interval, increment=Day(1)) == last(interval) - Day(1)
+        @test_throws BoundsError minimum(interval, increment=Day(1))
+        @test_throws BoundsError maximum(interval, increment=Day(1))
         @test bounds_types(interval) == (Open, Open)
         @test span(interval) == P
 
@@ -193,7 +193,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 3, 12, tz"America/Winnipeg")
         @test minimum(interval) == startpoint
-        @test maximum(interval, increment=Hour(1)) == ZonedDateTime(2018, 3, 11, 23, tz"America/Winnipeg")
+        @test maximum(interval, increment=Hour(1)) == last(interval) - Hour(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
@@ -205,14 +205,14 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test first(interval) == startpoint
         @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
         @test minimum(interval) == startpoint
-        @test maximum(interval, increment=Hour(1)) == ZonedDateTime(2018, 11, 4, 23, tz"America/Winnipeg")
+        @test maximum(interval, increment=Millisecond(1)) == last(interval) - Millisecond(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2020, 3, 9, 2, tz"America/Winnipeg")
         interval = AnchoredInterval{Day(-1)}(endpoint)
         @test_throws NonExistentTimeError first(interval)
-        @test_throws NonExistentTimeError minimum(interval, increment=Hour(1))
         @test last(interval) == endpoint
+        @test_throws NonExistentTimeError minimum(interval, increment=Hour(1))
         @test maximum(interval) == endpoint
         @test span(interval) == Day(1)
 

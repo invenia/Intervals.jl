@@ -163,7 +163,7 @@
             !isfinite(a) && return typemin(t)
 
             f = first(interval)
-            nv = if t <: AbstractFloat && (unit === nothing || unit == eps(t))
+            nv = if t <: AbstractFloat && unit === nothing
                 nextfloat(f)
             else
                 f + unit
@@ -193,7 +193,7 @@
             !isfinite(b) && return typemax(t)
 
             l = last(interval)
-            nv = if t <: AbstractFloat && (unit === nothing || unit == eps(t))
+            nv = if t <: AbstractFloat && unit === nothing
                 prevfloat(l)
             else
                 l - unit
@@ -274,30 +274,22 @@
 
             end
         end
-        @testset "empty intervals in min/max" begin
-            error_test_vals = [
-                # Different types
-                (Interval{Open,Open}(-10, -10), 1),
-                (Interval{Open,Open}(0.0, 0.0), 60),
-                (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 13)), Day(1)),
-                (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 0, 30)), Day(1)),
-            ]
-            for (interval, unit) in error_test_vals
-                @test minimum(interval; increment=unit) === nothing
-                @test maximum(interval; increment=unit) === nothing
-            end
-        end
-        @testset "domain errors in min/max" begin
+        @testset "bounds errors in min/max" begin
         error_test_vals = [
-            # Different types
+            # empty intervals
+            (Interval{Open,Open}(-10, -10), 1),
+            (Interval{Open,Open}(0.0, 0.0), 60),
+            (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 13)), Day(1)),
+            (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 0, 30)), Day(1)),
+            # increment too large
             (Interval{Open,Open}(-10, 15), 60),
             (Interval{Open,Open}(0.0, 25), 60.0),
             (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 14)), Day(5)),
             (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 5, 30)), Day(5)),
         ]
         for (interval, unit) in error_test_vals
-            @test_throws DomainError minimum(interval; increment=unit)
-            @test_throws DomainError maximum(interval; increment=unit)
+            @test_throws BoundsError minimum(interval; increment=unit)
+            @test_throws BoundsError maximum(interval; increment=unit)
         end
     end
     end

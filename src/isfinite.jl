@@ -2,3 +2,4 @@
 # `Char` and `Period` as well as other types.
 isfinite(x) = iszero(x - x)
 isfinite(x::Real) = Base.isfinite(x)
+isfinite(x::Union{Type{T}, T}) where T<:TimeType = Base.isfinite(x)

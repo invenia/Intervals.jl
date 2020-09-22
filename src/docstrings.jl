@@ -107,29 +107,27 @@ unbounded.
 isbounded(::AbstractInterval)
 
 """
-    minimum(interval::AbstractInterval{T}; increment::Any) -> T
+    minimum(interval::AbstractInterval{T}; [increment]) -> T
 
-The minimum value in the interval.
+The minimum value in the interval contained within the interval.
 
-If left bound is closed, returns `first(interval)`.
-If left bound is unbounded, returns `typemin(T)`
+If left-closed, returns `first(interval)`.
+If left-unbounded, returns minimum value possible for type `T`.
 
-On an empty interval or when the increment results in `first(interval) + increment ∉ interval`, returns BoundsError.
-
-When T <: AbstractFloat and no increment is passed, defaults to returning `nextfloat(first(interval))`
+A `BoundsError` is thrown for empty intervals or when the increment results in a minimum value
+not-contained by the interval.
 """
-minimum(::AbstractInterval; increment::Any)
+minimum(::AbstractInterval; increment)
 
 """
     maximum(interval::AbstractInterval{T}; increment::Any) -> T
 
-The maximum value in the interval.
+The maximum value in the interval contained within the interval.
 
-If right bound is closed, returns `last(interval)`.
-If right bound is unbounded, returns `typemax(T)`
+If right-closed, returns `last(interval)`.
+If right-unbounded, returns maximum value possible for type `T`.
 
-On an empty interval or when the increment results in `last(interval) - increment ∉ interval`, returns BoundsError.
-
-When T <: AbstractFloat and no increment is passed, defaults to returning `prevfloat(last(interval))`
+A `BoundsError` is thrown for empty intervals or when the increment results in a maximum value
+not-contained by the interval.
 """
-maximum(::AbstractInterval; increment::Any)
+maximum(::AbstractInterval; increment)

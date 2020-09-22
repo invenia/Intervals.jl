@@ -159,8 +159,8 @@
             # Also, if a is infinite we return typemin
             # If it's an abstractfloat, we can't return just typemin since typemin IS Inf and
             # since the bound is open at this point, Inf ∉ interval So we return the one after INF
-            !isfinite(a) && t <: AbstractFloat && return nextfloat(a)
-            !isfinite(a) && return typemin(t)
+            !Intervals.isfinite(a) && t <: AbstractFloat && return nextfloat(a)
+            !Intervals.isfinite(a) && return typemin(t)
 
             f = first(interval)
             nv = if t <: AbstractFloat && unit === nothing
@@ -206,29 +206,14 @@
         end
         @testset "bounded intervals" begin
             bounded_test_vals = [
-                (-10, 1000, 1),
-                (0.0, 1, 0.01),  # Use different types to test promotion
-                ('a', 'z', 1),
-                (Date(2013, 2, 13), Date(2013, 3, 13), Day(1)),
-                (DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 1), Millisecond(1)),
-
-                # Infinite endpoints
-                (-Inf, 10, 1),
-                (10, Inf, 1),
-                (-Inf, Inf, 1),
-                (-Inf, 1.0, 0.01),
-                (0.0, Inf, 0.01),
-
-                # test adding eps()
+                #test nextfloat and prevfloat
                 (-10.0, 10.0, nothing),
-
-                #test inf with nextfloat and prevfloat
                 (-Inf, Inf, nothing),
 
                 ('c', 'x', 2),
                 (Date(2004, 2, 13), Date(2020, 3, 13), Day(1)),
             ]
-            for (a, b, unit) in bounded_test_vals
+            for (a, b, unit) in append!(bounded_test_vals, test_values)
                 for (L, R) in BOUND_PERMUTATIONS
                     interval = Interval{L, R}(a, b)
 
@@ -275,23 +260,23 @@
             end
         end
         @testset "bounds errors in min/max" begin
-        error_test_vals = [
-            # empty intervals
-            (Interval{Open,Open}(-10, -10), 1),
-            (Interval{Open,Open}(0.0, 0.0), 60),
-            (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 13)), Day(1)),
-            (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 0, 30)), Day(1)),
-            # increment too large
-            (Interval{Open,Open}(-10, 15), 60),
-            (Interval{Open,Open}(0.0, 25), 60.0),
-            (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 14)), Day(5)),
-            (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 5, 30)), Day(5)),
-        ]
-        for (interval, unit) in error_test_vals
-            @test_throws BoundsError minimum(interval; increment=unit)
-            @test_throws BoundsError maximum(interval; increment=unit)
+            error_test_vals = [
+                # empty intervals
+                (Interval{Open,Open}(-10, -10), 1),
+                (Interval{Open,Open}(0.0, 0.0), 60),
+                (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 13)), Day(1)),
+                (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 0, 30)), Day(1)),
+                # increment too large
+                (Interval{Open,Open}(-10, 15), 60),
+                (Interval{Open,Open}(0.0, 25), 60.0),
+                (Interval{Open,Open}(Date(2013, 2, 13), Date(2013, 2, 14)), Day(5)),
+                (Interval{Open,Open}(DateTime(2016, 8, 11, 0, 30), DateTime(2016, 8, 11, 5, 30)), Day(5)),
+            ]
+            for (interval, unit) in error_test_vals
+                @test_throws BoundsError minimum(interval; increment=unit)
+                @test_throws BoundsError maximum(interval; increment=unit)
+            end
         end
-    end
     end
     @testset "display" begin
         interval = Interval{Open, Open}(1, 2)

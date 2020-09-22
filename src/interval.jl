@@ -193,11 +193,11 @@ end
 
 function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) where {T,R}
     isempty(interval) && throw(BoundsError(interval, 0))
-    min_val = first(interval)
+    min_val = first(interval) + increment
     # Since intervals can't have NaN, we can just use !isfinite to check if infinite
     !isfinite(min_val) && return typemin(T)
-    min_val + increment ∈ interval && return min_val + increment
-    throw(BoundsError(interval, min_val + increment))
+    min_val ∈ interval && return min_val
+    throw(BoundsError(interval, min_val))
 end
 
 function Base.minimum(interval::AbstractInterval{T,Open,R}) where {T<:Integer,R}
@@ -223,11 +223,11 @@ end
 
 function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) where {T,L}
     isempty(interval) && throw(BoundsError(interval, 0))
-    max_val = last(interval)
+    max_val = last(interval) - increment
     # Since intervals can't have NaN, we can just use !isfinite to check if infinite
     !isfinite(max_val) && return typemax(T)
-    max_val - increment ∈ interval && return max_val - increment
-    throw(BoundsError(interval, max_val - increment))
+    max_val ∈ interval && return max_val
+    throw(BoundsError(interval, max_val))
 end
 
 function Base.maximum(interval::AbstractInterval{T,L,Open}) where {T<:Integer,L}

@@ -177,7 +177,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test first(interval) == Date(2016, 8, 11)
         @test last(interval) == Date(2016, 8, 12)
-        # throws domain error
         @test_throws BoundsError minimum(interval, increment=Day(1))
         @test_throws BoundsError maximum(interval, increment=Day(1))
         @test bounds_types(interval) == (Open, Open)

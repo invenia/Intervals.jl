@@ -109,9 +109,10 @@ isbounded(::AbstractInterval)
 """
     minimum(interval::AbstractInterval{T}; [increment]) -> T
 
-The minimum value in the interval contained within the interval.
+The minimum value in the interval contained within the `interval`.
 
 If left-closed, returns `first(interval)`.
+If left-open, returns `first(interval) + eps(first(interval))`
 If left-unbounded, returns minimum value possible for type `T`.
 
 A `BoundsError` is thrown for empty intervals or when the increment results in a minimum value
@@ -122,9 +123,10 @@ minimum(::AbstractInterval; increment)
 """
     maximum(interval::AbstractInterval{T}; increment::Any) -> T
 
-The maximum value in the interval contained within the interval.
+The maximum value in the interval contained within the `interval`.
 
 If right-closed, returns `last(interval)`.
+If right-open, returns `first(interval) + eps(first(interval))`
 If right-unbounded, returns maximum value possible for type `T`.
 
 A `BoundsError` is thrown for empty intervals or when the increment results in a maximum value

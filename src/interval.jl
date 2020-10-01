@@ -250,7 +250,7 @@ end
 
 # Allows an interval to be converted to a scalar when the set contained by the interval only
 # contains a single element.
-function Base.convert(::Type{T}, interval::Interval{T}) where {T <: OrderedBaseTypes}
+function Base.convert(::Type{T}, interval::Interval{T}) where T
     if first(interval) == last(interval) && isclosed(interval)
         return first(interval)
     else
@@ -291,25 +291,11 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::A, b::T) where {T, A <: Interval{T}} = A(first(a) + b, last(a) + b)
-Base.:+(a::A, b::Number) where {T <: Number, A <: Interval{T}} = A(first(a) + b, last(a) + b)
-Base.:+(a::A, b::CharInts) where {T <: CharInts, A <: Interval{T}} = A(first(a) + b, last(a) + b)
-Base.:+(a::A, b::DatesTypes) where {T <: DatesTypes, A <: Interval{T}} = A(first(a) + b, last(a) + b)
+Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b)
 
-Base.:+(a::T, b::Interval{T}) where {T} = b + a
-Base.:+(a::Number, b::Interval{T}) where {T <: Number} = b + a
-Base.:+(a::CharInts, b::Interval{T}) where {T <: CharInts} = b + a
-Base.:+(a::DatesTypes, b::Interval{T}) where {T <: DatesTypes} = b + a
-
-Base.:-(a::Interval{T}, b::T) where {T} = a + -b
-Base.:-(a::T, b::Interval{T}) where {T} = a + -b
-Base.:-(a::Interval{T}, b::Number) where {T <: Number} = a + -b
-Base.:-(a::Number, b::Interval{T}) where {T <: Number} = a + -b
-Base.:-(a::Interval{T}, b::CharInts) where {T <: CharInts} = a + -b
-Base.:-(a::CharInts, b::Interval{T}) where {T <: CharInts} = a + -b
-Base.:-(a::Interval{T}, b::DatesTypes) where {T <: DatesTypes} = a + -b
-Base.:-(a::DatesTypes, b::Interval{T}) where {T <: DatesTypes} = a + -b
-
+Base.:+(a, b::Interval) = b + a
+Base.:-(a::Interval, b) = a + -b
+Base.:-(a, b::Interval) = a + -b
 Base.:-(a::Interval{T,L,R}) where {T,L,R} = Interval{T,R,L}(-last(a), -first(a))
 
 ##### EQUALITY #####

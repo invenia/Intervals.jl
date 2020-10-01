@@ -10,6 +10,10 @@ using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
+const CharInts = Union{Char, Integer}
+const DatesTypes = Union{Period, TimeType}
+const OrderedBaseTypes = Union{Char, Number, DatesTypes}
+
 abstract type Bound end
 abstract type Bounded <: Bound end
 struct Closed <: Bounded end

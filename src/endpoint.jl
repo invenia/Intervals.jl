@@ -145,8 +145,12 @@ function Base.isless(a::RightEndpoint, b::LeftEndpoint)
 end
 
 # Comparisons between Scalars and Endpoints
-Base.:(==)(a, b::Endpoint) = a == b.endpoint && isclosed(b)
-Base.:(==)(a::Endpoint, b) = b == a
+Base.:(==)(a::T, b::Endpoint{T}) where {T} = a == b.endpoint && isclosed(b)
+Base.:(==)(a::Endpoint{T}, b::T) where {T} = b == a
+Base.:(==)(a::Number, b::Endpoint{<:Number}) = a == b.endpoint && isclosed(b)
+Base.:(==)(a::Endpoint{<:Number}, b::Number) = b == a
+Base.:(==)(a::DatesTypes, b::Endpoint{<:DatesTypes}) = a == b.endpoint && isclosed(b)
+Base.:(==)(a::Endpoint{<:DatesTypes}, b::DatesTypes) = b == a
 
 function Base.isless(a, b::LeftEndpoint)
     return (

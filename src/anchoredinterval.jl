@@ -178,7 +178,7 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 # Allows an interval to be converted to a scalar when the set contained by the interval only
 # contains a single element.
-function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
+function Base.convert(::Type{T}, interval::AnchoredInterval{P, T}) where {P, T <: OrderedBaseTypes}
     if isclosed(interval) && (sign(P) == 0 || first(interval) == last(interval))
         return first(interval)
     else
@@ -258,10 +258,20 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: AnchoredInterval} = T(anchor(a) + b)
+Base.:+(a::A, b::T) where {P, T, A <: AnchoredInterval{P,T}} = A(anchor(a) + b)
+Base.:+(a::A, b::Number) where {P, T <: Number, A <: AnchoredInterval{P,T}} = A(anchor(a) + b)
+Base.:+(a::A, b::CharInts) where {P, T <: CharInts, A <: AnchoredInterval{P,T}} = A(anchor(a) + b)
+Base.:+(a::A, b::DatesTypes) where {P, T <: DatesTypes, A <: AnchoredInterval{P,T}} = A(anchor(a) + b)
 
-Base.:+(a, b::AnchoredInterval) = b + a
-Base.:-(a::AnchoredInterval, b) = a + -b
+Base.:+(a::T, b::AnchoredInterval{P, T}) where {P, T} = b + a
+Base.:+(a::Number, b::AnchoredInterval{P, T}) where {P, T <: Number} = b + a
+Base.:+(a::CharInts, b::AnchoredInterval{P, T}) where {P, T <: CharInts} = b + a
+Base.:+(a::DatesTypes, b::AnchoredInterval{P, T}) where {P, T <: DatesTypes} = b + a
+
+Base.:-(a::AnchoredInterval{P, T}, b::T) where {P, T} = a + -b
+Base.:-(a::AnchoredInterval{P, T}, b::Number) where {P, T <: Number} = a + -b
+Base.:-(a::AnchoredInterval{P, T}, b::CharInts) where {P, T <: CharInts} = a + -b
+Base.:-(a::AnchoredInterval{P, T}, b::DatesTypes) where {P, T <: DatesTypes} = a + -b
 
 # Required for StepRange{<:AnchoredInterval}
 Base.:-(a::AnchoredInterval, b::AnchoredInterval) = anchor(a) - anchor(b)

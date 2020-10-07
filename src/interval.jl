@@ -233,11 +233,13 @@ function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=nothing) w
     throw(BoundsError(interval, next_val))
 end
 
-##### CONVERSION #####
+"""
+    only(interval::AbstractInterval)
 
-# Allows an interval to be converted to a scalar when the set contained by the interval only
-# contains a single element.
-function Base.convert(::Type{T}, interval::Interval{T}) where T
+Returns the only element of a closed interval with coinciding endpoints (throws a
+DomainError otherwise).
+"""
+function Base.only(interval::Interval)
     if first(interval) == last(interval) && isclosed(interval)
         return first(interval)
     else
@@ -245,8 +247,18 @@ function Base.convert(::Type{T}, interval::Interval{T}) where T
     end
 end
 
-##### DISPLAY #####
+##### CONVERSION #####
 
+function Base.convert(::Type{T}, interval::Interval{T}) where {T}
+    depwarn(
+        "`convert(::Type{T}, interval::Interval{T})` is deprecated, " *
+        "use `only(interval)` instead.",
+        :convert,
+    )
+    return only(interval)
+end
+
+##### DISPLAY #####
 
 function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
     if get(io, :compact, false)

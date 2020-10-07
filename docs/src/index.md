@@ -263,6 +263,7 @@ Open
 Unbounded
 first
 last
+only
 span
 isclosed
 isopen

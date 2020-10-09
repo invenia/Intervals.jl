@@ -479,40 +479,54 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
 end
 
 ##### ROUNDING #####
+const RoundingFunctionTypes = Union{typeof(floor), typeof(ceil), typeof(round)}
 
 for f in (:floor, :ceil, :round)
-    @eval function Base.$f(
-        interval::Interval{T,L,R},
-        args...;
-        on::Type{<:Endpoint},
-    ) where {T,L,R}
-        left = LeftEndpoint(interval)
-        right = RightEndpoint(interval)
-
-        if on === LeftEndpoint
-            # Do nothing if the left endpoint is unbounded
-            if L <: Bounded
-                left = $f(left, args...)
-                # Shifts the interval, span remains the same
-                if R <: Bounded
-                    right = RightEndpoint{T, R}(left.endpoint + span(interval))
-                end
-            end
-        elseif on === RightEndpoint
-            # Do nothing if the right endpoint is unbounded
-            if R <: Bounded
-                right = $f(right, args...)
-                if L <: Bounded
-                    left = RightEndpoint{T, L}(right.endpoint - span(interval))
-                end
-            end
-        else
-            throw(ArgumentError("Unhandled `on` type: $on"))
-        end
-
-        return Interval(left, right)
+    @eval function Base.$f(interval::Interval, args...; on::Type{<:Endpoint})
+        return _round($f, interval, on, args...)
     end
 end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+) where {T, L <: Bounded, R <: Bounded}
+    left_val = f(first(interval), args...)
+    return Interval{T,L,R}(left_val, left_val + span(interval))
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+) where {T, L <: Bounded, R <: Unbounded}
+    left_val = f(first(interval), args...)
+    return Interval{T,L,R}(left_val, nothing)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+) where {T, L <: Unbounded, R <: Bound}
+    return interval
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+) where {T, L <: Bounded, R <: Bounded}
+    right_val = f(last(interval), args...)
+    return Interval{T,L,R}(right_val - span(interval), right_val)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+) where {T, L <: Unbounded, R <: Bounded}
+    right_val = f(last(interval), args...)
+    return Interval{T,L,R}(nothing, right_val)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+) where {T, L <: Bound, R <: Unbounded}
+    return interval
+end
+
 
 ##### TIME ZONES #####
 

@@ -889,71 +889,117 @@
     end
 
     @testset "floor" begin
-        @test floor(Interval(0.0, 1.0)) == Interval(0.0, 1.0)
-        @test floor(Interval(0.5, 1.0)) == Interval(0.0, 1.0)
-        @test floor(Interval(0.0, 1.5)) == Interval(0.0, 1.0)
-        @test floor(Interval(0.5, 1.5)) == Interval(0.0, 1.0)
+        @test_throws UndefKeywordError floor(Interval(0.0, 1.0))
 
         @test floor(Interval(0.0, 1.0), on=LeftEndpoint) == Interval(0.0, 1.0)
-        @test floor(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(0.0, 1.0)
+        @test floor(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(0.0, 0.5)
         @test floor(Interval(0.0, 1.5), on=LeftEndpoint) == Interval(0.0, 1.5)
-        @test floor(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(0.0, 1.5)
+        @test floor(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(0.0, 1.0)
 
         @test floor(Interval(0.0, 1.0), on=RightEndpoint) == Interval(0.0, 1.0)
         @test floor(Interval(0.5, 1.0), on=RightEndpoint) == Interval(0.5, 1.0)
-        @test floor(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 1.0)
-        @test floor(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 1.0)
+        @test floor(Interval(0.0, 1.5), on=RightEndpoint) == Interval(-0.5, 1.0)
+        @test floor(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.0, 1.0)
 
         # Test supplying a period to floor to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
-        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2))
-        @test floor(interval, Day) == expected
-        @test floor(interval, Day(1)) == expected
+        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2, 12))
+        @test_throws UndefKeywordError floor(interval, Day)
+        @test floor(interval, Day; on=LeftEndpoint) == expected
+        @test floor(interval, Day(1); on=LeftEndpoint) == expected
+
+        expected = Interval(DateTime(2011, 1, 31, 12), DateTime(2011, 2, 2))
+        @test floor(interval, Day; on=RightEndpoint) == expected
+        @test floor(interval, Day(1); on=RightEndpoint) == expected
+
+        # Test unbounded intervals
+        @test floor(Interval{Closed, Unbounded}(0.0, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Closed, Unbounded}(0.5, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.0), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.5), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test floor(Interval{Unbounded, Unbounded}(nothing, nothing), on=LeftEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test floor(Interval{Closed, Unbounded}(0.0, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Closed, Unbounded}(0.5, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.0), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.5), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Unbounded}(nothing, nothing), on=RightEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
     end
 
     @testset "ceil" begin
-        @test ceil(Interval(0.0, 1.0)) == Interval(0.0, 1.0)
-        @test ceil(Interval(0.5, 1.0)) == Interval(1.0, 1.0)
-        @test ceil(Interval(0.0, 1.5)) == Interval(0.0, 2.0)
-        @test ceil(Interval(0.5, 1.5)) == Interval(1.0, 2.0)
+        @test_throws UndefKeywordError ceil(Interval(0.0, 1.0))
 
         @test ceil(Interval(0.0, 1.0), on=LeftEndpoint) == Interval(0.0, 1.0)
-        @test ceil(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(1.0, 1.0)
+        @test ceil(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(1.0, 1.5)
         @test ceil(Interval(0.0, 1.5), on=LeftEndpoint) == Interval(0.0, 1.5)
-        @test ceil(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(1.0, 1.5)
+        @test ceil(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(1.0, 2.0)
 
         @test ceil(Interval(0.0, 1.0), on=RightEndpoint) == Interval(0.0, 1.0)
         @test ceil(Interval(0.5, 1.0), on=RightEndpoint) == Interval(0.5, 1.0)
-        @test ceil(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 2.0)
-        @test ceil(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
+        @test ceil(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
+        @test ceil(Interval(0.5, 1.5), on=RightEndpoint) == Interval(1.0, 2.0)
 
         # Test supplying a period to ceil to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
-        expected = Interval(DateTime(2011, 2, 2), DateTime(2011, 2, 3))
-        @test ceil(interval, Day) == expected
-        @test ceil(interval, Day(1)) == expected
+        expected = Interval(DateTime(2011, 2, 2), DateTime(2011, 2, 3, 12))
+        @test_throws UndefKeywordError ceil(interval, Day)
+        @test ceil(interval, Day; on=LeftEndpoint) == expected
+        @test ceil(interval, Day(1); on=LeftEndpoint) == expected
+
+        expected = Interval(DateTime(2011, 2, 1, 12), DateTime(2011, 2, 3))
+        @test ceil(interval, Day; on=RightEndpoint) == expected
+        @test ceil(interval, Day(1); on=RightEndpoint) == expected
+
+        # Test unbounded intervals
+        @test ceil(Interval{Closed, Unbounded}(0.0, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test ceil(Interval{Closed, Unbounded}(0.5, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(1.0, nothing)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.0), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.5), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test ceil(Interval{Unbounded, Unbounded}(nothing, nothing), on=LeftEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test ceil(Interval{Closed, Unbounded}(0.0, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test ceil(Interval{Closed, Unbounded}(0.5, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.0), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.5), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 2.0)
+        @test ceil(Interval{Unbounded, Unbounded}(nothing, nothing), on=RightEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
     end
 
     @testset "round" begin
-        @test round(Interval(0.0, 1.0)) == Interval(0.0, 1.0)
-        @test round(Interval(0.5, 1.0)) == Interval(0.0, 1.0)
-        @test round(Interval(0.0, 1.5)) == Interval(0.0, 2.0)
-        @test round(Interval(0.5, 1.5)) == Interval(0.0, 2.0)
+        @test_throws UndefKeywordError round(Interval(0.0, 1.0))
 
         @test round(Interval(0.0, 1.0), on=LeftEndpoint) == Interval(0.0, 1.0)
-        @test round(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(0.0, 1.0)
+        @test round(Interval(0.5, 1.0), on=LeftEndpoint) == Interval(0.0, 0.5)
         @test round(Interval(0.0, 1.5), on=LeftEndpoint) == Interval(0.0, 1.5)
-        @test round(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(0.0, 1.5)
+        @test round(Interval(0.5, 1.5), on=LeftEndpoint) == Interval(0.0, 1.0)
 
         @test round(Interval(0.0, 1.0), on=RightEndpoint) == Interval(0.0, 1.0)
         @test round(Interval(0.5, 1.0), on=RightEndpoint) == Interval(0.5, 1.0)
-        @test round(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.0, 2.0)
-        @test round(Interval(0.5, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
+        @test round(Interval(0.0, 1.5), on=RightEndpoint) == Interval(0.5, 2.0)
+        @test round(Interval(0.5, 1.5), on=RightEndpoint) == Interval(1.0, 2.0)
 
         # Test supplying a period to round to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
-        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 3))
-        @test round(interval, Day) == expected
-        @test round(interval, Day(1)) == expected
+        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2, 12))
+        @test_throws UndefKeywordError round(interval, Day)
+        @test round(interval, Day; on=LeftEndpoint) == expected
+        @test round(interval, Day(1); on=LeftEndpoint) == expected
+
+        expected = Interval(DateTime(2011, 2, 1, 12), DateTime(2011, 2, 3))
+        @test_throws UndefKeywordError round(interval, Day)
+        @test round(interval, Day; on=RightEndpoint) == expected
+        @test round(interval, Day(1); on=RightEndpoint) == expected
+
+        # Test unbounded intervals
+        @test round(Interval{Closed, Unbounded}(0.0, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Closed, Unbounded}(0.5, nothing), on=LeftEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.0), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.5), on=LeftEndpoint) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test round(Interval{Unbounded, Unbounded}(nothing, nothing), on=LeftEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test round(Interval{Closed, Unbounded}(0.0, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Closed, Unbounded}(0.5, nothing), on=RightEndpoint) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.0), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.5), on=RightEndpoint) == Interval{Unbounded, Closed}(nothing, 2.0)
+        @test round(Interval{Unbounded, Unbounded}(nothing, nothing), on=RightEndpoint) == Interval{Unbounded, Unbounded}(nothing, nothing)
     end
 end

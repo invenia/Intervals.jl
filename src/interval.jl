@@ -482,20 +482,30 @@ end
 
 for f in (:floor, :ceil, :round)
     @eval function Base.$f(
-        interval::Interval,
+        interval::Interval{T,L,R},
         args...;
-        on::Type{<:Endpoint}=LeftAndRightEndpoint,
-    )
+        on::Type{<:Endpoint},
+    ) where {T,L,R}
         left = LeftEndpoint(interval)
         right = RightEndpoint(interval)
 
-        if on === LeftAndRightEndpoint
-            left = $f(left, args...)
-            right = $f(right, args...)
-        elseif on === LeftEndpoint
-            left = $f(left, args...)
+        if on === LeftEndpoint
+            # Do nothing if the left endpoint is unbounded
+            if L <: Bounded
+                left = $f(left, args...)
+                # Shifts the interval, span remains the same
+                if R <: Bounded
+                    right = RightEndpoint{T, R}(left.endpoint + span(interval))
+                end
+            end
         elseif on === RightEndpoint
-            right = $f(right, args...)
+            # Do nothing if the right endpoint is unbounded
+            if R <: Bounded
+                right = $f(right, args...)
+                if L <: Bounded
+                    left = RightEndpoint{T, L}(right.endpoint - span(interval))
+                end
+            end
         else
             throw(ArgumentError("Unhandled `on` type: $on"))
         end

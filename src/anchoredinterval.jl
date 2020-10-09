@@ -143,8 +143,7 @@ HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 `HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
-# TODO: update to ceil the interval
-HE(anchor) = HourEnding(ceil(anchor, Hour))
+HE(anchor) = ceil(HourEnding(anchor), Hour)
 
 """
     HB(anchor) -> HourBeginning
@@ -152,8 +151,7 @@ HE(anchor) = HourEnding(ceil(anchor, Hour))
 `HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
-# TODO: update to floor the interval
-HB(anchor) = HourBeginning(floor(anchor, Hour))
+HB(anchor) = floor(HourBeginning(anchor), Hour)
 
 function Base.copy(x::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
     return AnchoredInterval{P,T,L,R}(anchor(x))
@@ -331,17 +329,17 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
     end
 
     L, R = bounds_types(interval)
-    return AnchoredInterval{new_P, T, L, R}(anchor)
+    return AnchoredInterval{new_P,T,L,R}(anchor)
 end
 
 ##### ROUNDING #####
 
 for f in (:floor, :ceil, :round)
     @eval function Base.$f(
-        interval::AnchoredInterval{P, T},
+        interval::AnchoredInterval{P,T,L,R},
         args...;
         on::Type{<:Endpoint}=AnchorEndpoint,
-    ) where {P, T}
+    ) where {P,T,L,R}
         anc = if on === AnchorEndpoint
             $f(anchor(interval), args...)
         elseif on === LeftEndpoint
@@ -360,7 +358,7 @@ for f in (:floor, :ceil, :round)
             throw(ArgumentError("Unhandled `on` type: $on"))
         end
 
-        return AnchoredInterval{P, T}(anc, inclusivity(interval))
+        return AnchoredInterval{P,T,L,R}(anc)
     end
 end
 

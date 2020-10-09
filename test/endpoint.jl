@@ -499,4 +499,9 @@ using Intervals: Endpoint, Left, Right, LeftEndpoint, RightEndpoint
         result = test .== 0
         @test result == [false, true, false, false, true, false]
     end
+
+    @testset "AnchorEndpoint" begin
+        # Unconstructable type used for rounding anchored intervals
+        @test_throws MethodError AnchorEndpoint()
+    end
 end

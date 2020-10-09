@@ -858,6 +858,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test floor(AnchoredInterval{-0.5}(0.5), on=RightEndpoint) == AnchoredInterval{-0.5}(0.0)
         @test floor(AnchoredInterval{+0.5}(0.5), on=RightEndpoint) == AnchoredInterval{+0.5}(0.5)
 
+        @test floor(AnchoredInterval{-0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{-0.5}(1.0)
+        @test floor(AnchoredInterval{+0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{+0.5}(1.0)
+        @test floor(AnchoredInterval{-0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{-0.5}(0.0)
+        @test floor(AnchoredInterval{+0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{+0.5}(0.0)
+
         # Test supplying a period to floor to
         interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))
         expected = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1))
@@ -886,6 +891,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test ceil(AnchoredInterval{-0.5}(0.5), on=RightEndpoint) == AnchoredInterval{-0.5}(1.0)
         @test ceil(AnchoredInterval{+0.5}(0.5), on=RightEndpoint) == AnchoredInterval{+0.5}(0.5)
 
+        @test ceil(AnchoredInterval{-0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{+0.5}(1.0)
+
         # Test supplying a period to ceil to
         interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))
         expected = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 2))
@@ -913,6 +923,11 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test round(AnchoredInterval{+0.5}(1.0), on=RightEndpoint) == AnchoredInterval{+0.5}(1.5)
         @test round(AnchoredInterval{-0.5}(0.5), on=RightEndpoint) == AnchoredInterval{-0.5}(0.0)
         @test round(AnchoredInterval{+0.5}(0.5), on=RightEndpoint) == AnchoredInterval{+0.5}(0.5)
+
+        @test round(AnchoredInterval{-0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{-0.5}(1.0)
+        @test round(AnchoredInterval{+0.5}(1.0), on=AnchorEndpoint) == AnchoredInterval{+0.5}(1.0)
+        @test round(AnchoredInterval{-0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{-0.5}(0.0)
+        @test round(AnchoredInterval{+0.5}(0.5), on=AnchorEndpoint) == AnchoredInterval{+0.5}(0.0)
 
         # Test supplying a period to round to
         interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))

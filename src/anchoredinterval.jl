@@ -335,30 +335,40 @@ end
 ##### ROUNDING #####
 
 for f in (:floor, :ceil, :round)
-    @eval function Base.$f(
-        interval::AnchoredInterval{P,T,L,R},
-        args...;
-        on::Symbol=:anchor,
-    ) where {P,T,L,R}
-        anc = if on === :anchor
-            $f(anchor(interval), args...)
-        elseif on === :left
-            if P ≤ zero(P)
-                $f(first(interval), args...) - P
-            else
-                $f(first(interval), args...)
-            end
-        elseif on === :right
-            if P ≤ zero(P)
-                $f(last(interval), args...)
-            else
-                $f(last(interval), args...) - P
-            end
-        else
-            throw(ArgumentError("Unhandled `on` type: $on"))
-        end
+    @eval begin
+        """
+           $($f)(interval::AnchoredInterval, args...; on::Symbol=:anchor)
 
-        return AnchoredInterval{P,T,L,R}(anc)
+        Round the anchored interval by applying `$($f)` to a single endpoint, then shifting
+        the interval so that the span remains the same. The `on` keyword determines which
+        endpoint the rounding will be applied to. Valid options are `:anchor`, `:left`, or
+        `:right`. Rounding defaults to using the anchor point.
+        """
+        function Base.$f(
+            interval::AnchoredInterval{P,T,L,R},
+            args...;
+            on::Symbol=:anchor,
+        ) where {P,T,L,R}
+            anc = if on === :anchor
+                $f(anchor(interval), args...)
+            elseif on === :left
+                if P ≤ zero(P)
+                    $f(first(interval), args...) - P
+                else
+                    $f(first(interval), args...)
+                end
+            elseif on === :right
+                if P ≤ zero(P)
+                    $f(last(interval), args...)
+                else
+                    $f(last(interval), args...) - P
+                end
+            else
+                throw(ArgumentError("Unhandled `on` type: $on"))
+            end
+
+            return AnchoredInterval{P,T,L,R}(anc)
+        end
     end
 end
 

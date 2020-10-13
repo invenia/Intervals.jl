@@ -482,8 +482,17 @@ end
 const RoundingFunctionTypes = Union{typeof(floor), typeof(ceil), typeof(round)}
 
 for f in (:floor, :ceil, :round)
-    @eval function Base.$f(interval::Interval, args...; on::Symbol)
-        return _round($f, interval, Val(on), args...)
+    @eval begin
+        """
+           $($f)(interval::Interval, args...; on::Symbol)
+
+        Round the interval by applying `$($f)` to a single endpoint, then shifting the
+        interval so that the span remains the same. The `on` keyword determines which
+        endpoint the rounding will be applied to. Valid options are `:left` or `:right`.
+        """
+        function Base.$f(interval::Interval, args...; on::Symbol)
+            return _round($f, interval, Val(on), args...)
+        end
     end
 end
 

@@ -338,17 +338,17 @@ for f in (:floor, :ceil, :round)
     @eval function Base.$f(
         interval::AnchoredInterval{P,T,L,R},
         args...;
-        on::Type{<:Endpoint}=AnchorEndpoint,
+        on::Symbol=:anchor,
     ) where {P,T,L,R}
-        anc = if on === AnchorEndpoint
+        anc = if on === :anchor
             $f(anchor(interval), args...)
-        elseif on === LeftEndpoint
+        elseif on === :left
             if P ≤ zero(P)
                 $f(first(interval), args...) - P
             else
                 $f(first(interval), args...)
             end
-        elseif on === RightEndpoint
+        elseif on === :right
             if P ≤ zero(P)
                 $f(last(interval), args...)
             else

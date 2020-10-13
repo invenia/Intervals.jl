@@ -31,11 +31,11 @@ Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
     LeftEndpoint
 
 `LeftEndpoint` represents the lesser endpoint of an `AbstractInterval`. Useful for comparing
-two endpoints to each other or for specifying how to round intervals.
+two endpoints to each other.
 
 ### Examples
 
-```jldoctest; setup = :(using Intervals)
+```jldoctest; setup = :(using Intervals; using Intervals: LeftEndpoint)
 julia> LeftEndpoint(Interval(0.0, 1.0))
 Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(0.0)
 
@@ -46,7 +46,7 @@ julia> LeftEndpoint{Integer, Closed}(1.0)
 Intervals.Endpoint{Integer,Intervals.Direction{:Left}(),Closed}(1)
 ```
 
-See also: [`RightEndpoint`](@ref), [`AnchorEndpoint`](@ref)
+See also: [`RightEndpoint`](@ref)
 """
 const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
 
@@ -54,11 +54,11 @@ const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
     RightEndpoint
 
 `RightEndpoint` represents the greater endpoint of an `AbstractInterval`. Useful for
-comparing two endpoints to each other or for specifying how to round intervals.
+comparing two endpoints to each other.
 
 ### Examples
 
-```jldoctest; setup = :(using Intervals)
+```jldoctest; setup = :(using Intervals; using Intervals: RightEndpoint)
 julia> RightEndpoint(Interval(0.0, 1.0))
 Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
 
@@ -69,7 +69,7 @@ julia> RightEndpoint{Integer, Closed}(1.0)
 Intervals.Endpoint{Integer,Intervals.Direction{:Right}(),Closed}(1)
 ```
 
-See also: [`LeftEndpoint`](@ref), [`AnchorEndpoint`](@ref)
+See also: [`LeftEndpoint`](@ref)
 """
 const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
 
@@ -78,24 +78,6 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
-
-# Unconstructable Endpoint type used for rounding AnchoredIntervals
-"""
-    AnchorEndpoint
-
-Unconstructable Endpoint type used for rounding AnchoredIntervals. Specifies to use
-whichever endpoint is the anchor.
-
-### Example
-
-```jldoctest; setup = :(using Intervals)
-julia> floor(AnchoredInterval{-0.5}(1.0), on=AnchorEndpoint)
-AnchoredInterval{-0.5,Float64,Open,Closed}(1.0)
-```
-
-See also: [`LeftEndpoint`](@ref), [`RightEndpoint`](@ref)
-"""
-const AnchorEndpoint{B} = Endpoint{Union{}, Direction{:Anchor}(), B} where {B <: Bounded}
 
 endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B

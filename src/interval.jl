@@ -482,47 +482,47 @@ end
 const RoundingFunctionTypes = Union{typeof(floor), typeof(ceil), typeof(round)}
 
 for f in (:floor, :ceil, :round)
-    @eval function Base.$f(interval::Interval, args...; on::Type{<:Endpoint})
-        return _round($f, interval, on, args...)
+    @eval function Base.$f(interval::Interval, args...; on::Symbol)
+        return _round($f, interval, Val(on), args...)
     end
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
 ) where {T, L <: Bounded, R <: Bounded}
     left_val = f(first(interval), args...)
     return Interval{T,L,R}(left_val, left_val + span(interval))
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
 ) where {T, L <: Bounded, R <: Unbounded}
     left_val = f(first(interval), args...)
     return Interval{T,L,R}(left_val, nothing)
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{LeftEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
 ) where {T, L <: Unbounded, R <: Bound}
     return interval
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
 ) where {T, L <: Bounded, R <: Bounded}
     right_val = f(last(interval), args...)
     return Interval{T,L,R}(right_val - span(interval), right_val)
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
 ) where {T, L <: Unbounded, R <: Bounded}
     right_val = f(last(interval), args...)
     return Interval{T,L,R}(nothing, right_val)
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Type{RightEndpoint}, args...
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
 ) where {T, L <: Bound, R <: Unbounded}
     return interval
 end

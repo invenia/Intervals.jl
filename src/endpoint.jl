@@ -24,10 +24,52 @@ struct Endpoint{T, D, B <: Bound}
     end
 end
 
-
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
 
+"""
+    LeftEndpoint
+
+Represents the lesser endpoint of an `AbstractInterval`. Useful for comparing two endpoints
+to each other.
+
+### Examples
+
+```jldoctest; setup = :(using Intervals; using Intervals: LeftEndpoint)
+julia> LeftEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(0.0)
+
+julia> LeftEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(1.0)
+
+julia> LeftEndpoint{Integer, Closed}(1.0)
+Intervals.Endpoint{Integer,Intervals.Direction{:Left}(),Closed}(1)
+```
+
+See also: [`RightEndpoint`](@ref)
+"""
 const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
+
+"""
+    RightEndpoint
+
+Represents the greater endpoint of an `AbstractInterval`. Useful for comparing two endpoints
+to each other.
+
+### Examples
+
+```jldoctest; setup = :(using Intervals; using Intervals: RightEndpoint)
+julia> RightEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+
+julia> RightEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+
+julia> RightEndpoint{Integer, Closed}(1.0)
+Intervals.Endpoint{Integer,Intervals.Direction{:Right}(),Closed}(1)
+```
+
+See also: [`LeftEndpoint`](@ref)
+"""
 const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
 
 LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)

@@ -143,7 +143,7 @@ HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 `HE` is a pseudoconstructor for [`HourEnding`](@ref) that rounds the anchor provided up to the
 nearest hour.
 """
-HE(anchor) = HourEnding(ceil(anchor, Hour))
+HE(anchor) = ceil(HourEnding(anchor), Hour)
 
 """
     HB(anchor) -> HourBeginning
@@ -151,7 +151,7 @@ HE(anchor) = HourEnding(ceil(anchor, Hour))
 `HB` is a pseudoconstructor for [`HourBeginning`](@ref) that rounds the anchor provided down to the
 nearest hour.
 """
-HB(anchor) = HourBeginning(floor(anchor, Hour))
+HB(anchor) = floor(HourBeginning(anchor), Hour)
 
 function Base.copy(x::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
     return AnchoredInterval{P,T,L,R}(anchor(x))
@@ -329,7 +329,47 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
     end
 
     L, R = bounds_types(interval)
-    return AnchoredInterval{new_P, T, L, R}(anchor)
+    return AnchoredInterval{new_P,T,L,R}(anchor)
+end
+
+##### ROUNDING #####
+
+for f in (:floor, :ceil, :round)
+    @eval begin
+        """
+           $($f)(interval::AnchoredInterval, args...; on::Symbol=:anchor)
+
+        Round the anchored interval by applying `$($f)` to a single endpoint, then shifting
+        the interval so that the span remains the same. The `on` keyword determines which
+        endpoint the rounding will be applied to. Valid options are `:anchor`, `:left`, or
+        `:right`. Rounding defaults to using the anchor point.
+        """
+        function Base.$f(
+            interval::AnchoredInterval{P,T,L,R},
+            args...;
+            on::Symbol=:anchor,
+        ) where {P,T,L,R}
+            anc = if on === :anchor
+                $f(anchor(interval), args...)
+            elseif on === :left
+                if P ≤ zero(P)
+                    $f(first(interval), args...) - P
+                else
+                    $f(first(interval), args...)
+                end
+            elseif on === :right
+                if P ≤ zero(P)
+                    $f(last(interval), args...)
+                else
+                    $f(last(interval), args...) - P
+                end
+            else
+                throw(ArgumentError("Unhandled `on` type: $on"))
+            end
+
+            return AnchoredInterval{P,T,L,R}(anc)
+        end
+    end
 end
 
 ##### UTILITIES #####

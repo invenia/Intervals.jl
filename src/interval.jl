@@ -478,6 +478,69 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
     return Interval(left, right)
 end
 
+##### ROUNDING #####
+const RoundingFunctionTypes = Union{typeof(floor), typeof(ceil), typeof(round)}
+
+for f in (:floor, :ceil, :round)
+    @eval begin
+        """
+           $($f)(interval::Interval, args...; on::Symbol)
+
+        Round the interval by applying `$($f)` to a single endpoint, then shifting the
+        interval so that the span remains the same. The `on` keyword determines which
+        endpoint the rounding will be applied to. Valid options are `:left` or `:right`.
+        """
+        function Base.$f(interval::Interval, args...; on::Symbol)
+            return _round($f, interval, Val(on), args...)
+        end
+    end
+end
+
+function _round(f::RoundingFunctionTypes, interval::Interval, on::Val{:anchor}, args...)
+    throw(ArgumentError(":anchor is only usable with an AnchoredInterval."))
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
+) where {T, L <: Bounded, R <: Bounded}
+    left_val = f(first(interval), args...)
+    return Interval{T,L,R}(left_val, left_val + span(interval))
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
+) where {T, L <: Bounded, R <: Unbounded}
+    left_val = f(first(interval), args...)
+    return Interval{T,L,R}(left_val, nothing)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
+) where {T, L <: Unbounded, R <: Bound}
+    return interval
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
+) where {T, L <: Bounded, R <: Bounded}
+    right_val = f(last(interval), args...)
+    return Interval{T,L,R}(right_val - span(interval), right_val)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
+) where {T, L <: Unbounded, R <: Bounded}
+    right_val = f(last(interval), args...)
+    return Interval{T,L,R}(nothing, right_val)
+end
+
+function _round(
+    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
+) where {T, L <: Bound, R <: Unbounded}
+    return interval
+end
+
+
 ##### TIME ZONES #####
 
 function TimeZones.astimezone(i::Interval{ZonedDateTime, L, R}, tz::TimeZone) where {L,R}

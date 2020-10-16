@@ -841,4 +841,112 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test interval isa AnchoredInterval
         @test interval == AnchoredInterval{-1,Int,Closed,Open}(2)
     end
+
+    @testset "floor" begin
+        # only :anchor, :left, and :right are supported
+        @test_throws ArgumentError floor(AnchoredInterval{-0.5}(1.0); on=:nothing)
+
+        @test floor(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
+        @test floor(AnchoredInterval{+0.5}(1.0)) == AnchoredInterval{+0.5}(1.0)
+        @test floor(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(0.0)
+        @test floor(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(0.0)
+
+        @test floor(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(0.5)
+        @test floor(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
+        @test floor(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
+        @test floor(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(0.0)
+
+        @test floor(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
+        @test floor(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(0.5)
+        @test floor(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(0.0)
+        @test floor(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+
+        @test floor(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
+        @test floor(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)
+        @test floor(AnchoredInterval{-0.5}(0.5); on=:anchor) == AnchoredInterval{-0.5}(0.0)
+        @test floor(AnchoredInterval{+0.5}(0.5); on=:anchor) == AnchoredInterval{+0.5}(0.0)
+
+        # Test supplying a period to floor to
+        interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1))
+        @test floor(interval_ending, Day) == expected
+        @test floor(interval_ending, Day(1)) == expected
+
+        interval_beginning = AnchoredInterval{Day(1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(1)}(DateTime(2011, 2, 1))
+        @test floor(interval_beginning, Day) == expected
+        @test floor(interval_beginning, Day(1)) == expected
+    end
+
+    @testset "ceil" begin
+        # only :anchor, :left, and :right are supported
+        @test_throws ArgumentError ceil(AnchoredInterval{-0.5}(1.0); on=:nothing)
+
+        @test ceil(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(1.0)) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(1.0)
+
+        @test ceil(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(1.5)
+        @test ceil(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
+        @test ceil(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(1.0)
+
+        @test ceil(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(1.5)
+        @test ceil(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+
+        @test ceil(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(0.5); on=:anchor) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(0.5); on=:anchor) == AnchoredInterval{+0.5}(1.0)
+
+        # Test supplying a period to ceil to
+        interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 2))
+        @test ceil(interval_ending, Day) == expected
+        @test ceil(interval_ending, Day(1)) == expected
+
+        interval_beginning = AnchoredInterval{Day(1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(1)}(DateTime(2011, 2, 2))
+        @test ceil(interval_beginning, Day) == expected
+        @test ceil(interval_beginning, Day(1)) == expected
+    end
+
+    @testset "round" begin
+        # only :anchor, :left, and :right are supported
+        @test_throws ArgumentError round(AnchoredInterval{-0.5}(1.0); on=:nothing)
+
+        @test round(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
+        @test round(AnchoredInterval{+0.5}(1.0)) == AnchoredInterval{+0.5}(1.0)
+        @test round(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(0.0)
+        @test round(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(0.0)
+
+        @test round(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(0.5)
+        @test round(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
+        @test round(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
+        @test round(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(0.0)
+
+        @test round(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
+        @test round(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(1.5)
+        @test round(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(0.0)
+        @test round(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+
+        @test round(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
+        @test round(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)
+        @test round(AnchoredInterval{-0.5}(0.5); on=:anchor) == AnchoredInterval{-0.5}(0.0)
+        @test round(AnchoredInterval{+0.5}(0.5); on=:anchor) == AnchoredInterval{+0.5}(0.0)
+
+        # Test supplying a period to round to
+        interval_ending = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(-1)}(DateTime(2011, 2, 2))
+        @test round(interval_ending, Day) == expected
+        @test round(interval_ending, Day(1)) == expected
+
+        interval_beginning = AnchoredInterval{Day(1)}(DateTime(2011, 2, 1, 12))
+        expected = AnchoredInterval{Day(1)}(DateTime(2011, 2, 2))
+        @test round(interval_beginning, Day) == expected
+        @test round(interval_beginning, Day(1)) == expected
+    end
 end

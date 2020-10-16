@@ -209,6 +209,44 @@ julia> 0..10 ≪ 11..20
 true
 ```
 
+### Rounding
+
+Interval rounding maintains the original span of the interval, shifting it according to
+whichever endpoint is specified as the one to use for rounding. The operations `floor`,
+`ceil`, and `round` are supported, as long as the `on` keyword is supplied to specify which
+endpoint should be used for rounding. Valid options are `:left`, `:right`, or
+`:anchor` if dealing with anchored intervals.
+
+```jldoctest
+julia> floor(Interval(0.0, 1.0), on=:left)
+Interval{Float64,Closed,Closed}(0.0, 1.0)
+
+julia> floor(Interval(0.5, 1.0), on=:left)
+Interval{Float64,Closed,Closed}(0.0, 0.5)
+
+julia> floor(Interval(0.5, 1.5), on=:right)
+Interval{Float64,Closed,Closed}(0.0, 1.0)
+```
+
+Anchored intervals default to rounding using the anchor point.
+
+```jldoctest
+julia> round(AnchoredInterval{-0.5}(1.0))
+AnchoredInterval{-0.5,Float64,Open,Closed}(1.0)
+
+julia> round(AnchoredInterval{+0.5}(0.5))
+AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+
+julia> round(AnchoredInterval{+0.5}(0.5), on=:anchor)
+AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+
+julia> round(AnchoredInterval{+0.5}(0.5), on=:left)
+AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+
+julia> round(AnchoredInterval{+0.5}(0.5), on=:right)
+AnchoredInterval{0.5,Float64,Closed,Open}(0.5)
+```
+
 ## API
 
 ```@docs

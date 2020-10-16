@@ -24,10 +24,11 @@ struct Endpoint{T, D, B <: Bound}
     end
 end
 
+
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
 
-const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B}
-const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B}
+const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
+const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
 
 LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)
 RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)

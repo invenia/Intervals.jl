@@ -887,4 +887,140 @@
             end
         end
     end
+
+    @testset "floor" begin
+        # `on` keyword is required
+        @test_throws UndefKeywordError floor(Interval(0.0, 1.0))
+
+        # only :left and :right are supported
+        @test_throws MethodError floor(Interval(0.0, 1.0); on=:nothing)
+
+        @test floor(Interval(0.0, 1.0); on=:left) == Interval(0.0, 1.0)
+        @test floor(Interval(0.5, 1.0); on=:left) == Interval(0.0, 0.5)
+        @test floor(Interval(0.0, 1.5); on=:left) == Interval(0.0, 1.5)
+        @test floor(Interval(0.5, 1.5); on=:left) == Interval(0.0, 1.0)
+
+        @test floor(Interval(0.0, 1.0); on=:right) == Interval(0.0, 1.0)
+        @test floor(Interval(0.5, 1.0); on=:right) == Interval(0.5, 1.0)
+        @test floor(Interval(0.0, 1.5); on=:right) == Interval(-0.5, 1.0)
+        @test floor(Interval(0.5, 1.5); on=:right) == Interval(0.0, 1.0)
+
+        # :anchor is only usable with AnchoredIntervals
+        @test_throws ArgumentError floor(Interval(0.0, 1.0); on=:anchor)
+
+        # Test supplying a period to floor to
+        interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
+        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2, 12))
+        @test_throws UndefKeywordError floor(interval, Day)
+        @test floor(interval, Day; on=:left) == expected
+        @test floor(interval, Day(1); on=:left) == expected
+
+        expected = Interval(DateTime(2011, 1, 31, 12), DateTime(2011, 2, 2))
+        @test floor(interval, Day; on=:right) == expected
+        @test floor(interval, Day(1); on=:right) == expected
+
+        # Test unbounded intervals
+        @test floor(Interval{Closed, Unbounded}(0.0, nothing); on=:left) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Closed, Unbounded}(0.5, nothing); on=:left) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.0); on=:left) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.5); on=:left) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test floor(Interval{Unbounded, Unbounded}(nothing, nothing); on=:left) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test floor(Interval{Closed, Unbounded}(0.0, nothing); on=:right) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test floor(Interval{Closed, Unbounded}(0.5, nothing); on=:right) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.0); on=:right) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Closed}(nothing, 1.5); on=:right) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test floor(Interval{Unbounded, Unbounded}(nothing, nothing); on=:right) == Interval{Unbounded, Unbounded}(nothing, nothing)
+    end
+
+    @testset "ceil" begin
+        # `on` keyword is required
+        @test_throws UndefKeywordError ceil(Interval(0.0, 1.0))
+
+        # only :left and :right are supported
+        @test_throws MethodError ceil(Interval(0.0, 1.0); on=:nothing)
+
+        @test ceil(Interval(0.0, 1.0); on=:left) == Interval(0.0, 1.0)
+        @test ceil(Interval(0.5, 1.0); on=:left) == Interval(1.0, 1.5)
+        @test ceil(Interval(0.0, 1.5); on=:left) == Interval(0.0, 1.5)
+        @test ceil(Interval(0.5, 1.5); on=:left) == Interval(1.0, 2.0)
+
+        @test ceil(Interval(0.0, 1.0); on=:right) == Interval(0.0, 1.0)
+        @test ceil(Interval(0.5, 1.0); on=:right) == Interval(0.5, 1.0)
+        @test ceil(Interval(0.0, 1.5); on=:right) == Interval(0.5, 2.0)
+        @test ceil(Interval(0.5, 1.5); on=:right) == Interval(1.0, 2.0)
+
+        # :anchor is only usable with AnchoredIntervals
+        @test_throws ArgumentError ceil(Interval(0.0, 1.0); on=:anchor)
+
+        # Test supplying a period to ceil to
+        interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
+        expected = Interval(DateTime(2011, 2, 2), DateTime(2011, 2, 3, 12))
+        @test_throws UndefKeywordError ceil(interval, Day)
+        @test ceil(interval, Day; on=:left) == expected
+        @test ceil(interval, Day(1); on=:left) == expected
+
+        expected = Interval(DateTime(2011, 2, 1, 12), DateTime(2011, 2, 3))
+        @test ceil(interval, Day; on=:right) == expected
+        @test ceil(interval, Day(1); on=:right) == expected
+
+        # Test unbounded intervals
+        @test ceil(Interval{Closed, Unbounded}(0.0, nothing); on=:left) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test ceil(Interval{Closed, Unbounded}(0.5, nothing); on=:left) == Interval{Closed, Unbounded}(1.0, nothing)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.0); on=:left) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.5); on=:left) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test ceil(Interval{Unbounded, Unbounded}(nothing, nothing); on=:left) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test ceil(Interval{Closed, Unbounded}(0.0, nothing); on=:right) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test ceil(Interval{Closed, Unbounded}(0.5, nothing); on=:right) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.0); on=:right) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test ceil(Interval{Unbounded, Closed}(nothing, 1.5); on=:right) == Interval{Unbounded, Closed}(nothing, 2.0)
+        @test ceil(Interval{Unbounded, Unbounded}(nothing, nothing); on=:right) == Interval{Unbounded, Unbounded}(nothing, nothing)
+    end
+
+    @testset "round" begin
+        # `on` keyword is required
+        @test_throws UndefKeywordError round(Interval(0.0, 1.0))
+
+        # only :left and :right are supported
+        @test_throws MethodError round(Interval(0.0, 1.0); on=:nothing)
+
+        @test round(Interval(0.0, 1.0); on=:left) == Interval(0.0, 1.0)
+        @test round(Interval(0.5, 1.0); on=:left) == Interval(0.0, 0.5)
+        @test round(Interval(0.0, 1.5); on=:left) == Interval(0.0, 1.5)
+        @test round(Interval(0.5, 1.5); on=:left) == Interval(0.0, 1.0)
+
+        @test round(Interval(0.0, 1.0); on=:right) == Interval(0.0, 1.0)
+        @test round(Interval(0.5, 1.0); on=:right) == Interval(0.5, 1.0)
+        @test round(Interval(0.0, 1.5); on=:right) == Interval(0.5, 2.0)
+        @test round(Interval(0.5, 1.5); on=:right) == Interval(1.0, 2.0)
+
+        # :anchor is only usable with AnchoredIntervals
+        @test_throws ArgumentError round(Interval(0.0, 1.0); on=:anchor)
+
+        # Test supplying a period to round to
+        interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
+        expected = Interval(DateTime(2011, 2, 1), DateTime(2011, 2, 2, 12))
+        @test_throws UndefKeywordError round(interval, Day)
+        @test round(interval, Day; on=:left) == expected
+        @test round(interval, Day(1); on=:left) == expected
+
+        expected = Interval(DateTime(2011, 2, 1, 12), DateTime(2011, 2, 3))
+        @test_throws UndefKeywordError round(interval, Day)
+        @test round(interval, Day; on=:right) == expected
+        @test round(interval, Day(1); on=:right) == expected
+
+        # Test unbounded intervals
+        @test round(Interval{Closed, Unbounded}(0.0, nothing); on=:left) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Closed, Unbounded}(0.5, nothing); on=:left) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.0); on=:left) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.5); on=:left) == Interval{Unbounded, Closed}(nothing, 1.5)
+        @test round(Interval{Unbounded, Unbounded}(nothing, nothing); on=:left) == Interval{Unbounded, Unbounded}(nothing, nothing)
+
+        @test round(Interval{Closed, Unbounded}(0.0, nothing); on=:right) == Interval{Closed, Unbounded}(0.0, nothing)
+        @test round(Interval{Closed, Unbounded}(0.5, nothing); on=:right) == Interval{Closed, Unbounded}(0.5, nothing)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.0); on=:right) == Interval{Unbounded, Closed}(nothing, 1.0)
+        @test round(Interval{Unbounded, Closed}(nothing, 1.5); on=:right) == Interval{Unbounded, Closed}(nothing, 2.0)
+        @test round(Interval{Unbounded, Unbounded}(nothing, nothing); on=:right) == Interval{Unbounded, Unbounded}(nothing, nothing)
+    end
 end

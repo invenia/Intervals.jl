@@ -906,7 +906,7 @@
         @test floor(Interval(0.5, 1.5); on=:right) == Interval(0.0, 1.0)
 
         # :anchor is only usable with AnchoredIntervals
-        @test_throws MethodError floor(Interval(0.0, 1.0); on=:anchor)
+        @test_throws ArgumentError floor(Interval(0.0, 1.0); on=:anchor)
 
         # Test supplying a period to floor to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
@@ -951,7 +951,7 @@
         @test ceil(Interval(0.5, 1.5); on=:right) == Interval(1.0, 2.0)
 
         # :anchor is only usable with AnchoredIntervals
-        @test_throws MethodError ceil(Interval(0.0, 1.0); on=:anchor)
+        @test_throws ArgumentError ceil(Interval(0.0, 1.0); on=:anchor)
 
         # Test supplying a period to ceil to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))
@@ -996,7 +996,7 @@
         @test round(Interval(0.5, 1.5); on=:right) == Interval(1.0, 2.0)
 
         # :anchor is only usable with AnchoredIntervals
-        @test_throws MethodError round(Interval(0.0, 1.0); on=:anchor)
+        @test_throws ArgumentError round(Interval(0.0, 1.0); on=:anchor)
 
         # Test supplying a period to round to
         interval = Interval(DateTime(2011, 2, 1, 6), DateTime(2011, 2, 2, 18))

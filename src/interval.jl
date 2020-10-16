@@ -496,6 +496,10 @@ for f in (:floor, :ceil, :round)
     end
 end
 
+function _round(f::RoundingFunctionTypes, interval::Interval, on::Val{:anchor}, args...)
+    throw(ArgumentError(":anchor is only usable with an AnchoredInterval."))
+end
+
 function _round(
     f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
 ) where {T, L <: Bounded, R <: Bounded}

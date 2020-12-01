@@ -321,8 +321,8 @@ function Base.:(≈)(a::AbstractInterval, b::AbstractInterval)
         return false
     end
     # deal with bounded intervals
-    if ((first_a !== nothing && !(first(a) ≈ first(b))) ||
-        (last_a !== nothing && !(last(a) ≈ last(b))))
+    if ((first_a !== nothing && !(first_a ≈ first_b)) ||
+        (last_a !== nothing && !(last_a ≈ last_b)))
         return false
     end
     return true

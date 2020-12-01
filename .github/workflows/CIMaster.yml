@@ -1,9 +1,10 @@
 name: CI
-# Run on tags or any pull request
+# Run on master
 on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC (8 PM CST)
   push:
-    tags: ["*"]
-  pull_request:
+    branches: [master]
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -59,6 +60,15 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
+      - name: Notify slack fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1
+        with:
+          channel: nightly-dev
+          status: FAILED
+          color: danger
   docs:
     name: Documentation
     runs-on: ubuntu-latest

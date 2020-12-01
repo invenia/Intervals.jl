@@ -23,7 +23,7 @@ include("test_utils.jl")
     # Note: The output of the doctests currently requires a newer version of Julia
     # https://github.com/JuliaLang/julia/pull/34387
     # The doctests fail on x86, so only run them on 64-bit hardware
-    if VERSION >= v"1.5.0-DEV.163" && Sys.ARCH == :x86_64
+    if VERSION >= v"1.5.0-DEV.163" && Sys.WORD_SIZE == 64
         doctest(Intervals)
     else
         @warn "Skipping doctests"

@@ -1,4 +1,5 @@
 @testset "Interval" begin
+    ϵ = 1e - 10
     test_values = [
         (-10, 1000, 1),
         (0.0, 1, 0.01),  # Use different types to test promotion
@@ -506,6 +507,10 @@
                 if a isa Number && b isa Number
                     @test -interval == Interval{R, L}(-b, -a)
                     @test unit - interval == Interval{R, L}(unit - b, unit - a)
+                    @test interval ≈ Interval{L, R}(a, b + ϵ)
+                    @test interval ≈ Interval{L, L}(a, b + ϵ)
+                    @test interval ≈ Interval{R, R}(a, b + ϵ)
+                    @test interval ≈ Interval{R, L}(a, b + ϵ)
                 else
                     @test_throws MethodError -interval
                     @test_throws MethodError unit - interval

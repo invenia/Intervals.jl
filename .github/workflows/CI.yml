@@ -71,7 +71,6 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
-          arch: 'x64'
       - run: |
           git config --global user.name name
           git config --global user.email email

@@ -1,14 +1,14 @@
 name: CI
-# Run on tags or any pull request
+# Run on master, tags, or any pull request
 on:
   push:
+    branches: [master]
     tags: ["*"]
   pull_request:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
@@ -34,6 +34,10 @@ jobs:
           - os: ubuntu-latest
             version: nightly
             arch: x64
+          # Add a 32-bit job to ensure we don't have any 64-bit specific logic
+          - os: ubuntu-latest
+            version: 1
+            arch: x86
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
@@ -67,6 +71,7 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1'
+          arch: 'x64'
       - run: |
           git config --global user.name name
           git config --global user.email email

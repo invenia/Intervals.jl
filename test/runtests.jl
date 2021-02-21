@@ -1,3 +1,4 @@
+using Arrow
 using Base.Iterators: product
 using Dates
 using Documenter: doctest
@@ -19,6 +20,7 @@ include("test_utils.jl")
     include("anchoredinterval.jl")
     include("comparisons.jl")
     include("plotting.jl")
+    include("arrow.jl")
 
     # Note: The output of the doctests currently requires a newer version of Julia
     # https://github.com/JuliaLang/julia/pull/34387

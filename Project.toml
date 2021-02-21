@@ -8,17 +8,21 @@ version = "1.5.0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 
 [compat]
+Arrow = "1"
 Documenter = "0.23, 0.24"
 Infinity = "0.2.3"
 RecipesBase = "0.7, 0.8, 1"
+Requires = "1"
 TimeZones = "0.7, 0.8, 0.9, 0.10, 0.11, 1"
 julia = "1"
 
 [extras]
+Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Infinity = "a303e19e-6eb4-11e9-3b09-cd9505f79100"
@@ -27,4 +31,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["Documenter", "ImageMagick", "Infinity", "Plots", "Test", "VisualRegressionTests"]
+test = ["Arrow", "Documenter", "ImageMagick", "Infinity", "Plots", "Test", "VisualRegressionTests"]

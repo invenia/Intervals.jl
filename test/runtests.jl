@@ -1,5 +1,5 @@
 # NOTE: v1.3 checks are for if you want to test on pre-1.3 w/o the Arrow.jl dependency
-VERSION > v"1.3" && using Arrow
+VERSION >= v"1.3" && using Arrow
 
 using Base.Iterators: product
 using Dates

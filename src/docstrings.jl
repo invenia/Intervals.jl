@@ -56,8 +56,14 @@ Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(0.0)
 julia> LeftEndpoint{Closed}(1.0)
 Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(1.0)
 
-julia> LeftEndpoint{Integer, Closed}(1.0)
-Intervals.Endpoint{Integer,Intervals.Direction{:Left}(),Closed}(1)
+julia> LeftEndpoint{Closed}(1) < LeftEndpoint{Closed}(2)
+true
+
+julia> LeftEndpoint{Closed}(0) < LeftEndpoint{Open}(0)
+true
+
+julia> LeftEndpoint{Open}(0) <= LeftEndpoint{Closed}(0)
+false
 ```
 
 See also: [`RightEndpoint`](@ref)
@@ -79,8 +85,14 @@ Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
 julia> RightEndpoint{Closed}(1.0)
 Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
 
-julia> RightEndpoint{Integer, Closed}(1.0)
-Intervals.Endpoint{Integer,Intervals.Direction{:Right}(),Closed}(1)
+julia> RightEndpoint{Closed}(1) < RightEndpoint{Closed}(2)
+true
+
+julia> RightEndpoint{Open}(0) < RightEndpoint{Closed}(0)
+true
+
+julia> RightEndpoint{Closed}(0) <= RightEndpoint{Open}(0)
+false
 ```
 
 See also: [`LeftEndpoint`](@ref)

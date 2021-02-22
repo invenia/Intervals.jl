@@ -41,6 +41,51 @@ effectively infinite).
 """
 :Unbounded
 
+"""
+    LeftEndpoint <: Endpoint
+
+Represents the lower endpoint of an `AbstractInterval`. Useful for comparing two endpoints
+to each other.
+
+### Examples
+
+```jldoctest; setup = :(using Intervals; using Intervals: LeftEndpoint)
+julia> LeftEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(0.0)
+
+julia> LeftEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(1.0)
+
+julia> LeftEndpoint{Integer, Closed}(1.0)
+Intervals.Endpoint{Integer,Intervals.Direction{:Left}(),Closed}(1)
+```
+
+See also: [`RightEndpoint`](@ref)
+"""
+:LeftEndpoint
+
+"""
+    RightEndpoint <: Endpoint
+
+Represents the upper endpoint of an `AbstractInterval`. Useful for comparing two endpoints
+to each other.
+
+### Examples
+
+```jldoctest; setup = :(using Intervals; using Intervals: RightEndpoint)
+julia> RightEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+
+julia> RightEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+
+julia> RightEndpoint{Integer, Closed}(1.0)
+Intervals.Endpoint{Integer,Intervals.Direction{:Right}(),Closed}(1)
+```
+
+See also: [`LeftEndpoint`](@ref)
+"""
+:RightEndpoint
 
 """
     first(interval::AbstractInterval{T}) -> Union{T,Nothing}

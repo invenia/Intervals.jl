@@ -532,25 +532,23 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test string(interval) == "(0 .. 10]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
 
-        if VERSION >= v"1.6.0"
-            @test sprint(show, interval) ==
-                "AnchoredInterval{-10, $Int, Open, Closed}(10)"
+        shown = if VERSION >= v"1.6.0"
+            "AnchoredInterval{-10, $Int, Open, Closed}(10)"
         else
-            @test sprint(show, interval) ==
-                "AnchoredInterval{-10,$Int,Open,Closed}(10)"
+            "AnchoredInterval{-10,$Int,Open,Closed}(10)"
         end
+        @test sprint(show, interval) == shown
 
         interval = AnchoredInterval{25}('a')
         @test string(interval) == "[a .. z)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
 
-        if VERSION >= v"1.6.0"
-            @test sprint(show, interval) ==
-                "AnchoredInterval{25, Char, Closed, Open}('a')"
+        shown = if VERSION >= v"1.6.0"
+            "AnchoredInterval{25, Char, Closed, Open}('a')"
         else
-            @test sprint(show, interval) ==
-                "AnchoredInterval{25,Char,Closed,Open}('a')"
+            "AnchoredInterval{25,Char,Closed,Open}('a')"
         end
+        @test sprint(show, interval) == shown
     end
 
     @testset "equality" begin

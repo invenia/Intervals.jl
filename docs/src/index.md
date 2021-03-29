@@ -84,7 +84,7 @@ julia> string(b)
 "[2013-01-01 .. 2016-01-01)"
 
 julia> c = HourEnding(DateTime(2016, 8, 11))
-AnchoredInterval{Hour(-1), DateTime, Open, Closed}(DateTime("2016-08-11T00:00:00"))
+HourEnding{DateTime, Open, Closed}(DateTime("2016-08-11T00:00:00"))
 
 julia> string(c)
 "(2016-08-10 HE24]"
@@ -96,13 +96,13 @@ julia> string(c)
 julia> using TimeZones, Dates
 
 julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+HourEnding{ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
 
 julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
+HourEnding{ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
 
 julia> he + Hour(1)
-AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
+HourEnding{ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
 
 julia> foreach(println, he:he + Day(1))
 (2013-02-13 HE01-06:00]
@@ -175,7 +175,7 @@ julia> b = Interval{Open, Closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1
 Interval{DateTime, Open, Closed}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
 
 julia> c = HourEnding(DateTime(2013, 2, 13, 1))
-AnchoredInterval{Hour(-1), DateTime, Open, Closed}(DateTime("2013-02-13T01:00:00"))
+HourEnding{DateTime, Open, Closed}(DateTime("2013-02-13T01:00:00"))
 
 julia> a == b
 false

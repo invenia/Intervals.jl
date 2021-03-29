@@ -32,23 +32,23 @@ This package defines:
 
 ```jldoctest
 julia> a = 1..10
-Interval{Int64,Closed,Closed}(1, 10)
+Interval{Int64, Closed, Closed}(1, 10)
 
 julia> b = 5..15
-Interval{Int64,Closed,Closed}(5, 15)
+Interval{Int64, Closed, Closed}(5, 15)
 
 julia> intersect(a, b)
-Interval{Int64,Closed,Closed}(5, 10)
+Interval{Int64, Closed, Closed}(5, 10)
 ```
 
 ### Bounds
 
 ```jldoctest
-julia> a = Interval{Closed,Closed}(1, 10)
-Interval{Int64,Closed,Closed}(1, 10)
+julia> a = Interval{Closed, Closed}(1, 10)
+Interval{Int64, Closed, Closed}(1, 10)
 
-julia> b = Interval{Open,Open}(5, 15)
-Interval{Int64,Open,Open}(5, 15)
+julia> b = Interval{Open, Open}(5, 15)
+Interval{Int64, Open, Open}(5, 15)
 
 julia> 5 in a
 true
@@ -57,10 +57,10 @@ julia> 5 in b
 false
 
 julia> intersect(a, b)
-Interval{Int64,Open,Closed}(5, 10)
+Interval{Int64, Open, Closed}(5, 10)
 
 julia> c = Interval(15, 20)
-Interval{Int64,Closed,Closed}(15, 20)
+Interval{Int64, Closed, Closed}(15, 20)
 
 julia> isempty(intersect(b, c))
 true
@@ -70,21 +70,21 @@ true
 
 ```jldoctest
 julia> a = Interval('a', 'z')
-Interval{Char,Closed,Closed}('a', 'z')
+Interval{Char, Closed, Closed}('a', 'z')
 
 julia> string(a)
 "[a .. z]"
 
 julia> using Dates
 
-julia> b = Interval{Closed,Open}(Date(2013), Date(2016))
-Interval{Date,Closed,Open}(Date("2013-01-01"), Date("2016-01-01"))
+julia> b = Interval{Closed, Open}(Date(2013), Date(2016))
+Interval{Date, Closed, Open}(Date("2013-01-01"), Date("2016-01-01"))
 
 julia> string(b)
 "[2013-01-01 .. 2016-01-01)"
 
 julia> c = HourEnding(DateTime(2016, 8, 11))
-AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2016-08-11T00:00:00"))
+AnchoredInterval{Hour(-1), DateTime, Open, Closed}(DateTime("2016-08-11T00:00:00"))
 
 julia> string(c)
 "(2016-08-10 HE24]"
@@ -96,13 +96,13 @@ julia> string(c)
 julia> using TimeZones, Dates
 
 julia> unrounded = HourEnding(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
 
 julia> he = HE(ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg"))
-AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 1, tz"America/Winnipeg"))
 
 julia> he + Hour(1)
-AnchoredInterval{Hour(-1),ZonedDateTime,Open,Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
+AnchoredInterval{Hour(-1), ZonedDateTime, Open, Closed}(ZonedDateTime(2013, 2, 13, 2, tz"America/Winnipeg"))
 
 julia> foreach(println, he:he + Day(1))
 (2013-02-13 HE01-06:00]
@@ -168,14 +168,14 @@ Two `AbstractInterval`s are considered equal if they have identical left and rig
 endpoints (taking bounds into account):
 
 ```jldoctest
-julia> a = Interval{Closed,Open}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime,Closed,Open}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
+julia> a = Interval{Closed, Open}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
+Interval{DateTime, Closed, Open}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
 
-julia> b = Interval{Open,Closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime,Open,Closed}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
+julia> b = Interval{Open, Closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
+Interval{DateTime, Open, Closed}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
 
 julia> c = HourEnding(DateTime(2013, 2, 13, 1))
-AnchoredInterval{Hour(-1),DateTime,Open,Closed}(DateTime("2013-02-13T01:00:00"))
+AnchoredInterval{Hour(-1), DateTime, Open, Closed}(DateTime("2013-02-13T01:00:00"))
 
 julia> a == b
 false
@@ -219,32 +219,32 @@ endpoint should be used for rounding. Valid options are `:left`, `:right`, or
 
 ```jldoctest
 julia> floor(Interval(0.0, 1.0), on=:left)
-Interval{Float64,Closed,Closed}(0.0, 1.0)
+Interval{Float64, Closed, Closed}(0.0, 1.0)
 
 julia> floor(Interval(0.5, 1.0), on=:left)
-Interval{Float64,Closed,Closed}(0.0, 0.5)
+Interval{Float64, Closed, Closed}(0.0, 0.5)
 
 julia> floor(Interval(0.5, 1.5), on=:right)
-Interval{Float64,Closed,Closed}(0.0, 1.0)
+Interval{Float64, Closed, Closed}(0.0, 1.0)
 ```
 
 Anchored intervals default to rounding using the anchor point.
 
 ```jldoctest
 julia> round(AnchoredInterval{-0.5}(1.0))
-AnchoredInterval{-0.5,Float64,Open,Closed}(1.0)
+AnchoredInterval{-0.5, Float64, Open, Closed}(1.0)
 
 julia> round(AnchoredInterval{+0.5}(0.5))
-AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 
 julia> round(AnchoredInterval{+0.5}(0.5), on=:anchor)
-AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 
 julia> round(AnchoredInterval{+0.5}(0.5), on=:left)
-AnchoredInterval{0.5,Float64,Closed,Open}(0.0)
+AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 
 julia> round(AnchoredInterval{+0.5}(0.5), on=:right)
-AnchoredInterval{0.5,Float64,Closed,Open}(0.5)
+AnchoredInterval{0.5, Float64, Closed, Open}(0.5)
 ```
 
 ## API

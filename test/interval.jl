@@ -282,16 +282,34 @@
         interval = Interval{Open, Open}(1, 2)
         @test string(interval) == "(1 .. 2)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == "Interval{$Int,Open,Open}(1, 2)"
+
+        shown = if VERSION >= v"1.6.0"
+             "Interval{$Int, Open, Open}(1, 2)"
+        else
+             "Interval{$Int,Open,Open}(1, 2)"
+        end
+        @test sprint(show, interval) == shown
 
         interval = Interval{Open, Closed}('a', 'b')
         @test string(interval) == "(a .. b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) == "Interval{Char,Open,Closed}('a', 'b')"
+        shown = if VERSION >= v"1.6.0"
+            "Interval{Char, Open, Closed}('a', 'b')"
+        else
+            "Interval{Char,Open,Closed}('a', 'b')"
+        end
+        @test sprint(show, interval) == shown
 
         interval = Interval{Closed, Open}(Date(2012), Date(2013))
+
+        type_str = if VERSION >= v"1.6.0"
+            "Interval{Date, Closed, Open}"
+        else
+            "Interval{Date,Closed,Open}"
+        end
         shown = string(
-            "Interval{Date,Closed,Open}(",
+            type_str,
+            "(",
             sprint(show, Date(2012, 1, 1)),
             ", ",
             sprint(show, Date(2013, 1, 1)),
@@ -305,8 +323,12 @@
         interval = Interval{Closed, Closed}("a", "b")
         @test string(interval) == "[a .. b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-        @test sprint(show, interval) ==
+        shown = if VERSION >= v"1.6.0"
+            "Interval{String, Closed, Closed}(\"a\", \"b\")"
+        else
             "Interval{String,Closed,Closed}(\"a\", \"b\")"
+        end
+        @test sprint(show, interval) == shown
     end
 
     @testset "equality" begin

@@ -51,10 +51,10 @@ to each other.
 
 ```jldoctest; setup = :(using Intervals; using Intervals: LeftEndpoint)
 julia> LeftEndpoint(Interval(0.0, 1.0))
-Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(0.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Left}(), Closed}(0.0)
 
 julia> LeftEndpoint{Closed}(1.0)
-Intervals.Endpoint{Float64,Intervals.Direction{:Left}(),Closed}(1.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Left}(), Closed}(1.0)
 
 julia> LeftEndpoint{Closed}(1) < LeftEndpoint{Closed}(2)
 true
@@ -80,10 +80,10 @@ to each other.
 
 ```jldoctest; setup = :(using Intervals; using Intervals: RightEndpoint)
 julia> RightEndpoint(Interval(0.0, 1.0))
-Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Right}(), Closed}(1.0)
 
 julia> RightEndpoint{Closed}(1.0)
-Intervals.Endpoint{Float64,Intervals.Direction{:Right}(),Closed}(1.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Right}(), Closed}(1.0)
 
 julia> RightEndpoint{Closed}(1) < RightEndpoint{Closed}(2)
 true

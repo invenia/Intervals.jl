@@ -426,6 +426,18 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 ),
             ),
             (
+                AnchoredInterval{Week(-1)}(ceil(dt, Week)),
+                "(WE 2016-08-15]",
+                string(
+                    if VERSION >= v"1.6.0"
+                        "AnchoredInterval{$(repr(Week(-1))), DateTime, Open, Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Week(-1))),DateTime,Open,Closed}"
+                    end,
+                    "($(repr(DateTime(2016, 8, 15))))",
+                ),
+            ),
+            (
                 AnchoredInterval{Day(-1)}(DateTime(dt)),
                 "(DE 2016-08-11 02:00:00]",
                 string(
@@ -514,6 +526,30 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
            ),
+           (
+                AnchoredInterval{Microsecond(-10)}(dt),
+                "(2016-08-11 10μsE02:00:00.000.000]",
+                string(
+                    if VERSION >= v"1.6.0"
+                        "AnchoredInterval{$(repr(Microsecond(-10))), DateTime, Open, Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Microsecond(-10))),DateTime,Open,Closed}"
+                    end,
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    ),
+                ), 
+            (
+                AnchoredInterval{Nanosecond(-10)}(dt),
+                "(2016-08-11 10nsE02:00:00:00.000.000.000]",
+                string(
+                    if VERSION >= v"1.6.0"
+                        "AnchoredInterval{$(repr(Nanosecond(-10))), DateTime, Open, Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Nanosecond(-10))),DateTime,Open,Closed}"
+                    end,
+                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                ),
+            ),   
         ]
 
         for (interval, printed, shown) in tests

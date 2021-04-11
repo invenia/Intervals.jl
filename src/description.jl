@@ -43,15 +43,20 @@ function description(dt::AbstractDateTime, p::Period, suffix::String)
 end
 
 function time_string(dt::AbstractDateTime, p::Period)
-    t = (hour(dt), minute(dt), second(dt), millisecond(dt))
+    t = (hour(dt), minute(dt), second(dt), millisecond(dt), microsecond(Time(dt)), nanosecond(Time(dt)))
+    println(t)
     if p isa Hour && all(t[2:end] .== 0)
         return @sprintf("%02d", t[1])
     elseif p isa Minute && all(t[3:end] .== 0)
         return @sprintf("%02d:%02d", t[1:2]...)
-    elseif !isa(p, Millisecond) && t[4] == 0
+    elseif p isa Millisecond && all(t[4:end] .== 0)
         return @sprintf("%02d:%02d:%02d", t[1:3]...)
+    elseif p isa Microsecond && all(t[5:end] .== 0)
+        return @sprintf("%02d:%02d:%02d.%03d", t[1:4]...)
+    elseif !isa(p, Nanosecond) && t[6] == 0
+        return @sprintf("%02d:%02d:%02d.%03d.%03d", t[1:5]...)
     else
-        return @sprintf("%02d:%02d:%02d.%03d", t...)
+        return @sprintf("%02d:%02d:%02d.%03d.%03d.%03d", t...)
     end
 end
 
@@ -61,8 +66,11 @@ end
 
 prefix(::Type{Year}) = "Y"
 prefix(::Type{Month}) = "Mo"
+prefix(::Type{Week}) = "We"
 prefix(::Type{Day}) = "D"
 prefix(::Type{Hour}) = "H"
 prefix(::Type{Minute}) = "M"
 prefix(::Type{Second}) = "S"
 prefix(::Type{Millisecond}) = "ms"
+prefix(::Type{Microsecond}) = "μs"
+prefix(::Type{Nanosecond}) = "ns"

@@ -23,7 +23,5 @@ interval_marker(x::Type{Open}) = :none
 
     markershape := markers
     seriestype  := :path  # always a path, even in a scatter plot
-
     new_xs, new_ys
-    
 end

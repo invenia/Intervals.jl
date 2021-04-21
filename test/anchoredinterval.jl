@@ -585,6 +585,13 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             "AnchoredInterval{25,Char,Closed,Open}('a')"
         end
         @test sprint(show, interval) == shown
+
+        # Error if no prefix defined for the given period type
+        interval = AnchoredInterval{Microsecond(-1)}(Date(dt))
+        @test_throws ErrorException sprint(print, interval)
+
+        interval = AnchoredInterval{Nanosecond(-1)}(Date(dt))
+        @test_throws ErrorException sprint(print, interval)
     end
 
     @testset "equality" begin

@@ -60,7 +60,6 @@ function prefix(p::Period)
 end
 
 prefix(::Type{Year}) = "Y"
-prefix(::Type{Quarter}) = "Q"
 prefix(::Type{Month}) = "Mo"
 prefix(::Type{Week}) = "W"
 prefix(::Type{Day}) = "D"
@@ -69,5 +68,10 @@ prefix(::Type{Minute}) = "M"
 prefix(::Type{Second}) = "S"
 prefix(::Type{Millisecond}) = "ms"
 
-# informative error if no prefix is defined for the givne type.
+# `Quarter` defined after Julia1.6.
+if VERSION >= v"1.6"
+    prefix(::Type{Quarter}) = "Q"
+end
+
+# informative error if no prefix is defined for the given type.
 prefix(T::Type{<:Period}) = error("A prefix for period $T has not yet been defined")

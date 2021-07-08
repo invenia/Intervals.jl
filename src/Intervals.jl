@@ -4,7 +4,6 @@ using ArrowTypes: ArrowTypes, JuliaType, arrowname
 using Dates
 using Printf
 using RecipesBase
-using Requires
 using Serialization: Serialization, AbstractSerializer, deserialize
 using TimeZones
 

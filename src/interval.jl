@@ -258,35 +258,103 @@ function Base.convert(::Type{T}, interval::Interval{T}) where T
     end
 end
 
+##### Interval Macro #####
+
+macro interval_cmd(str)
+    !isempty(str) || throw("syntax: Interval must not be empty")
+    f, l = first(str), last(str)
+    L = (f in ('［', '[')) ? Closed :
+        (f in ('（', '(')) ? Open :
+                             Unbounded
+    R = (l in ('］', ']')) ? Closed :
+        (l in ('）', ')')) ? Open :
+                            Unbounded
+    if L === R === Unbounded
+        if str !== ','
+            throw("syntax: Interval specified as unbounded (left delimiter '$f' was not '［','[','（' or '('; right delimiter '$l' was not '］',']','）' or ')'")
+        end
+        return :(Interval{$L, $R}(nothing, nothing))
+    end
+    if L === Unbounded
+        if f !== ','
+            throw("syntax: Left unbounded interval (left delimiter '$f' was not '［','[','（' or '(') must not have a lower bound")
+        end
+        expr = Meta.parse(str)
+        return :(Interval{$L, $R}(nothing, $(esc(expr))))
+    else
+        str = str[(ncodeunits(f)+1):end]
+    end
+    if R === Unbounded
+        if l !== ','
+            throw("syntax: Left unbounded interval (right delimiter '$l' was not '［','[','（' or '(') must not have an upper bound")
+        end
+        expr = Meta.parse(str)
+        return :(Interval{$L, $R}($(esc(expr)), nothing))
+    else
+        str = str[1:(end-1)]
+    end
+    # Add parentheses around the string to parse this as a tuple
+    str = string('(', str, ')')
+    expr = Meta.parse(str)
+    :(Interval{$L, $R}(($(esc(expr))...)))
+end
+const var"@i_cmd" = var"@interval_cmd"
+
 ##### DISPLAY #####
 
+function print_interval(io, printer, interval::Interval{T,L,R}) where {T,L,R}
+    print(io, L === Closed ? "［" : "（")
+    if L !== Unbounded
+        printer(io, first(interval))
+    end
+    print(io, get(io, :compact, false) ? "," : ", ")
+    if R !== Unbounded
+        printer(io, last(interval))
+    end
+    print(io, R === Closed ? "］" : "）")
+end
 
 function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
-    if get(io, :compact, false)
-        print(io, interval)
-    else
-        print(io, "$(typeof(interval))(")
-        L === Unbounded ? print(io, "nothing") : show(io, interval.first)
+    if L === Closed && R === Closed
+        print(io, "..(")
+        show(io, first(interval))
         print(io, ", ")
-        R === Unbounded ? print(io, "nothing") : show(io, interval.last)
+        show(io, last(interval))
         print(io, ")")
+    else
+        if get(io, :compact, false)
+            buf = IOBuffer()
+            ioctx = IOContext(buf, io)
+            print_interval(ioctx, show, interval)
+            str = String(take!(buf))
+            use_triple = any(==('`'), str)
+
+            print(io, 'i', use_triple ? "```" : '`')
+            print(io, str)
+            print(io, use_triple ? "```" : '`')
+        else
+            Base.show_type_name(io, Base.typename(Interval))
+            print(io, '{', L, ",", R, "}(")
+            show(io, L === Unbounded ? nothing : first(interval))
+            print(io, ", ")
+            show(io, R === Unbounded ? nothing : first(interval))
+            print(io, ")")
+        end
+    end
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", interval::Interval{T,L,R}) where {T,L,R}
+    if L === Closed && R === Closed
+        show(io, mime, first(interval))
+        print(io, get(io, :compact, false) ? ".." : " .. ")
+        show(io, mime, last(interval))
+    else
+        print_interval(io, (io, x)->show(io, mime, x), interval)
     end
 end
 
 function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
-    # Print to io in order to keep properties like :limit and :compact
-    if get(io, :compact, false)
-        io = IOContext(io, :limit=>true)
-    end
-
-    print(
-        io,
-        L === Closed ? "[" : "(",
-        L === Unbounded ? "" : first(interval),
-        " .. ",
-        R === Unbounded ? "" : last(interval),
-        R === Closed ? "]" : ")",
-    )
+    print_interval(io, print, interval)
 end
 
 ##### ARITHMETIC #####

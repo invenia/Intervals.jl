@@ -58,5 +58,6 @@ export Bound,
        less_than_disjoint,
        greater_than_disjoint,
        superset,
-       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
+       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉,
+       @i_cmd, @interval_cmd
 end

@@ -10,6 +10,12 @@ using Dates: AbstractDateTime, value, coarserperiod
 
 import Base: ⊆, ⊇, ⊈, ⊉, union, union!, merge
 
+# Extend `Base.isdisjoint` when it exists
+# https://github.com/JuliaLang/julia/pull/34427
+if VERSION >= v"1.5.0-DEV.124"
+    import Base: isdisjoint
+end
+
 abstract type Bound end
 abstract type Bounded <: Bound end
 struct Closed <: Bounded end
@@ -57,6 +63,7 @@ export Bound,
        union!,
        less_than_disjoint,
        greater_than_disjoint,
+       isdisjoint,
        superset,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
 end

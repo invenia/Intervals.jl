@@ -426,6 +426,30 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 ),
             ),
             (
+                AnchoredInterval{Week(-1)}(dt),
+                "(WE 2016-08-11 02:00:00]",
+                string(
+                    if VERSION >= v"1.6.0"
+                        "AnchoredInterval{$(repr(Week(-1))), DateTime, Open, Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Week(-1))),DateTime,Open,Closed}"
+                    end,
+                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0))))",
+                ),
+            ),
+            (
+                AnchoredInterval{Week(-1)}(ceil(dt, Week)),
+                "(WE 2016-08-15]",
+                string(
+                    if VERSION >= v"1.6.0"
+                        "AnchoredInterval{$(repr(Week(-1))), DateTime, Open, Closed}"
+                    else
+                        "AnchoredInterval{$(repr(Week(-1))),DateTime,Open,Closed}"
+                    end,
+                    "($(repr(DateTime(2016, 8, 15))))",
+                ),
+            ),
+            (
                 AnchoredInterval{Day(-1)}(DateTime(dt)),
                 "(DE 2016-08-11 02:00:00]",
                 string(
@@ -516,6 +540,18 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
            ),
         ]
 
+        # add test for `Quarter`, only defined after Julia1.6
+        if VERSION >= v"1.6"
+            entry = (AnchoredInterval{Quarter(-1)}(ceil(Date(dt), Quarter)),
+                "(QE 2016-10-01]",
+                string(
+                    "AnchoredInterval{$(repr(Quarter(-1))), Date, Open, Closed}",
+                    "($(repr(Date(2016, 10, 01))))",
+                ),
+            )
+            push!(tests, entry)
+        end
+
         for (interval, printed, shown) in tests
             @test sprint(print, interval) == printed
             @test string(interval) == printed
@@ -549,6 +585,13 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             "AnchoredInterval{25,Char,Closed,Open}('a')"
         end
         @test sprint(show, interval) == shown
+
+        # Error if no prefix defined for the given period type
+        interval = AnchoredInterval{Microsecond(-1)}(Date(dt))
+        @test_throws ErrorException sprint(print, interval)
+
+        interval = AnchoredInterval{Nanosecond(-1)}(Date(dt))
+        @test_throws ErrorException sprint(print, interval)
     end
 
     @testset "equality" begin

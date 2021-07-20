@@ -70,6 +70,9 @@ end
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
 
+            @test isdisjoint(earlier, later)
+            @test isdisjoint(later, earlier)
+
             @test intersect(earlier, later) == expected_overlap
             @test_throws ArgumentError merge(earlier, later)
             @test union([earlier, later]) == [earlier, later]
@@ -124,6 +127,9 @@ end
 
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
+
+            @test isdisjoint(earlier, later)
+            @test isdisjoint(later, earlier)
 
             @test intersect(earlier, later) == expected_overlap
             @test_throws ArgumentError merge(earlier, later)
@@ -180,6 +186,9 @@ end
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
 
+            @test isdisjoint(earlier, later)
+            @test isdisjoint(later, earlier)
+
             @test intersect(earlier, later) == expected_overlap
             @test merge(earlier, later) == expected_superset
             @test union([earlier, later]) == [expected_superset]
@@ -234,6 +243,9 @@ end
 
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
+
+            @test isdisjoint(earlier, later)
+            @test isdisjoint(later, earlier)
 
             @test intersect(earlier, later) == expected_overlap
             @test merge(earlier, later) == expected_superset
@@ -290,6 +302,9 @@ end
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
 
+            @test !isdisjoint(earlier, later)
+            @test !isdisjoint(later, earlier)
+
             @test intersect(earlier, later) == expected_overlap
             @test merge(earlier, later) == expected_superset
             @test union([earlier, later]) == [expected_superset]
@@ -345,6 +360,9 @@ end
             @test !issubset(earlier, later)
             @test !issubset(later, earlier)
 
+            @test !isdisjoint(earlier, later)
+            @test !isdisjoint(later, earlier)
+
             @test intersect(earlier, later) == expected_overlap
             @test merge(earlier, later) == expected_superset
             @test union([earlier, later]) == [expected_superset]
@@ -387,6 +405,9 @@ end
 
             @test issubset(a, b)
             @test issubset(b, a)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
@@ -431,6 +452,9 @@ end
             @test !issubset(a, b)
             @test issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -473,6 +497,9 @@ end
 
             @test !issubset(a, b)
             @test issubset(b, a)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
@@ -517,6 +544,9 @@ end
             @test !issubset(a, b)
             @test issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -559,6 +589,9 @@ end
 
             @test issubset(a, b)
             @test !issubset(b, a)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
@@ -603,6 +636,9 @@ end
             @test issubset(a, b)
             @test !issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -645,6 +681,9 @@ end
 
             @test issubset(a, b)
             @test issubset(b, a)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
@@ -689,6 +728,9 @@ end
             @test !issubset(a, b)
             @test issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -732,6 +774,9 @@ end
             @test !issubset(a, b)
             @test issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -774,6 +819,9 @@ end
             @test issubset(a, b)
             @test issubset(b, a)
 
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
+
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
             @test union([a, b]) == [expected_superset]
@@ -807,6 +855,9 @@ end
 
             @test issubset(a, b)
             @test issubset(b, a)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(a, b) == expected_overlap
             @test merge(a, b) == expected_superset
@@ -869,6 +920,9 @@ end
 
             @test issubset(smaller, larger)
             @test !issubset(larger, smaller)
+
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
             @test intersect(smaller, larger) == expected_overlap
             @test merge(smaller, larger) == expected_superset

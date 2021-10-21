@@ -18,6 +18,7 @@ include("test_utils.jl")
     include("interval.jl")
     include("anchoredinterval.jl")
     include("comparisons.jl")
+    include("sets.jl")
     include("plotting.jl")
 
     # Note: The output of the doctests currently requires a newer version of Julia

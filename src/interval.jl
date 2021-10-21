@@ -351,6 +351,89 @@ true
 ≫(a, b) = greater_than_disjoint(a, b)
 # ≫̸(a, b) = !≫(a, b)
 
+###### Set-related Helpers #####
+
+# Edge is used to represent the two bounds of an interval when merging sets
+# of intervals
+struct Edge{T, A}
+    value::T
+    first::Bool
+    index::Int
+    origin::Symbol
+end
+Edge(t, start, closed) = Edge{eltype(t), closed}(t, start, 0, :none)
+isclosed(x::Edge{<:Any, Closed}) = true
+isclosed(x::Edge{<:Any, Open}) = false
+isless(x::Edge, y::Edge) = isequal(x,y) ? isless(isclosed(x), isclosed(y)) : isless(x.value, y.value)
+isequal(x::Edge, y::Edge) = isequal(isclosed(x), isclosed(y)) && isequal(x.value, y.value)
+startedge(x, i, origin) = Edge(x, true, i, origin, startedge(x))
+stopedge(x, i, origin) = Edge(x, false, i, origin, stopedge(x))
+isstart(x) = x.first
+
+Interval(x::Edge{T, A}, y::Edge{S, B}) where {T, S, A, B} = Interval{Union{T,S}, A, B}(x.value, y.value)
+
+# unbunch: represent one or more intervals as a sequence of edges
+function unbunch(interval::AbstractInterval, origin)
+    return [startedge(interval, 1, origin), stopedge(interval, 1, origin)]
+end
+unbunch(intervals::AbstractVector{<:Edge}, origin) = intervals
+function unbunch(intervals, origin)
+    result = mapreduce(((i) -> [startedge(intervals[i], i, origin), 
+                                stopedge(intervals[i], i, origin)]), 
+                        vcat, eachindex(intervals))
+    # iteration trick: a final edge that has a maximal value (to simplify edge cases)
+    push!(result, Edge(typemax(eltype(intervals)), true, true))
+
+    return result
+end
+
+# represent a sequence of edges as a sequence of one or more intervals
+bunch(intervals::AbstractVector{<:AbstractInterval}, orgin, withend) = intervals
+function bunch(intervals)
+    return map(partition(intervals, 2)) do pair
+        return Interval(pair...)
+    end
+end
+
+function mergesets(op, x, y)
+    result = Union{eltype(x), eltype(y)}[]
+    sizehint!(result, length(x) + length(y))
+
+    point_will_include = true
+
+    xedge, x = Iterators.peel(x)
+    yedge, y = Iterators.peel(y)
+    inx = false
+    iny = false
+
+    while !isempty(x) && !isempty(y)
+        t = xedge < yedge ? xedge.value : yedge.value
+        if xedge <= yedge
+            inx = isstart(x)
+            xedge_, x = Iterators.peel(x)
+        end
+        if yedge <= xedge
+            iny = isstart(y)
+            yedge_, y = Iterators.peel(y)
+        end
+
+        xedge, yedge = xedge_, yedge_
+
+        include_t = op(inx, iny)
+        if include_t == point_will_include
+            if point_will_include
+                push!(result, Edge(t, true, 0, :result))
+                point_will_include = false
+            else
+                push!(result, Edge(t, false, 0, :result))
+                point_will_include = true
+            end
+        end
+    end
+
+    return bunch(result)
+end
+
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
@@ -417,12 +500,12 @@ function Base.union(intervals::AbstractVector{<:AbstractInterval})
 end
 
 """
-    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
+    union!(intervals::AbstractVector{<:AbstractInterval})
 
 Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
 non-overlapping intervals.
 """
-function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
+function Base.union!(intervals::AbstractVector{<:AbstractInterval})
     sort!(intervals)
 
     i = 2
@@ -467,6 +550,80 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
     left = min(LeftEndpoint(a), LeftEndpoint(b))
     right = max(RightEndpoint(a), RightEndpoint(b))
     return Interval(left, right)
+end
+
+function mergecleanup(x, y) 
+    return (sort!(unbunch(union(x), :x, true), by=startedge), 
+            sort!(unbunch(union(y), :y, true), by=startedge))
+end
+const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
+
+function Base.intersect(x::AbstractIntervals, y::AbstractIntervals)
+    return mergesets((inx, iny) -> inx || iny, mergecleanup(x, y)...)
+end
+function Base.union(x::AbstractIntervals, y::AbstractIntervals)
+    return mergesets((inx, iny) -> inx && iny, mergecleanup(x, y)...)
+end
+function Base.setdiff(x::AbstractIntervals, y::AbstractIntervals)
+    return mergesets((inx, iny) -> inx && !iny, mergecleanup(x, y)...)
+end
+function Base.symdiff(x::AbstractIntervals, y::AbstractIntervals)
+    return mergesets((inx, iny) -> inx ⊻ iny, mergecleanup(x, y)...)
+end
+function Base.issubset(x::AbstractIntervals, y::AbstractIntervals)
+    return isempty(setdiff(x, y))
+end
+if !isdefined(Base, :isdisjoint)
+    @eval Base function isdisjoint end
+end
+function Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
+    return isempty(intersect(x, y))
+end
+Base.in(x::AbstractInterval, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
+
+"""
+    intersectmap!(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
+                 y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
+
+Returns a Vector{Set{Int}} object where the value at index i gives indices to
+all intervals in `y` that intersect with `x[i]`. (The i's are according to the
+sorted order).
+
+If `sorted` is true, assumes x and y are already sorted by `first`. No change to
+`x` will occur in this case (i.e. the ! can be safely ignored).
+"""
+function intersectmap!(x::AbstractIntervals, y::AbstractIntervals; sorted=false)
+    x = sorted ? sort!(x, by=startedge)
+    y = sorted ? sort(y, by=startedge)
+
+    xedge, x = Iterators.peel(x)
+    yedge, y = Iterators.peel(y)
+
+    result = [Set{Int}[] for _ in 1:length(x)]
+    active_xs = Set{Int}[]
+    while !isempty(x) && !isempty(y)
+        if isstart(xedge)
+            push!(active_xs, xedge.index)
+        elseif
+            delete!(active_xs, xedge.index)
+        end
+
+        if isstart(yedge)
+            for i in active_xs
+                push!(result[i], yedge.index)
+            end
+        end
+
+        if xedge <= yedge
+            xedge_, x = Iterators.peel(x)
+        end
+        if yedge <= xedge
+            yedge_, y = Iterators.peel(y)
+        end
+        xedge, yedge = xedge_, yedge_
+    end
+
+    return result
 end
 
 ##### ROUNDING #####

@@ -474,7 +474,7 @@ first_is_start(x) = isempty(x) ? false : isstart(first(x))
 # `mergesets` is the primary internal function implementing set operations (see
 # below for its usage). It iterates through the start and stop points in x and
 # y, in order from lowest to highest. The implementation is based on the insight
-# that we can make a decision to include or exclude poinats after a given start
+# that we can make a decision to include or exclude points after a given start
 # or stop point of the interval (based on `op`), until we hit another start or
 # stop point.
 #
@@ -611,8 +611,17 @@ end
 Flattens a vector of overlapping intervals into a new, smaller vector containing only
 non-overlapping intervals.
 """
-function Base.union(intervals::AbstractVector{T}) where T <: AbstractInterval
-    return union!(convert(Vector{T}, intervals))
+function Base.union(intervals::AbstractVector{<:AbstractInterval})
+    return union!(convert(Vector{AbstractInterval}, intervals))
+end
+# allow a concretely typed array for `Interval` objects (as opposed to e.g. anchored intervals
+# which may change type during the union process)
+function Base.union(intervals::AbstractVector{T}) where T <: Interval
+    input = convert(Vector{T}, intervals)
+    if input === intervals
+        input = copy(intervals)
+    end
+    return union!(input)
 end
 
 """

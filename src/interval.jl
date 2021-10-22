@@ -37,13 +37,27 @@ julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
 
-### Set operations
+### Note on Ordering
 
-General set operations can be performed over arrays of intervals. These set
+The `Interval` constructor will compare `first` and `last`; if it finds that
+`first > last`, they will be reversed to ensure that `first < last`. This
+simplifies calls to `in` and `intersect`:
+
+```julia
+julia> i = Interval{Open,Closed}(Date(2016, 8, 11), Date(2013, 2, 13))
+Interval{Date,Closed,Open}(2013-02-13, 2016-08-11)
+```
+
+Note that the bounds are also reversed in this case.
+
+### Multi-interval set operations
+
+Set operations can also be performed over two pairs interval arrays. These set
 operations take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})`
-and return an array of non-overalping intervals representing the result. You can
-also pass a single interval to either arugment. These set operations do not
-currently support unbounded intervals.
+and intrepret `x` and `y` as representing a set covered by the provided
+intervals. The return value is an array of non-overalping intervals representing
+the result of `op` over these sets. You can also pass a single
+interval to either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
 
 See also: [`AnchoredInterval`](@ref)
 """

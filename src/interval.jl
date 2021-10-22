@@ -387,7 +387,7 @@ end
 # EdgeDir is used to represent [a, b) (left) and (a, b] (right) intervals
 # which are closed under set operations (so we can keep things type invariant
 # if only left or only right intervals are present in an array)
-struct EdgeDir{D,T} <: AbtractEdge{T}
+struct EdgeDir{D,T} <: AbstractEdge{T}
     value::T
     first::Bool
     index::Int

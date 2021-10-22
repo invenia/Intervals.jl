@@ -1,12 +1,13 @@
 """
     Interval{T, L <: Bound, R <: Bound}
 
-An `Interval` represents a non-iterable range or span of values (non-interable because,
-unlike a `StepRange`, no step is defined).
+An `Interval` represents a non-iterable range or span of values (non-interable
+because, unlike a `StepRange`, no step is defined).
 
-An `Interval` can be closed (both `first` and `last` are included in the interval), open
-(neither `first` nor `last` are included), or half-open. This openness is defined by the
-bounds information which is stored as the type parameters `L` and `R`.
+An `Interval` can be closed (both `first` and `last` are included in the
+interval), open (neither `first` nor `last` are included), or half-open. This
+openness is defined by the bounds information which is stored as the type
+parameters `L` and `R`.
 
 ### Example
 
@@ -35,6 +36,14 @@ A closed `Interval` can be constructed with the `..` infix constructor:
 julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
+
+### Set operations
+
+General set operations can be performed over arrays of intervals. These set
+operations take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})`
+and return an array of non-overalping intervals representing the result. You can
+also pass a single interval to either arugment. These set operations do not
+currently support unbounded intervals.
 
 See also: [`AnchoredInterval`](@ref)
 """
@@ -363,6 +372,7 @@ struct Edge{T} <: AbstractEdge{T}
     closed::Bool
 end
 Edge(t, start = true, closed = true) = Edge{eltype(t)}(t, start, 0, closed)
+Edge(t::Edge, start, closed) = Edge(t.value, start, closed)
 isclosed(x::Edge) = x.closed
 offset(x::AbstractEdge) = x.first ? !isclosed(x) : isclosed(x)
 function Base.isless(x::AbstractEdge, y::AbstractEdge) 
@@ -375,7 +385,22 @@ end
 Base.isequal(x::AbstractEdge, y::AbstractEdge) = isequal(isclosed(x), isclosed(y)) && isequal(x.value, y.value)
 Base.eltype(::AbstractEdge{T}) where T = T
 Base.eltype(::Type{<:AbstractEdge{T}}) where T = T
+"""
+    startedge(interval)
+
+A representation of the starting edge of an interval. Useful for proper sorting
+of intervals (e.g. sort(intervals, by=startedge)). The difference between
+sorting by `first` is that it properly accounts for `closed/open` edges.
+"""
 startedge(x::AbstractInterval{T,A}, i=0) where {T,A} = Edge{T}(first(x), true, i, A == Closed)
+
+"""
+    stopedge(interval)
+
+A representation of the stopping edge of an interval. Useful for proper sorting
+of intervals (e.g. sort(intervals, by=startedge)). The difference between
+sorting by `first` is that it properly accounts for `closed/open` edges.
+"""
 stopedge(x::AbstractInterval{T,<:Any,B}, i=0) where {T,B} = Edge{T}(last(x), false, i, B == Closed)
 isstart(x::AbstractEdge) = x.first
 
@@ -393,12 +418,17 @@ struct EdgeDir{D,T} <: AbstractEdge{T}
     index::Int
 end
 EdgeDir(t, dir, start = true) = EdgeDir{eltype(t), dir}(t, start, 0)
+function Edge(t::EdgeDir, start, closed)
+    result = EdgeDir(t.value, start, 0)
+    @assert isclosed(result) == closed
+    return result
+end
 isclosed(x::EdgeDir{:left}) = x.first
 isclosed(x::EdgeDir{:right}) = !x.first
-startedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{T, :left}(first(x), true, i)
-stopedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{T, :left}(last(x), false, i)
-startedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{T, :right}(first(x), true, i)
-stopedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{T, :right}(last(x), false, i)
+startedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{:left, T}(first(x), true, i)
+stopedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{:left, T}(last(x), false, i)
+startedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{:right, T}(first(x), true, i)
+stopedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{:right, T}(last(x), false, i)
 
 function Interval(x::EdgeDir{D,T}, y::EdgeDir{D,S}) where {D, T, S}
     if D == :left
@@ -414,8 +444,8 @@ function unbunch(interval::AbstractInterval)
 end
 unbunch(intervals::AbstractVector{<:Edge}) = intervals
 edgetype(::Type{T}) where T = Edge{T}
-edgetype(::Type{<:Interval{T, Open, Closed}}) where T = EdgeDir{T, :right}
-edgetype(::Type{<:Interval{T, Closed, Open}}) where T = EdgeDir{T, :left}
+edgetype(::Type{<:Interval{T, Open, Closed}}) where T = EdgeDir{:right, T}
+edgetype(::Type{<:Interval{T, Closed, Open}}) where T = EdgeDir{:left, T}
 function unbunch(intervals)
     isempty(intervals) && return edgetype(eltype(intervals))[]
     result = mapreduce(((i) -> [startedge(intervals[i], i), 
@@ -433,7 +463,7 @@ function bunch(edges)
     @assert iseven(length(edges))
     isempty(edges) && return intervaltype(eltype(edges))[]
     return map(Iterators.partition(edges, 2)) do pair
-        @assert pair[1].first && !pair[1].first 
+        @assert pair[1].first && !pair[2].first 
         return Interval(pair...)
     end
 end
@@ -527,7 +557,7 @@ function mergesets(op, x, y)
         if include_t != include_future_points
             # start including points
             if !include_future_points
-                push!(result, Edge(t.value, true, keep_edge))
+                push!(result, Edge(t, true, keep_edge))
                 include_future_points = true
             # if we're about to create an empty interval (e.g. [1, 1)), remove it
             elseif !isempty(result) && !keep_edge && t.value == result[end].value 
@@ -535,7 +565,7 @@ function mergesets(op, x, y)
                 include_future_points = false
             # stop including points
             else
-                push!(result, Edge(t.value, false, keep_edge))
+                push!(result, Edge(t, false, keep_edge))
                 include_future_points = false
             end
         # if we're supposed to keep the edge but we're not including any points
@@ -546,6 +576,8 @@ function mergesets(op, x, y)
         end
 
     end
+
+    #=@show =#result
 
     return bunch(result)
 end
@@ -711,19 +743,16 @@ asarray(x::AbstractArray) = x
 alength(x) = 1
 alength(x::AbstractArray) = length(x)
 """
-    intersectmap!(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
+    intersectmap(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
                  y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
 
 Returns a Vector{Vector{Int}} object where the value at index i gives indices to
 all intervals in `y` that intersect with `x[i]`.
 
-If `sorted` is true, assumes x and y are already sorted by `first`. No change to
-`x` will occur in this case (i.e. the ! can be safely ignored).
 """
-function intersectmap!(x_::AbstractIntervals, y_::AbstractIntervals; sorted=false)
-    sorted_ixs = !sorted ? sortperm(asarray(x_), by=startedge) : Int[]
-    x = !sorted ? unbunch(sort!(asarray(x_), by=startedge)) : unbunch(x_)
-    y = !sorted ? unbunch(sort!(asarray(y_), by=startedge)) : unbunch(y_)
+function intersectmap(x_::AbstractIntervals, y_::AbstractIntervals)
+    x = sort!(unbunch(asarray(x_)))
+    y = sort!(unbunch(asarray(y_)))
 
     result = [Vector{Int}() for _ in 1:alength(x_)]
 
@@ -731,13 +760,13 @@ function intersectmap!(x_::AbstractIntervals, y_::AbstractIntervals; sorted=fals
     active_ys = Set{Int}()
     while !isempty(x)
         # println("loop--------------------")
-        # @show isempty(x) || first(x)
-        # @show isempty(y) || first(y)
-        #=@show=# x_less = first_is_less(x, y)
-        #=@show=# y_less = first_is_less(y, x)
+        #=@show =#isempty(x) || first(x)
+        #=@show =#isempty(y) || first(y)
+        #=@show =#x_less = first_is_less(x, y)
+        #=@show =#y_less = first_is_less(y, x)
 
         if !y_less
-            if #=@show=# first_is_start(x) 
+            if #=@show =#first_is_start(x) 
                 push!(active_xs, first(x).index)
             else
                 delete!(active_xs, first(x).index)
@@ -746,7 +775,7 @@ function intersectmap!(x_::AbstractIntervals, y_::AbstractIntervals; sorted=fals
         end
 
         if !x_less
-            if #=@show=# first_is_start(y) && !x_less
+            if #=@show =#first_is_start(y) && !x_less
                 push!(active_ys, first(y).index)
             else
                 delete!(active_ys, first(y).index)
@@ -754,24 +783,16 @@ function intersectmap!(x_::AbstractIntervals, y_::AbstractIntervals; sorted=fals
             y = Iterators.peel(y)[2]
         end
 
-        #=@show=# active_ys
-        #=@show=# active_xs
+        #=@show =#active_ys
+        #=@show =#active_xs
         for i in active_xs
             append!(result[i], active_ys)
         end
 
-        #=@show=# result
+        #=@show =#result
     end
 
-    if !sorted
-        unsorted = similar(result)
-        for i in eachindex(result)
-            unsorted[sorted_ixs[i]] = unique!(result[i])
-        end
-        return unsorted
-    else
-        return result .= unique!.(result)
-    end
+    return unique!.(result)
 end
 
 ##### ROUNDING #####

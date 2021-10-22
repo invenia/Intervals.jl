@@ -18,12 +18,12 @@ using Random
         @test isdisjoint(setdiff(a, b), b)
         @test !isdisjoint(a, a)
         
-        intersections = intersectmap!(a, b)
+        intersections = intersectmap(copy(a), b)
         a, b = Intervals.asarray.((a,b))
-        @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[collect(ix[2])])), 
+        @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 
                   enumerate(intersections))
 
-        @test all(ix -> isempty(intersect(a[ix[1]], b[Not(collect(ix[2]))])), 
+        @test all(ix -> isempty(intersect(a[ix[1]], b[Not(ix[2])])), 
                   enumerate(intersections))
     end
 
@@ -52,6 +52,33 @@ using Random
                                        (2.0.*rand(length(intervals)) .- 1.0)))]
     a, b = intervals[1:25], intervals[26:end]
     @test all(first.(intervals) .∈ intervals)
+    testsets(intervals[1:25], intervals[26:end])
+    testsets(intervals[1], intervals[26:end])
+    testsets(intervals[1:25], intervals[26])
+
+    randint(a,b) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(a,b)
+    randint(a::Interval) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(first(a), last(a))
+    intervals = randint.(starts, starts .+ rand(1:10_000, 25))
+    intervals = [intervals; randint.(translate.(intervals, round.(Int, area.(intervals) .*
+                                                (2.0.*rand(length(intervals)) .- 1.0))))]
+    testsets(intervals[1:25], intervals[26:end])
+    testsets(intervals[1], intervals[26:end])
+    testsets(intervals[1:25], intervals[26])
+
+    leftint(a,b) = Interval{Int, Closed, Open}(a, b)
+    leftint(a::Interval) = Interval{Int, Closed, Open}(first(a), last(a))
+    intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
+    intervals = [intervals; leftint.(translate.(intervals, round.(Int, area.(intervals) .*
+                                                (2.0.*rand(length(intervals)) .- 1.0))))]
+    testsets(intervals[1:25], intervals[26:end])
+    testsets(intervals[1], intervals[26:end])
+    testsets(intervals[1:25], intervals[26])
+
+    rightint(a,b) = Interval{Int, Open, Closed}(a, b)
+    rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
+    intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
+    intervals = [intervals; rightint.(translate.(intervals, round.(Int, area.(intervals) .*
+                                                (2.0.*rand(length(intervals)) .- 1.0))))]
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])

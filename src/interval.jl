@@ -496,10 +496,10 @@ first_is_start(x) = isempty(x) ? false : isstart(first(x))
 #
 function mergesets(op, x, y)
     result = Union{eltype(x), eltype(y)}[]
-    #=@show=# typeof(result)
     sizehint!(result, length(x) + length(y))
 
-    include_next_points = true
+    # to start, points are not included (until we see the starting edge of a set)
+    include_future_points = false
 
     inx = false
     iny = false
@@ -512,40 +512,37 @@ function mergesets(op, x, y)
         keep_y_edge = iny
 
         if x_isless || x_equal
-            #=@show=# inx = first_is_start(x)
+            inx = first_is_start(x)
             keep_x_edge = first_is_closed(x)
             x = Iterators.peel(x)[2]
         end
         if !x_isless || x_equal
-            #=@show=# iny = first_is_start(y)
+            iny = first_is_start(y)
             keep_y_edge = first_is_closed(y)
             y = Iterators.peel(y)[2]
         end
 
-        #=@show=# inx
-        #=@show=# iny
-        #=@show=# include_t = op(inx, iny)
-        keep_edge = op(#=@show=#(keep_x_edge), #=@show=#(keep_y_edge))
-        #=@show=# keep_edge
-        #=@show=# include_next_points
-        if include_t == include_next_points
-            if include_next_points
-                push!(result, #=@show=# Edge(t.value, true, keep_edge))
-                include_next_points = false
+        include_t = op(inx, iny)
+        keep_edge = op(keep_x_edge, keep_y_edge)
+        if include_t != include_future_points
+            # start including points
+            if !include_future_points
+                push!(result, Edge(t.value, true, keep_edge))
+                include_future_points = true
+            # if we're about to create an empty interval (e.g. [1, 1)), remove it
             elseif !isempty(result) && !keep_edge && t.value == result[end].value 
-                # println("poping result")
                 pop!(result)
-                include_next_points = true
+                include_future_points = false
+            # stop including points
             else
-                push!(result, #=@show=# Edge(t.value, false, keep_edge))
-                include_next_points = true
+                push!(result, Edge(t.value, false, keep_edge))
+                include_future_points = false
             end
-        # if we're supposed to keep the edge but
-        # we're not including any points right now,
-        # we need to add an edge (e.g. [0, 1] ∪ [1, 2])
-        elseif keep_edge && include_next_points
-            push!(result, #=@show=# Edge(t.value, true, true))
-            push!(result, #=@show=# Edge(t.value, false, true))
+        # if we're supposed to keep the edge but we're not including any points
+        # right now, we need to add a singleton edge (e.g. [0, 1] ∪ [1, 2])
+        elseif keep_edge && !include_future_points
+            push!(result, Edge(t.value, true, true))
+            push!(result, Edge(t.value, false, true))
         end
 
     end

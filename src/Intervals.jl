@@ -1,5 +1,7 @@
 module Intervals
 
+using Infiltrator # TODO: REMOVE!!!
+
 using Dates
 using Printf
 using RecipesBase
@@ -20,6 +22,7 @@ bound_type(x::Bool) = x ? Closed : Open
 
 abstract type AbstractInterval{T, L <: Bound, R <: Bound} end
 
+Base.eltype(::Type{<:AbstractInterval{T}}) where {T} = T
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
 bounds_types(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
@@ -58,5 +61,6 @@ export Bound,
        less_than_disjoint,
        greater_than_disjoint,
        superset,
+       intersectmap!,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
 end

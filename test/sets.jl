@@ -18,6 +18,7 @@ using InvertedIndices
         @test !isdisjoint(a, a)
         
         intersections = intersectmap!(a, b)
+        a, b = Intervals.asarray.((a,b))
         @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[collect(ix[2])])), 
                   enumerate(intersections))
 
@@ -49,7 +50,7 @@ using InvertedIndices
     intervals = [intervals; translate.(intervals, round.(Int, area.(intervals) .*
                                        (2.0.*rand(length(intervals)) .- 1.0)))]
     a, b = intervals[1:25], intervals[26:end]
-    @test all(first.(intervals) .∈ Ref(intervals))
+    @test all(first.(intervals) .∈ intervals)
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])

@@ -363,7 +363,14 @@ struct Edge{T}
 end
 Edge(t, start = true, closed = true) = Edge{eltype(t)}(t, start, 0, closed)
 isclosed(x::Edge) = x.closed
-Base.isless(x::Edge, y::Edge) = isequal(x,y) ? isless(isclosed(x), isclosed(y)) : isless(x.value, y.value)
+offset(x::Edge) = x.first ? !x.closed : x.closed
+function Base.isless(x::Edge, y::Edge) 
+    if isequal(x.value, y.value) 
+        return isless(offset(x), offset(y)) 
+    else 
+        return isless(x.value, y.value)
+    end
+end
 Base.isequal(x::Edge, y::Edge) = isequal(isclosed(x), isclosed(y)) && isequal(x.value, y.value)
 Base.eltype(::Edge{T}) where T = T
 Base.eltype(::Type{<:Edge{T}}) where T = T
@@ -450,7 +457,7 @@ first_is_start(x) = isempty(x) ? false : isstart(first(x))
 # start including points).
 function mergesets(op, x, y)
     result = Union{eltype(x), eltype(y)}[]
-    @show typeof(result)
+    #=@show=# typeof(result)
     sizehint!(result, length(x) + length(y))
 
     include_next_points = true
@@ -466,38 +473,40 @@ function mergesets(op, x, y)
         keep_y_edge = iny
 
         if x_isless || x_equal
-            @show inx = first_is_start(x)
+            #=@show=# inx = first_is_start(x)
             keep_x_edge = first_is_closed(x)
             x = Iterators.peel(x)[2]
         end
         if !x_isless || x_equal
-            @show iny = first_is_start(y)
+            #=@show=# iny = first_is_start(y)
             keep_y_edge = first_is_closed(y)
             y = Iterators.peel(y)[2]
         end
 
-        @show inx
-        @show iny
-        @show include_t = op(inx, iny)
-        keep_edge = op(@show(keep_x_edge), @show(keep_y_edge))
-        @show keep_edge
-        @show include_next_points
+        #=@show=# inx
+        #=@show=# iny
+        #=@show=# include_t = op(inx, iny)
+        keep_edge = op(#=@show=#(keep_x_edge), #=@show=#(keep_y_edge))
+        #=@show=# keep_edge
+        #=@show=# include_next_points
         if include_t == include_next_points
             if include_next_points
-                push!(result, @show Edge(t.value, true, keep_edge))
+                push!(result, #=@show=# Edge(t.value, true, keep_edge))
                 include_next_points = false
-            # TODO: remove empty sets in an elseif here
-            # (e.g. [1, 0))
+            elseif !isempty(result) && !keep_edge && t.value == result[end].value 
+                # println("poping result")
+                pop!(result)
+                include_next_points = true
             else
-                push!(result, @show Edge(t.value, false, keep_edge))
+                push!(result, #=@show=# Edge(t.value, false, keep_edge))
                 include_next_points = true
             end
         # if we're supposed to keep the edge but
         # we're not including any points right now,
         # we need to add an edge (e.g. [0, 1] ∪ [1, 2])
         elseif keep_edge && include_next_points
-            push!(result, @show Edge(t.value, true, true))
-            push!(result, @show Edge(t.value, false, true))
+            push!(result, #=@show=# Edge(t.value, true, true))
+            push!(result, #=@show=# Edge(t.value, false, true))
         end
 
     end
@@ -649,46 +658,77 @@ function Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(intersect(x, y))
 end
 Base.in(x::AbstractInterval, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
+function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
+    x, y = mergecleanup(x,y)
+    return x == y
+end
 
+asarray(x) = [x]
+asarray(x::AbstractArray) = x
+alength(x) = 1
+alength(x::AbstractArray) = length(x)
 """
     intersectmap!(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
                  y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
 
-Returns a Vector{Set{Int}} object where the value at index i gives indices to
-all intervals in `y` that intersect with `x[i]`. (The i's are according to the
-sorted order).
+Returns a Vector{Vector{Int}} object where the value at index i gives indices to
+all intervals in `y` that intersect with `x[i]`.
 
 If `sorted` is true, assumes x and y are already sorted by `first`. No change to
 `x` will occur in this case (i.e. the ! can be safely ignored).
 """
 function intersectmap!(x_::AbstractIntervals, y_::AbstractIntervals; sorted=false)
-    x = !sorted ? unbunch(sort!(x_, by=startedge)) : x_
-    y = !sorted ? unbunch(sort(y_, by=startedge)) : y_
+    sorted_ixs = !sorted ? sortperm(asarray(x_), by=startedge) : Int[]
+    x = !sorted ? unbunch(sort!(asarray(x_), by=startedge)) : unbunch(x_)
+    y = !sorted ? unbunch(sort!(asarray(y_), by=startedge)) : unbunch(y_)
 
-    result = [Set{Int}() for _ in 1:length(x_)]
+    result = [Vector{Int}() for _ in 1:alength(x_)]
+
     active_xs = Set{Int}()
+    active_ys = Set{Int}()
     while !isempty(x)
-        if first_is_start(x)
-            push!(active_xs, first(x).index)
-        else
-            delete!(active_xs, first(x).index)
-        end
+        # println("loop--------------------")
+        # @show isempty(x) || first(x)
+        # @show isempty(y) || first(y)
+        #=@show=# x_less = first_is_less(x, y)
+        #=@show=# y_less = first_is_less(y, x)
 
-        if first_is_start(y)
-            for i in active_xs
-                push!(result[i], first(y).index)
+        if !y_less
+            if #=@show=# first_is_start(x) 
+                push!(active_xs, first(x).index)
+            else
+                delete!(active_xs, first(x).index)
             end
-        end
-
-        if !first_is_less(y, x)
             x = Iterators.peel(x)[2]
         end
-        if !first_is_less(x, y)
+
+        if !x_less
+            if #=@show=# first_is_start(y) && !x_less
+                push!(active_ys, first(y).index)
+            else
+                delete!(active_ys, first(y).index)
+            end
             y = Iterators.peel(y)[2]
         end
+
+        #=@show=# active_ys
+        #=@show=# active_xs
+        for i in active_xs
+            append!(result[i], active_ys)
+        end
+
+        #=@show=# result
     end
 
-    return result
+    if !sorted
+        unsorted = similar(result)
+        for i in eachindex(result)
+            unsorted[sorted_ixs[i]] = unique!(result[i])
+        end
+        return unsorted
+    else
+        return result .= unique!.(result)
+    end
 end
 
 ##### ROUNDING #####

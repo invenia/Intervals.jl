@@ -74,6 +74,15 @@ using Random
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])
 
+    rightint(a,b) = Interval{Int, Open, Closed}(a, b)
+    rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
+    intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
+    intervals = [intervals; rightint.(translate.(intervals, round.(Int, area.(intervals) .*
+                                                (2.0.*rand(length(intervals)) .- 1.0))))]
+    testsets(intervals[1:25], intervals[26:end])
+    testsets(intervals[1], intervals[26:end])
+    testsets(intervals[1:25], intervals[26])
+
     intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
     intervals = [intervals; leftint.(translate.(intervals, round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
@@ -83,13 +92,4 @@ using Random
     testsets(intervals[1:25], rightint.(intervals[26:end]))
     testsets(intervals[1], rightint.(intervals[26:end]))
     testsets(intervals[1:25], rightint(intervals[26]))
-
-    rightint(a,b) = Interval{Int, Open, Closed}(a, b)
-    rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
-    intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; rightint.(translate.(intervals, round.(Int, area.(intervals) .*
-                                                (2.0.*rand(length(intervals)) .- 1.0))))]
-    testsets(intervals[1:25], intervals[26:end])
-    testsets(intervals[1], intervals[26:end])
-    testsets(intervals[1:25], intervals[26])
 end

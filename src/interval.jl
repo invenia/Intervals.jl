@@ -446,16 +446,10 @@ function unbunch(interval::AbstractInterval, ::Type{T}) where T
 end
 function unbunch(intervals, t::Type{T} = edgetype(eltype(intervals))) where T
     isempty(intervals) && return T[]
-    local result
-    try 
-        filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
-        result = mapreduce(((i) -> [startedge(T, intervals[i], i), 
-                                    stopedge(T, intervals[i], i)]), 
-                            vcat, filtered)
-    catch e
-        @infiltrate
-    end
-
+    filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
+    result = mapreduce(((i) -> [startedge(T, intervals[i], i), 
+                                stopedge(T, intervals[i], i)]), 
+                        vcat, filtered)
     return sort!(result)
 end
 function unbunch(a::AbstractVector{<:AbstractInterval{T,Closed,Open}}, 
@@ -474,7 +468,7 @@ unbunch(a, b) = unbunch.((a, b), Union{edgetype(typeof(a)), edgetype(typeof(b))}
 
 
 # represent a sequence of edges as a sequence of one or more intervals
-bunch(intervals::AbstractVector{<:AbstractInterval}, orgin, withend) = intervals
+bunch(intervals::AbstractVector{<:AbstractInterval}) = intervals
 intervaltype(::Type{<:Edge{T}}) where T = Interval{T}
 intervaltype(::Type{<:EdgeDir{:left, T}}) where T = Interval{T, Closed, Open}
 intervaltype(::Type{<:EdgeDir{:right, T}}) where T = Interval{T, Open, Closed}
@@ -548,19 +542,18 @@ function mergesets(op, x, y)
     sizehint!(result, length(x) + length(y))
 
     # to start, points are not included (until we see the starting edge of a set)
-    include_points = false
-
+    inresult = false
     inx = false
     iny = false
+
     # track_edge == true implies that we have all [a, b) or all (a, b]
     # intervals (and so are closed under set operations)
     track_edge = !(eltype(x) <: EdgeDir && edgedir(first(x)) == edgedir(first(y)))
 
     while !(isempty(x) && isempty(y))
-        # println("loop---------")
         t = first_is_less(x, y) ? first(x) : first(y)
-        #=@show=# x_isless = first_is_less(x, y)
-        #=@show=# x_equal = first_is_equal(x, y)
+        x_isless = first_is_less(x, y)
+        x_equal = first_is_equal(x, y)
         local keep_x_edge
         local keep_y_edge
         if track_edge
@@ -583,45 +576,34 @@ function mergesets(op, x, y)
             y = Iterators.peel(y)[2]
         end
 
-        include_t = op(#=@show=#(inx), #=@show=#(iny))
-        #=@show=# isempty(x) ||first(x)
-        #=@show=# isempty(y) || first(y)
-        #=@show=# include_t
         if track_edge
             keep_edge = op(keep_x_edge, keep_y_edge)
         else
             keep_edge = nothing
         end
-        #=@show=# include_points
-        if include_t != include_points
+        if op(inx, iny) != inresult
             # start including points
-            if !include_points
-                # println("adding edge----")
-                push!(result, #=@show=# Edge(t, true, keep_edge))
-                include_points = true
-            # if we're about to create an empty interval (e.g. [1, 1) or (1, 1])), remove it
+            if !inresult
+                push!(result, Edge(t, true, keep_edge))
+                inresult = true
+            # if we're about to create an empty interval (e.g. [1, 1) or (1, 1]), remove it
             elseif !isempty(result) && t.value == result[end].value && 
                 (!track_edge || !isclosed(t) || !isclosed(result[end])) # at least one open edge
-
-                # println("removing edge----")
                 pop!(result)
-                include_points = false
+                inresult = false
             # stop including points
             else
-                # println("adding edge----")
-                push!(result, #=@show=# Edge(t, false, keep_edge))
-                include_points = false
+                push!(result, Edge(t, false, keep_edge))
+                inresult = false
             end
         # if we're supposed to keep the edge but we're not including any points
-        # right now, we need to add a singleton edge (e.g. [0, 1] ∪ [1, 2])
-        elseif track_edge && keep_edge && !include_points
+        # right now, we need to add a singleton edge (e.g. [0, 1] ∩ [1, 2])
+        elseif track_edge && keep_edge && !inresult
             push!(result, Edge(t, true, true))
             push!(result, Edge(t, false, true))
         end
 
     end
-
-    #=@show =#result
 
     return bunch(result)
 end
@@ -679,6 +661,8 @@ function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S
 
     return Interval(left, right)
 end
+
+##### Multi-interval Set Operations #####
 
 # There is power in a union.
 """
@@ -754,8 +738,8 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
 end
 
 Base.union(x::AbstractInterval) = x
-const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 
+const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 mergeclean(x, y) = unbunch(union(x), union(y))
 function Base.intersect(x::AbstractIntervals, y::AbstractIntervals)
     return mergesets((inx, iny) -> inx && iny, mergeclean(x, y)...)
@@ -772,7 +756,7 @@ end
 function Base.issubset(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(setdiff(x, y))
 end
-# may or may not be from based (see top of `Intervals.jl`)
+# may or may not be from Base (see top of `Intervals.jl`)
 function isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(intersect(x, y))
 end
@@ -790,7 +774,7 @@ alength(x::AbstractArray) = length(x)
     intersectmap(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
                  y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
 
-Returns a Vector{Vector{Int}} object where the value at index i gives indices to
+Returns a Vector{Vector{Int}} where the value at index i gives the indices to
 all intervals in `y` that intersect with `x[i]`.
 
 """
@@ -805,14 +789,11 @@ function intersectmap_helper(result, x, y)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)
-        # println("loop--------------------")
-        #=@show =#isempty(x) || first(x)
-        #=@show =#isempty(y) || first(y)
-        #=@show =#x_less = first_is_less(x, y)
-        #=@show =#y_less = first_is_less(y, x)
+        x_less = first_is_less(x, y)
+        y_less = first_is_less(y, x)
 
         if !y_less
-            if #=@show =#first_is_start(x) 
+            if first_is_start(x) 
                 push!(active_xs, first(x).index)
             else
                 delete!(active_xs, first(x).index)
@@ -821,7 +802,7 @@ function intersectmap_helper(result, x, y)
         end
 
         if !x_less
-            if #=@show =#first_is_start(y) && !x_less
+            if first_is_start(y) && !x_less
                 push!(active_ys, first(y).index)
             else
                 delete!(active_ys, first(y).index)
@@ -829,13 +810,9 @@ function intersectmap_helper(result, x, y)
             y = Iterators.peel(y)[2]
         end
 
-        #=@show =#active_ys
-        #=@show =#active_xs
         for i in active_xs
             append!(result[i], active_ys)
         end
-
-        #=@show =#result
     end
 
     return unique!.(result)

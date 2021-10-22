@@ -355,7 +355,8 @@ true
 
 # Edge is used to represent the two bounds of an interval when merging sets
 # of intervals
-struct Edge{T}
+abstract type AbstractEdge{T}; end
+struct Edge{T} <: AbstractEdge{T}
     value::T
     first::Bool
     index::Int
@@ -363,24 +364,48 @@ struct Edge{T}
 end
 Edge(t, start = true, closed = true) = Edge{eltype(t)}(t, start, 0, closed)
 isclosed(x::Edge) = x.closed
-offset(x::Edge) = x.first ? !x.closed : x.closed
-function Base.isless(x::Edge, y::Edge) 
+offset(x::AbstractEdge) = x.first ? !isclosed(x) : isclosed(x)
+function Base.isless(x::AbstractEdge, y::AbstractEdge) 
     if isequal(x.value, y.value) 
         return isless(offset(x), offset(y)) 
     else 
         return isless(x.value, y.value)
     end
 end
-Base.isequal(x::Edge, y::Edge) = isequal(isclosed(x), isclosed(y)) && isequal(x.value, y.value)
-Base.eltype(::Edge{T}) where T = T
-Base.eltype(::Type{<:Edge{T}}) where T = T
+Base.isequal(x::AbstractEdge, y::AbstractEdge) = isequal(isclosed(x), isclosed(y)) && isequal(x.value, y.value)
+Base.eltype(::AbstractEdge{T}) where T = T
+Base.eltype(::Type{<:AbstractEdge{T}}) where T = T
 startedge(x::AbstractInterval{T,A}, i=0) where {T,A} = Edge{T}(first(x), true, i, A == Closed)
 stopedge(x::AbstractInterval{T,<:Any,B}, i=0) where {T,B} = Edge{T}(last(x), false, i, B == Closed)
-isstart(x::Edge) = x.first
+isstart(x::AbstractEdge) = x.first
 
 function Interval(x::Edge{T}, y::Edge{S}) where {T, S} 
     return Interval{Union{T,S}, bound_type(isclosed(x)), 
                     bound_type(isclosed(y))}(x.value, y.value)
+end
+
+# EdgeDir is used to represent [a, b) (left) and (a, b] (right) intervals
+# which are closed under set operations (so we can keep things type invariant
+# if only left or only right intervals are present in an array)
+struct EdgeDir{D,T} <: AbtractEdge{T}
+    value::T
+    first::Bool
+    index::Int
+end
+EdgeDir(t, dir, start = true) = EdgeDir{eltype(t), dir}(t, start, 0)
+isclosed(x::EdgeDir{:left}) = x.first
+isclosed(x::EdgeDir{:right}) = !x.first
+startedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{T, :left}(first(x), true, i)
+stopedge(x::AbstractInterval{T,Closed,Open}, i=0) where T = EdgeDir{T, :left}(last(x), false, i)
+startedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{T, :right}(first(x), true, i)
+stopedge(x::AbstractInterval{T,Open,Closed}, i=0) where T = EdgeDir{T, :right}(last(x), false, i)
+
+function Interval(x::EdgeDir{D,T}, y::EdgeDir{D,S}) where {D, T, S}
+    if D == :left
+        return Interval{Union{T,S}, Closed, Open}(x.value, y.value)
+    else
+        return Interval{Union{T,S}, Open, Closed}(x.value, y.value)
+    end
 end
 
 # unbunch: represent one or more intervals as a sequence of edges
@@ -388,8 +413,11 @@ function unbunch(interval::AbstractInterval)
     return [startedge(interval, 1), stopedge(interval, 1)]
 end
 unbunch(intervals::AbstractVector{<:Edge}) = intervals
+edgetype(::Type{T}) where T = Edge{T}
+edgetype(::Type{<:Interval{T, Open, Closed}}) where T = EdgeDir{T, :right}
+edgetype(::Type{<:Interval{T, Closed, Open}}) where T = EdgeDir{T, :left}
 function unbunch(intervals)
-    isempty(intervals) && return Interval{eltype(eltype(intervals))}[]
+    isempty(intervals) && return edgetype(eltype(intervals))[]
     result = mapreduce(((i) -> [startedge(intervals[i], i), 
                                 stopedge(intervals[i], i)]), 
                         vcat, eachindex(intervals))
@@ -398,9 +426,14 @@ end
 
 # represent a sequence of edges as a sequence of one or more intervals
 bunch(intervals::AbstractVector{<:AbstractInterval}, orgin, withend) = intervals
-function bunch(intervals)
-    isempty(intervals) && return Interval{eltype(eltype(intervals))}[]
-    return map(Iterators.partition(intervals, 2)) do pair
+intervaltype(::Type{T}) where T = Interval{T}
+intervaltype(::EdgeDir{T, :left}) where T = Interval{T, Closed, Open}
+intervaltype(::EdgeDir{T, :right}) where T = Interval{T, Open, Closed}
+function bunch(edges)
+    @assert iseven(length(edges))
+    isempty(edges) && return intervaltype(eltype(edges))[]
+    return map(Iterators.partition(edges, 2)) do pair
+        @assert pair[1].first && !pair[1].first 
         return Interval(pair...)
     end
 end
@@ -441,9 +474,9 @@ first_is_start(x) = isempty(x) ? false : isstart(first(x))
 # `mergesets` is the primary internal function implementing set operations (see
 # below for its usage). It iterates through the start and stop points in x and
 # y, in order from lowest to highest. The implementation is based on the insight
-# that we can make a decision to include or exclude a given start or stop point
-# of the interval (based on `op`) and all future points will yield the same
-# decision, until we hit another start or stop point.
+# that we can make a decision to include or exclude poinats after a given start
+# or stop point of the interval (based on `op`), until we hit another start or
+# stop point.
 #
 # For each start/stop point, we determine two things: 
 #   1. whether the point should be included in the merge operation or not (based
@@ -455,6 +488,12 @@ first_is_start(x) = isempty(x) ? false : isstart(first(x))
 # Then, we decide to add a new start/stop time point if 1 and 2 match (i.e.
 # "should include" points will create a time point when the next point will
 # start including points).
+#
+# A final issue is handling the closed/open nature of each edge. We have to
+# track whether to keep the edge (closed) or not (open) separately. Keeping the
+# edge may require we keep a singleton edge ([1,1]) such as when to closed edges
+# intersect with one another (e.g. (0, 1] ∩ [1, 2))
+#
 function mergesets(op, x, y)
     result = Union{eltype(x), eltype(y)}[]
     #=@show=# typeof(result)

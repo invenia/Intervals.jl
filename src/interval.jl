@@ -376,8 +376,8 @@ true
 
 ###### Set-related Helpers #####
 
-# Edge is used to represent the two bounds of an interval when merging sets of
-# intervals. This way we can sort edges in order during `mergesets` (see below).
+# Edge is used to represent the two bounds of an interval seperately. This
+# allows us to sort edges across sets during `mergesets` (see below).
 abstract type AbstractEdge{T}; end
 struct Edge{T} <: AbstractEdge{T}
     value::T
@@ -560,7 +560,7 @@ function mergesets(op, x, y)
     inx = false
     iny = false
 
-    # track_edge == true implies that we have all [a, b) or all (a, b]
+    # track_edge == false implies that we have all [a, b) or all (a, b]
     # intervals (and so are closed under set operations)
     track_edge = !(eltype(x) <: EdgeDir && edgedir(first(x)) == edgedir(first(y)))
 

@@ -687,10 +687,8 @@ end
 function Base.issubset(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(setdiff(x, y))
 end
-if !isdefined(Base, :isdisjoint)
-    @eval Base function isdisjoint end
-end
-function Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
+# may or may not be from based (see top of `Intervals.jl`)
+function isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(intersect(x, y))
 end
 Base.in(x::AbstractInterval, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)

@@ -1,5 +1,6 @@
 using Intervals
 using InvertedIndices
+using Random
 
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)

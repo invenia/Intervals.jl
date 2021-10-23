@@ -385,7 +385,7 @@ struct Edge{T} <: AbstractEdge{T}
     index::Int
     closed::Bool
 end
-Edge(t, start = true, closed = true) = Edge{eltype(t)}(t, start, 0, closed)
+Edge(t::T, start = true, closed = true) where T = Edge{T}(t, start, 0, closed)
 Edge(t::AbstractEdge, start, closed) = Edge(t.value, start, closed)
 isclosed(x::Edge) = x.closed
 offset(x::AbstractEdge) = x.first ? !isclosed(x) : isclosed(x)

@@ -20,9 +20,13 @@ using Random
         
         intersections = intersectmap(copy(a), b)
         a, b = Intervals.asarray.((a,b))
+        # verify that all indices returned in `intersectmap` correspond to sets
+        # in b that overlap with the given set in a
         @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 
                   enumerate(intersections))
 
+        # verify that all indices not returned in `intersectmap` correspond to
+        # sets in b that do not overlap with the given set in akk
         @test all(ix -> isempty(intersect(a[ix[1]], b[Not(ix[2])])), 
                   enumerate(intersections))
     end

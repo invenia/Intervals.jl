@@ -600,7 +600,9 @@ function mergesets(op, x, y)
             if !inresult
                 push!(result, Edge(t, true, keep_edge))
                 inresult = true
-            # if we're about to create an empty interval (e.g. [1, 1) or (1, 1]), remove it
+            # edgecase: if `inresult == true` we want to add a stop edge (what
+            # `else` does below); *but* if this would create an empty interval
+            # (e.g. [1, 1) or (1, 1]), we need to instead remove the start edge
             elseif !isempty(result) && t.value == result[end].value && 
                 (!track_edge || !isclosed(t) || !isclosed(result[end])) # at least one open edge
                 pop!(result)
@@ -610,8 +612,9 @@ function mergesets(op, x, y)
                 push!(result, Edge(t, false, keep_edge))
                 inresult = false
             end
-        # if we're supposed to keep the edge but we're not including any points
-        # right now, we need to add a singleton edge (e.g. [0, 1] ∩ [1, 2])
+        # edgecase: if we're supposed to keep the edge but we're not including
+        # any points right now, we need to add a singleton edge (e.g. [0, 1] ∩
+        # [1, 2])
         elseif track_edge && keep_edge && !inresult
             push!(result, Edge(t, true, true))
             push!(result, Edge(t, false, true))

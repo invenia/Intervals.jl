@@ -387,169 +387,179 @@ true
 
 ###### Set-related Helpers #####
 
-# TODO: replace all references to "edge" with "endpoint" to maintain consistent terminology
-# TODO: use a new type IndexedEndpoint instead of a tuple, to improve clarity/avoid
-# bugs (first is a valid method for both tuples and edges)
-# TODO: mergesets still needs to be adapted to work with IndexedEdge
-# objects
-
 # unbunch: represent one or more intervals as a sequence of endpoints and their indices into the original intervals
-edgetype(::Type{<:AbstractInterval{T}}) where T = Endpoint{T}
-edgetype(::Type{<:AbstractVector{T}}) where T <: AbstractInterval = edgetype(T)
+endpoint_type(::Type{<:AbstractInterval{T}}) where T = Endpoint{T}
+endpoint_type(::Type{<:AbstractVector{T}}) where T <: AbstractInterval = endpoint_type(T)
 
 leftpoint(x::AbstractInterval, ::Type{<:Endpoint}) = LeftEndpoint(x)
 rightpoint(x::AbstractInterval, ::Type{<:Endpoint}) = RightEndpoint(x)
 leftpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = LeftHalfOpenEndpoint(x)
 rightpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = RightHalfOpenEndpoint(x)
 
-function unbunch(interval::AbstractInterval, ::Type{T}) where T
-    return [(0, leftpoint(interval, T)), (0, rightpoint(interval, T))]
+function unbunch(interval::AbstractInterval, ::Type{T}; enumerate=false) where T
+    if enumerate
+        return [(1, leftpoint(interval, T)), (1, rightpoint(interval, T))]
+    else
+        return [leftpoint(interval, T), rightpoint(interval, T)]
 end
-function unbunch(intervals, t::Type{T} = edgetype(intervals)) where T
+
+function unbunch(intervals, t::Type{T} = endpoint_type(intervals); enumerate=false) where T
     isempty(intervals) && return T[]
     filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
-    result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)), 
-                                (i, rightpoint(intervals[i], T))]), 
-                        vcat, filtered)
-    return sort!(result)
+    if enumerate
+        result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)), 
+                                    (i, rightpoint(intervals[i], T))]), 
+                            vcat, filtered)
+        return sort!(result, by=last)
+    else
+        result = mapreduce(((i) -> [leftpoint(intervals[i], T), 
+                                    rightpoint(intervals[i], T)]), 
+                            vcat, filtered)
+        return sort!(result)
+    end
 end
 function unbunch(a::AbstractVector{<:AbstractInterval{T,Closed,Open}}, 
-                 b::AbstractVector{<:AbstractInterval{S,Closed,Open}}) where {T, S}
+                 b::AbstractVector{<:AbstractInterval{S,Closed,Open}}; enumerate=false) where {T, S}
     E = HalfOpenEndpoint{promote_type(T, S), LeftClosed}
-    return unbunch(a, E), unbunch(b, E)
+    return unbunch(a, E; enumerate), unbunch(b, E; enumerate)
 end
 function unbunch(a::AbstractVector{<:AbstractInterval{T,Open,Closed}}, 
-                 b::AbstractVector{<:AbstractInterval{S,Open,Closed}}) where {T, S}
+                 b::AbstractVector{<:AbstractInterval{S,Open,Closed}}; enumerate=false) where {T, S}
     E = HalfOpenEndpoint{promote_type(T, S), RightClosed}
-    return unbunch(a, E), unbunch(b, E)
+    return unbunch(a, E; enumerate), unbunch(b, E; enumerate)
 end
-unbunch(a, b) = unbunch.((a, b), Union{edgetype(typeof(a)), edgetype(typeof(b))})
+unbunch(a, b; enuemrate=false) = unbunch.((a, b), promote_type(endpoint_type(typeof(a)), endpoint_type(typeof(b))); enumerate)
 
-# represent a sequence of edges as a sequence of one or more intervals
+# represent a sequence of endpoints as a sequence of one or more intervals
 bunch(intervals::AbstractVector{<:AbstractInterval}) = intervals
 intervaltype(::Type{<:Endpoint{T}}) where T = Interval{T}
 intervaltype(::Type{<:HalfOpenEndpoint{T, LeftClosed}}) where T = Interval{T, Closed, Open}
 intervaltype(::Type{<:HalfOpenEndpoint{T, RightClosed}}) where T = Interval{T, Open, Closed}
 intervaltype(::Type{<:Tuple{Int, E}}) where E = intervaltype(E)
-function bunch(edges)
-    @assert iseven(length(edges))
-    isempty(edges) && return intervaltype(eltype(edges))[]
-    return map(Iterators.partition(edges, 2)) do pair
+function bunch(endpoints)
+    @assert iseven(length(endpoints))
+    isempty(endpoints) && return intervaltype(eltype(endpoints))[]
+    return map(Iterators.partition(endpoints, 2)) do pair
         return Interval(last.(pair)...)
     end
 end
 
-# conditions to check on sequences of edge (handling empty sequence edge cases)
-function first_is_less(x, y)
+# conditions to check on sequences of endpoint (handling empty sequence endpoint cases)
+function first_is_less(x, y; by=identity)
     if isempty(x)
         return false
     elseif isempty(y)
         return true
     else
-        return isless(first(x), first(y))
+        return isless(by(first(x)), by(first(y)))
     end
 end
 
-function first_is_equal(x, y)
+function first_is_equal(x, y, by=identity)
     if isempty(x)
         return false
     elseif isempty(y)
         return false
     else
-        return isequal(first(x), first(y))
+        return isequal(by(first(x)), by(first(y)))
     end
 end
 
-function first_is_closed(x)
+function first_is_closed(x, by=identity)
     if isempty(x)
         true
     else
-        return isclosed(first(x))
+        return isclosed(by(first(x)))
     end
 end
 
-first_is_left(x) = isempty(x) ? false : isleft(first(x))
-edgedir(::HalfOpenEndpoint{T, B}) where {T, B} = B
+first_is_left(x, by=identity) = isempty(x) ? false : isleft(by(first(x)))
+endpoint_dir_type(::Type) = NaN # a value unequal to itself
+endpoint_dir_type(::Type{<:HalfOpenEndpoint{T, B}}) where {T, B} = B
+endpoint_dir_type(::Type{<:AbstractArray{T}}) where T = endpoint_dir_type(T)
 
 #     mergesets(op, x, y)
 #
 # `mergesets` is the primary internal function implementing set operations (see
-# below for its usage). It iterates through the left and right edges in x and y,
-# in order from lowest to highest. The implementation is based on the insight
-# that we can make a decision to include or exclude all points after a given
-# edge (based on `op`) and that decision will remain unchanged moving left to
-# right along the real-number line until we encounter a new edge.
+# below for its usage). It iterates through the left and right endpoints in x
+# and y, in order from lowest to highest. The implementation is based on the
+# insight that we can make a decision to include or exclude all points after a
+# given endpoint (based on `op`) and that decision will remain unchanged moving
+# left to right along the real-number line until we encounter a new endpoint.
 #
-# For each edge, we determine two things: 
+# For each endpoint, we determine two things: 
 #   1. whether subsequent points should be included in the merge operation or
 #        not (based on its membership in both `x` and `y`) by using `op`
-#   2. whether the next step will define a left (start including) or right edge
-#        (stop includeing)
+#   2. whether the next step will define a left (start including) or right
+#        endpoint (stop includeing)
 #
-# Then, we decide to add a new start/stop time point if 1 and 2 match (i.e.
-# "should include" points will create a time point when the next point will
-# start including points).
+# Then, we decide to add a new endpoint if 1 and 2 match (i.e. "should include"
+# points will create a time point when the next point will start including
+# points).
 #
-# A final issue is handling the closed/open nature of each edge. In the general
-# case, we have to track whether to keep the edge (closed) or not (open)
-# separately. Keeping the edge may require we keep a singleton edge ([1,1]) such
-# as when to closed edges intersect with one another (e.g. (0, 1] ∩ [1, 2))
+# A final issue is handling the closed/open nature of each endpoint. In the
+# general case, we have to track whether to keep the endpoint (closed) or not
+# (open) separately. Keeping the endpoint may require we keep a singleton
+# endpoint ([1,1]) such as when to closed endpoints intersect with one another
+# (e.g. (0, 1] ∩ [1, 2))
 #
 function mergesets(op, x, y)
     result = promote_type(eltype(x), eltype(y))[]
     sizehint!(result, length(x) + length(y))
 
-    # to start, points are not included (until we see the starting edge of a set)
+    # to start, points are not included (until we see the starting endpoint of a set)
     inresult = false
     inx = false
     iny = false
 
-    # we do not have to track the edges if we're using HalfOpenEndpoint objects
+    # we do not have to track the endpoints if we're using HalfOpenEndpoint
+    # objects 
     # NOTE: since this statement relies only on types, the branches using this
     # flag should compile away
-    track_edge = !(eltype(x) <: HalfOpenEndpoint && edgedir(first(x)) == edgedir(first(y)))
+    track_endpoint = endpoint_dir_type(x) != endpoint_dir_type(y)
 
     while !(isempty(x) && isempty(y))
         t = first_is_less(x, y) ? first(x) : first(y)
         x_isless = first_is_less(x, y)
         x_equal = first_is_equal(x, y)
-        keep_x_edge = track_edge ? inx : nothing
-        keep_y_edge = track_edge ? iny : nothing
+        keep_x_endpoint = track_endpoint ? inx : nothing
+        keep_y_endpoint = track_endpoint ? iny : nothing
 
         if x_isless || x_equal
             inx = first_is_left(x)
-            keep_x_edge = track_edge ? first_is_closed(x) : nothing
+            keep_x_endpoint = track_endpoint ? first_is_closed(x) : nothing
             x = Iterators.peel(x)[2]
         end
         if !x_isless 
             iny = first_is_left(y)
-            keep_y_edge = track_edge ? first_is_closed(y) : nothing
+            keep_y_endpoint = track_endpoint ? first_is_closed(y) : nothing
             y = Iterators.peel(y)[2]
         end
 
-        keep_edge = track_edge ? op(keep_x_edge, keep_y_edge) : nothing
+        keep_endpoint = track_endpoint ? op(keep_x_endpoint, keep_y_endpoint) : nothing
 
         if op(inx, iny) != inresult
             # start including points
             if !inresult
-                push!(result, left_endpoint(t, keep_edge))
+                push!(result, left_endpoint(t, keep_endpoint))
                 inresult = true
-            # edgecase: if `inresult == true` we want to add a stop edge (what
-            # `else` does below); *but* if this would create an empty interval
-            # (e.g. [1, 1) or (1, 1]), we need to instead remove the start edge
+            # edgecase: if `inresult == true` we want to add a right endpoint
+            # (what `else` does below); *but* if this would create an empty
+            # interval (e.g. [1, 1) or (1, 1]), we need to instead remove the
+            # most recent left endpoint
             elseif !isempty(result) && t.value == result[end].value && 
-                (!track_edge || !isclosed(t) || !isclosed(result[end])) # at least one open edge
+                (!track_endpoint || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
                 pop!(result)
                 inresult = false
             # stop including points
             else
-                push!(result, right_endpoint(t, keep_edge))
+                push!(result, right_endpoint(t, keep_endpoint))
                 inresult = false
             end
-        # edgecase: if we're supposed to keep the edge but we're not including
-        # any points right now, we need to add a singleton edge (e.g. [0, 1] ∩
+        # edgecase: if we're supposed to keep the endpoint but we're not including
+        # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
         # [1, 2])
-        elseif track_edge && keep_edge && !inresult
+        elseif track_endpoint && keep_endpoint && !inresult
             push!(result, left_endpoint(t, true))
             push!(result, right_endpoint(t, true))
         end
@@ -734,8 +744,8 @@ all intervals in `y` that intersect with `x[i]`.
 
 """
 function intersectmap(x_::AbstractIntervals, y_::AbstractIntervals)
-    x = unbunch(asarray(x_))
-    y = unbunch(asarray(y_))
+    x = unbunch(asarray(x_); enumerate=true)
+    y = unbunch(asarray(y_); enumerate=true)
     result = [Vector{Int}() for _ in 1:alength(x_)]
 
     intersectmap_helper(result, x, y)
@@ -744,23 +754,23 @@ function intersectmap_helper(result, x, y)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)
-        x_less = first_is_less(x, y)
-        y_less = first_is_less(y, x)
+        x_less = first_is_less(x, y, by=last)
+        y_less = first_is_less(y, x, by=last)
 
         if !y_less
-            if first_is_left(x) 
-                push!(active_xs, first(x).index)
+            if first_is_left(x, by=last) 
+                push!(active_xs, first(first(x)))
             else
-                delete!(active_xs, first(x).index)
+                delete!(active_xs, first(first(x))
             end
             x = Iterators.peel(x)[2]
         end
 
         if !x_less
-            if first_is_left(y) && !x_less
-                push!(active_ys, first(y).index)
+            if first_is_left(y, by=last) && !x_less
+                push!(active_ys, first(first(y)))
             else
-                delete!(active_ys, first(y).index)
+                delete!(active_ys, first(first(y)))
             end
             y = Iterators.peel(y)[2]
         end

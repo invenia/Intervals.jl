@@ -122,20 +122,18 @@ function Base.:(==)(a::AbstractEndpoint, b::AbstractEndpoint)
     return (
         isunbounded(a) && isunbounded(b) ||
         a.endpoint == b.endpoint && 
-        (isleft(a) == isleft(b) ||
+        (isleft(a) == isleft(b) ? isclosed()
          isclosed(a) && isclosed(b))
     )
 end
 
 function Base.isequal(a::AbstractEndpoint, b::AbstractEndpoint)
-    return (
-        isunbounded(a) && isunbounded(b) ||
-        isequal(a.endpoint, b.endpoint) && 
-        (isleft(a) == isleft(b) ||
-         isclosed(a) && isclosed(b))
-    )
+    return (isunbounded(a) && isunbounded(b) ||
+            isequal(a.endpoint, b.endpoint) &&
+            # TODO: `==` should that be `isequal?`
+            (isleft(a) == isleft(b) ? isclosed(a) == isclosed(b) :
+             isclosed(a) && isclosed(b)))
 end
-
 
 function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
     if isleft(a) == isleft(b)

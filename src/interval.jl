@@ -390,45 +390,53 @@ true
 # unbunch: represent one or more intervals as a sequence of endpoints and their indices into the original intervals
 endpoint_type(::Type{<:AbstractInterval{T}}) where T = Endpoint{T}
 endpoint_type(::Type{<:AbstractVector{T}}) where T <: AbstractInterval = endpoint_type(T)
+endpoint_type(::Type) = missing
+endpoint_type(x) = endpoint_type(typeof(x))
 
 leftpoint(x::AbstractInterval, ::Type{<:Endpoint}) = LeftEndpoint(x)
 rightpoint(x::AbstractInterval, ::Type{<:Endpoint}) = RightEndpoint(x)
 leftpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = LeftHalfOpenEndpoint(x)
 rightpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = RightHalfOpenEndpoint(x)
 
-function unbunch(interval::AbstractInterval, ::Type{T}; enumerate=false) where T
+function unbunch(interval::AbstractInterval, ::Type{T}; enumerate=false, sortby=identity) where T
     if enumerate
         return [(1, leftpoint(interval, T)), (1, rightpoint(interval, T))]
     else
         return [leftpoint(interval, T), rightpoint(interval, T)]
+    end
 end
 
-function unbunch(intervals, t::Type{T} = endpoint_type(intervals); enumerate=false) where T
+function unbunch(intervals, t::Type{T}=endpoint_type(intervals); enumerate=false,
+                 sortby=identity) where {T}
     isempty(intervals) && return T[]
     filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
     if enumerate
-        result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)), 
-                                    (i, rightpoint(intervals[i], T))]), 
-                            vcat, filtered)
-        return sort!(result, by=last)
+        result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)),
+                                    (i, rightpoint(intervals[i], T))]), vcat, filtered)
+        return sort!(convert(Array{Tuple{Int,T}}, result); by=sortby ∘ last)
     else
-        result = mapreduce(((i) -> [leftpoint(intervals[i], T), 
-                                    rightpoint(intervals[i], T)]), 
-                            vcat, filtered)
-        return sort!(result)
+        result = mapreduce(((i) -> [leftpoint(intervals[i], T), rightpoint(intervals[i], T)]),
+                           vcat, filtered)
+        return sort!(convert(Array{T}, result); by=sortby)
     end
 end
-function unbunch(a::AbstractVector{<:AbstractInterval{T,Closed,Open}}, 
-                 b::AbstractVector{<:AbstractInterval{S,Closed,Open}}; enumerate=false) where {T, S}
-    E = HalfOpenEndpoint{promote_type(T, S), LeftClosed}
-    return unbunch(a, E; enumerate), unbunch(b, E; enumerate)
+function unbunch(a::AbstractVector{<:AbstractInterval{T,Closed,Open}},
+                 b::AbstractVector{<:AbstractInterval{S,Closed,Open}}; enumerate=false,
+                 sortby=identity) where {T,S}
+    E = HalfOpenEndpoint{promote_type(T, S),LeftClosed}
+    return unbunch(a, E; enumerate, sortby), unbunch(b, E; enumerate, sortby)
 end
-function unbunch(a::AbstractVector{<:AbstractInterval{T,Open,Closed}}, 
-                 b::AbstractVector{<:AbstractInterval{S,Open,Closed}}; enumerate=false) where {T, S}
-    E = HalfOpenEndpoint{promote_type(T, S), RightClosed}
-    return unbunch(a, E; enumerate), unbunch(b, E; enumerate)
+function unbunch(a::AbstractVector{<:AbstractInterval{T,Open,Closed}},
+                 b::AbstractVector{<:AbstractInterval{S,Open,Closed}}; enumerate=false,
+                 sortby=identity) where {T,S}
+    E = HalfOpenEndpoint{promote_type(T, S),RightClosed}
+    return unbunch(a, E; enumerate, sortby), unbunch(b, E; enumerate, sortby)
 end
-unbunch(a, b; enuemrate=false) = unbunch.((a, b), promote_type(endpoint_type(typeof(a)), endpoint_type(typeof(b))); enumerate)
+function unbunch(a, b; enumerate=false, sortby=identity) 
+    T = promote_type(eltype(endpoint_type(typeof(a))), 
+                     eltype(endpoint_type(typeof(b))))
+    unbunch.((a, b), Endpoint{T}; enumerate, sortby)
+end
 
 # represent a sequence of endpoints as a sequence of one or more intervals
 bunch(intervals::AbstractVector{<:AbstractInterval}) = intervals
@@ -440,7 +448,7 @@ function bunch(endpoints)
     @assert iseven(length(endpoints))
     isempty(endpoints) && return intervaltype(eltype(endpoints))[]
     return map(Iterators.partition(endpoints, 2)) do pair
-        return Interval(last.(pair)...)
+        return Interval(pair...)
     end
 end
 
@@ -473,10 +481,11 @@ function first_is_closed(x, by=identity)
     end
 end
 
-first_is_left(x, by=identity) = isempty(x) ? false : isleft(by(first(x)))
+first_is_left(x; by=identity) = isempty(x) ? false : isleft(by(first(x)))
 endpoint_dir_type(::Type) = NaN # a value unequal to itself
 endpoint_dir_type(::Type{<:HalfOpenEndpoint{T, B}}) where {T, B} = B
 endpoint_dir_type(::Type{<:AbstractArray{T}}) where T = endpoint_dir_type(T)
+endpoint_dir_type(x::T) where T = endpoint_dir_type(T)
 
 #     mergesets(op, x, y)
 #
@@ -519,9 +528,10 @@ function mergesets(op, x, y)
     track_endpoint = endpoint_dir_type(x) != endpoint_dir_type(y)
 
     while !(isempty(x) && isempty(y))
-        t = first_is_less(x, y) ? first(x) : first(y)
-        x_isless = first_is_less(x, y)
-        x_equal = first_is_equal(x, y)
+        # println("-------------------")
+        #=@show=# t = first_is_less(x, y) ? first(x) : first(y)
+        #=@show=# x_isless = first_is_less(x, y)
+        #=@show=# x_equal = first_is_equal(x, y)
         keep_x_endpoint = track_endpoint ? inx : nothing
         keep_y_endpoint = track_endpoint ? iny : nothing
 
@@ -538,7 +548,9 @@ function mergesets(op, x, y)
 
         keep_endpoint = track_endpoint ? op(keep_x_endpoint, keep_y_endpoint) : nothing
 
-        if op(inx, iny) != inresult
+        #=@show=# inx
+        #=@show=# iny
+        if #=@show=#(op(inx, iny)) != #=@show=#(inresult)
             # start including points
             if !inresult
                 push!(result, left_endpoint(t, keep_endpoint))
@@ -547,7 +559,7 @@ function mergesets(op, x, y)
             # (what `else` does below); *but* if this would create an empty
             # interval (e.g. [1, 1) or (1, 1]), we need to instead remove the
             # most recent left endpoint
-            elseif !isempty(result) && t.value == result[end].value && 
+            elseif !isempty(result) && endpoint(t) == endpoint(result[end]) && 
                 (!track_endpoint || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
                 pop!(result)
                 inresult = false
@@ -568,10 +580,10 @@ function mergesets(op, x, y)
 
     return bunch(result)
 end
-left_endpoint(t::AbstractEndpoint{T}, closed) where T = LeftEndpoint{T,closed ? Closed : Open}(t)
-right_endpoint(t::AbstractEndpoint{T}, closed) where T = RightEndpoint{T,closed ? Closed : Open}(t)
-left_endpoint(t::HalfOpenEndpoint{T}, ::Nothing) where T = HalfOpenEndpoint{T}(t, true)
-right_endpoint(t::HalfOpenEndpoint{T}, ::Nothing) where T = HalfOpenEndpoint{T}(t, false)
+left_endpoint(t::AbstractEndpoint{T}, closed) where T = LeftEndpoint{T,closed ? Closed : Open}(endpoint(t))
+right_endpoint(t::AbstractEndpoint{T}, closed) where T = RightEndpoint{T,closed ? Closed : Open}(endpoint(t))
+left_endpoint(t::HalfOpenEndpoint{T,B}, ::Nothing) where {T,B} = HalfOpenEndpoint{T,B}(endpoint(t), true)
+right_endpoint(t::HalfOpenEndpoint{T,B}, ::Nothing) where {T,B} = HalfOpenEndpoint{T,B}(endpoint(t), false)
 
 ##### SET OPERATIONS #####
 
@@ -735,6 +747,22 @@ asarray(x) = [x]
 asarray(x::AbstractArray) = x
 alength(x) = 1
 alength(x::AbstractArray) = length(x)
+
+# sort endpoints so that a closed left endpoint comes before
+# a closed right endpoint (used by `intersectmap`)
+struct EndpointOffset{E <: Endpoint}
+    data::E
+end
+offset_value(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
+offset(x::Endpoint) = EndpointOffset(x)
+function Base.isless(x::EndpointOffset, y::EndpointOffset)
+    if isequal(x.data, y.data)
+        return isless(offset_value(x.data), offset_value(y.data))
+    else
+        return isless(x.data, y.data)
+    end
+end
+
 """
     intersectmap(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
                  y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
@@ -744,8 +772,8 @@ all intervals in `y` that intersect with `x[i]`.
 
 """
 function intersectmap(x_::AbstractIntervals, y_::AbstractIntervals)
-    x = unbunch(asarray(x_); enumerate=true)
-    y = unbunch(asarray(y_); enumerate=true)
+    x = unbunch(asarray(x_); enumerate=true, sortby=offset)
+    y = unbunch(asarray(y_); enumerate=true, sortby=offset)
     result = [Vector{Int}() for _ in 1:alength(x_)]
 
     intersectmap_helper(result, x, y)
@@ -754,14 +782,14 @@ function intersectmap_helper(result, x, y)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)
-        x_less = first_is_less(x, y, by=last)
-        y_less = first_is_less(y, x, by=last)
+        x_less = first_is_less(x, y, by=offset∘last)
+        y_less = first_is_less(y, x, by=offset∘last)
 
         if !y_less
             if first_is_left(x, by=last) 
                 push!(active_xs, first(first(x)))
             else
-                delete!(active_xs, first(first(x))
+                delete!(active_xs, first(first(x)))
             end
             x = Iterators.peel(x)[2]
         end

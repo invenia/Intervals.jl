@@ -1,5 +1,7 @@
 module Intervals
 
+using Infiltrator
+
 using Dates
 using Printf
 using RecipesBase

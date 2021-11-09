@@ -26,6 +26,8 @@ struct Endpoint{T, D, B <: Bound} <: AbstractEndpoint{T}
 end
 
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
+Base.eltype(::AbstractEndpoint{T}) where T = T
+Base.eltype(::Type{<:AbstractEndpoint{T}}) where T = T
 
 # when all intervals are half-closed in the same direction (all [a, b) or all
 # (b, a]) set operations over them are closed (e.g. all resulting intervals will
@@ -39,9 +41,9 @@ struct HalfOpenEndpoint{T, B} <: AbstractEndpoint{T}
     endpoint::T
     left::Bool
 
-    function HalfOpenEndpoint{T, B}(ep::T) where {T, B}
+    function HalfOpenEndpoint{T, B}(ep::T, left) where {T, B}
         @assert B isa DirectionBound
-        new{T,B}(ep)
+        new{T,B}(ep, left)
     end
 end
 HalfOpenEndpoint{T,B}(ep) where {T,B} = HalfOpenEndpoint{T,B}(convert(T, ep))
@@ -54,17 +56,22 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
+LeftHalfOpenEndpoint(i::AbstractInterval{T, Closed, Open}) where T = HalfOpenEndpoint{T, LeftClosed}(first(i), true)
+LeftHalfOpenEndpoint(i::AbstractInterval{T, Open, Closed}) where T = HalfOpenEndpoint{T, RightClosed}(first(i), true)
+RightHalfOpenEndpoint(i::AbstractInterval{T, Closed, Open}) where T = HalfOpenEndpoint{T, LeftClosed}(last(i), false)
+RightHalfOpenEndpoint(i::AbstractInterval{T, Open, Closed}) where T = HalfOpenEndpoint{T, RightClosed}(last(i), false)
 
 endpoint(x::AbstractEndpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(::Endpoint{T,D,B}) where {T,D,B} = B
-bound_type(x::HalfOpenEndpoint{T, LeftClosed}) = x.left ? Closed : Open
-bound_type(x::HalfOpenEndpoint{T, RightClosed}) = !x.left ? Closed : Open
+bound_type(x::HalfOpenEndpoint{<:Any, LeftClosed}) = x.left ? Closed : Open
+bound_type(x::HalfOpenEndpoint{<:Any, RightClosed}) = !x.left ? Closed : Open
 
 isclosed(x::Endpoint) = bound_type(x) === Closed
 isclosed(x::HalfOpenEndpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 isbounded(x::Endpoint) = bound_type(x) !== Unbounded
 isbounded(x::HalfOpenEndpoint) = true
+isunbounded(x::HalfOpenEndpoint) = false
 
 isleft(x::LeftEndpoint) = true
 isleft(x::RightEndpoint) = false
@@ -83,7 +90,7 @@ function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     return h
 end
 
-function Base.hash(x::HalfOpenEndpoint{T,B}, h::UInt) where {T}
+function Base.hash(x::HalfOpenEndpoint{T,B}, h::UInt) where {T,B}
     h = hash(:HalfOpenEndpoint, h)
     h = hash(B, h)
     return hash(x.endpoint, h)
@@ -157,10 +164,10 @@ function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
 end
 
 # Comparisons between Scalars and Endpoints
-Base.:(==)(a, b::Endpoint) = a == b.endpoint && isclosed(b)
-Base.:(==)(a::Endpoint, b) = b == a
+Base.:(==)(a::Number, b::Endpoint) = a == b.endpoint && isclosed(b)
+Base.:(==)(a::Endpoint, b::Number) = b == a
 
-function Base.isless(a, b::AbstractEndpoint)
+function Base.isless(a::Number, b::AbstractEndpoint)
     if isleft(b)
         return (
             !isunbounded(b) && (
@@ -173,8 +180,8 @@ function Base.isless(a, b::AbstractEndpoint)
     end
 end
 
-function Base.isless(a::RightEndpoint, b)
-    if !isleft(b)
+function Base.isless(a::RightEndpoint, b::Number)
+    if !isleft(a)
         return (
             !isunbounded(a) &&
             (

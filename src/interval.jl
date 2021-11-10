@@ -36,19 +36,6 @@ julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
 
-### Note on Ordering
-
-The `Interval` constructor will compare `first` and `last`; if it finds that
-`first > last`, they will be reversed to ensure that `first < last`. This simplifies
-calls to `in` and `intersect`:
-
-```julia
-julia> i = Interval{Open,Closed}(Date(2016, 8, 11), Date(2013, 2, 13))
-Interval{Date,Closed,Open}(2013-02-13, 2016-08-11)
-```
-
-Note that the bounds are also reversed in this case.
-
 See also: [`AnchoredInterval`](@ref)
 """
 struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}

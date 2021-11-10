@@ -753,7 +753,6 @@ alength(x::AbstractArray) = length(x)
 struct EndpointOffset{E <: Endpoint}
     data::E
 end
-offset_value(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 offset(x::Endpoint) = EndpointOffset(x)
 function Base.isless(x::EndpointOffset, y::EndpointOffset)
     if isequal(x.data, y.data)

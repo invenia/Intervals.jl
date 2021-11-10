@@ -66,6 +66,8 @@ bound_type(::Endpoint{T,D,B}) where {T,D,B} = B
 bound_type(x::HalfOpenEndpoint{<:Any, LeftClosed}) = x.left ? Closed : Open
 bound_type(x::HalfOpenEndpoint{<:Any, RightClosed}) = !x.left ? Closed : Open
 
+isunbounded(x::Number) = !isinf(x)
+
 isclosed(x::Endpoint) = bound_type(x) === Closed
 isclosed(x::HalfOpenEndpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
@@ -137,28 +139,23 @@ end
 
 function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
     if isleft(a) == isleft(b)
-        return (
-            !isunbounded(b) && (
-                isunbounded(a) ||
-                a.endpoint < b.endpoint ||
-                a.endpoint == b.endpoint && 
-                (offset_value(a) < offset_value(b))
-            )
-        )
-    elseif isleft(a) && !isleft(b)
-        return (
-            isunbounded(a) ||
-            isunbounded(b) ||
+        if isunbounded(a) || isunbounded(b)
+            return isunbounded(a) < isunbounded(b)
+        elseif a.endpoint == b.endpoint 
+            return offset_value(a) < offset_value(b)
+        else
             a.endpoint < b.endpoint
-        )
+        end
     else
-        return (
-            !isunbounded(a) && !isunbounded(b) &&
-            (
-                a.endpoint < b.endpoint ||
-                a.endpoint == b.endpoint && !(isclosed(a) && isclosed(b))
-            )
-        )
+        if isunbounded(a)
+            return isleft(a)
+        elseif isunbounded(b)
+            return !isleft(b)
+        elseif a.endpoint == b.endpoint
+            return !(isclosed(a) && isclosed(b)) && isleft(a) < isleft(b)
+        else
+            a.endpoint < b.endpoint
+        end
     end
 end
 
@@ -175,7 +172,7 @@ function Base.isless(a::Number, b::AbstractEndpoint)
             )
         )
     else
-        return a < b.endpoint
+        return isunbounded(a) || a < b.endpoint
     end
 end
 
@@ -189,6 +186,6 @@ function Base.isless(a::AbstractEndpoint, b::Number)
             )
         )
     else
-        return a.endpoint < b
+        return isunbounded(b) || a.endpoint < b
     end
 end

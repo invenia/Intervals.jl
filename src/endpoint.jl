@@ -101,7 +101,8 @@ end
 Base.broadcastable(e::Endpoint) = Ref(e)
 Base.broadcastable(e::HalfOpenEndpoint) = Ref(e)
 
-offset_value(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
+offset_value(x::AbstractEndpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
+
 """
     ==(a::Endpoint, b::Endpoint) -> Bool
 
@@ -131,10 +132,15 @@ function Base.:(==)(a::AbstractEndpoint, b::AbstractEndpoint)
 end
 
 function Base.isequal(a::AbstractEndpoint, b::AbstractEndpoint)
-    return (isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b) ||
-            isequal(a.endpoint, b.endpoint) &&
-            (isleft(a) == isleft(b) ? isclosed(a) == isclosed(b) :
-             isclosed(a) && isclosed(b)))
+    if isunbounded(a) || isunbounded(b)
+        return (isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b))
+    elseif !isequal(a.endpoint, b.endpoint)
+        return false
+    elseif isleft(a) == isleft(b)
+        return isclosed(a) == isclosed(b) 
+    else 
+        return isclosed(a) && isclosed(b)
+    end
 end
 
 function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
@@ -165,7 +171,7 @@ end
 Base.:(==)(a::Number, b::Endpoint) = a == b.endpoint && isclosed(b)
 Base.:(==)(a::Endpoint, b::Number) = b == a
 
-function Base.isless(a::Number, b::AbstractEndpoint)
+function Base.isless(a, b::AbstractEndpoint)
     if isleft(b)
         return (
             !isunbounded(b) && (
@@ -178,7 +184,7 @@ function Base.isless(a::Number, b::AbstractEndpoint)
     end
 end
 
-function Base.isless(a::AbstractEndpoint, b::Number)
+function Base.isless(a::AbstractEndpoint, b)
     if !isleft(a)
         return (
             !isunbounded(a) &&

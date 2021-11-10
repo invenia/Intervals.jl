@@ -123,7 +123,7 @@ Visualizing two contiguous intervals can assist in understanding this logic:
 """
 function Base.:(==)(a::AbstractEndpoint, b::AbstractEndpoint)
     return (
-        isunbounded(a) && isunbounded(b) ||
+        isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b)||
         a.endpoint == b.endpoint && 
         (isleft(a) == isleft(b) ? isclosed(a) == isclosed(b) :
              isclosed(a) && isclosed(b))
@@ -131,7 +131,7 @@ function Base.:(==)(a::AbstractEndpoint, b::AbstractEndpoint)
 end
 
 function Base.isequal(a::AbstractEndpoint, b::AbstractEndpoint)
-    return (isunbounded(a) && isunbounded(b) ||
+    return (isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b) ||
             isequal(a.endpoint, b.endpoint) &&
             (isleft(a) == isleft(b) ? isclosed(a) == isclosed(b) :
              isclosed(a) && isclosed(b)))
@@ -140,7 +140,9 @@ end
 function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
     if isleft(a) == isleft(b)
         if isunbounded(a) || isunbounded(b)
-            return isunbounded(a) < isunbounded(b)
+            return isleft(a) ? 
+                isbounded(a) < isbounded(b) :
+                isunbounded(a) < isunbounded(b)
         elseif a.endpoint == b.endpoint 
             return offset_value(a) < offset_value(b)
         else
@@ -172,7 +174,7 @@ function Base.isless(a::Number, b::AbstractEndpoint)
             )
         )
     else
-        return isunbounded(a) || a < b.endpoint
+        return isunbounded(b) || a < b.endpoint
     end
 end
 
@@ -186,6 +188,6 @@ function Base.isless(a::AbstractEndpoint, b::Number)
             )
         )
     else
-        return isunbounded(b) || a.endpoint < b
+        return isunbounded(a) || a.endpoint < b
     end
 end

@@ -555,106 +555,117 @@
         )
     end
 
+    array_and_single(x) = [x, [x]]
     @testset "in" begin
         for (a, b, unit) in test_values
-            interval = Interval(a, b)
-            @test  in(a, interval)
-            @test  in(a + unit, interval)
-            @test !in(a - unit, interval) || isinf(a)
-            @test  in(b, interval)
-            @test  in(b - unit, interval)
-            @test !in(b + unit, interval) || isinf(b)
+            for interval in array_and_single(Interval(a, b))
+                @test  in(a, interval)
+                @test  in(a + unit, interval)
+                @test !in(a - unit, interval) || isinf(a)
+                @test  in(b, interval)
+                @test  in(b - unit, interval)
+                @test !in(b + unit, interval) || isinf(b)
+            end
 
-            interval = Interval{Closed, Open}(a, b)
-            @test  in(a, interval)
-            @test  in(a + unit, interval)
-            @test !in(a - unit, interval) || isinf(a)
-            @test !in(b, interval)
-            @test  in(b - unit, interval) || isinf(b)
-            @test !in(b + unit, interval)
+            for interval in array_and_single(Interval{Closed, Open}(a, b))
+                @test  in(a, interval)
+                @test  in(a + unit, interval)
+                @test !in(a - unit, interval) || isinf(a)
+                @test !in(b, interval)
+                @test  in(b - unit, interval) || isinf(b)
+                @test !in(b + unit, interval)
+            end
 
-            interval = Interval{Open, Closed}(a, b)
-            @test !in(a, interval)
-            @test  in(a + unit, interval) || isinf(a)
-            @test !in(a - unit, interval)
-            @test  in(b, interval)
-            @test  in(b - unit, interval)
-            @test !in(b + unit, interval) || isinf(b)
+            for interval in array_and_single(Interval{Open, Closed}(a, b))
+                @test !in(a, interval)
+                @test  in(a + unit, interval) || isinf(a)
+                @test !in(a - unit, interval)
+                @test  in(b, interval)
+                @test  in(b - unit, interval)
+                @test !in(b + unit, interval) || isinf(b)
+            end
 
-            interval = Interval{Open, Open}(a, b)
-            @test !in(a, interval)
-            @test  in(a + unit, interval) || isinf(a)
-            @test !in(a - unit, interval) || isinf(a)
-            @test !in(b, interval)
-            @test  in(b - unit, interval) || isinf(b)
-            @test !in(b + unit, interval) || isinf(b)
+            for interval in array_and_single(Interval{Open, Open}(a, b))
+                @test !in(a, interval)
+                @test  in(a + unit, interval) || isinf(a)
+                @test !in(a - unit, interval) || isinf(a)
+                @test !in(b, interval)
+                @test  in(b - unit, interval) || isinf(b)
+                @test !in(b + unit, interval) || isinf(b)
+            end
 
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
     end
 
     @testset "issubset" begin
-        @test 0..10 ⊆ 0..10
-        @test 0..10 ⊇ 0..10
-        @test Interval{Open, Open}(0, 10) ⊆ 0..10
-        @test Interval{Open, Open}(0, 10) ⊉ 0..10
-        @test 0..10 ⊈ Interval{Open, Open}(0, 10)
-        @test 0..10 ⊇ Interval{Open, Open}(0, 10)
-        @test 1..9 ⊆ 0..10
-        @test 1..9 ⊉ 0..10
-        @test 0..10 ⊈ 1..9
-        @test 0..10 ⊇ 1..9
-        @test 1..11 ⊈ 0..10
-        @test 1..11 ⊉ 0..10
-        @test -1..9 ⊈ 0..10
-        @test -1..9 ⊉ 0..10
-        @test 20..30 ⊈ 0..10
-        @test 20..30 ⊉ 0..10
+        for (af, bf) in [(identity, identity), (vcat, identity), (identity, vcat), (vcat, vact)]
+            @test af(0..10) ⊆ bf(0..10)
+            @test af(0..10) ⊇ bf(0..10)
+            @test af(Interval{Open, Open}(0, 10)) ⊆ bf(0..10)
+            @test af(Interval{Open, Open}(0, 10)) ⊉ bf(0..10)
+            @test af(0..10) ⊈ bf(Interval{Open, Open}(0, 10))
+            @test af(0..10) ⊇ bf(Interval{Open, Open}(0, 10))
+            @test af(1..9) ⊆ bf(0..10)
+            @test af(1..9) ⊉ bf(0..10)
+            @test af(0..10) ⊈ bf(1..9)
+            @test af(0..10) ⊇ bf(1..9)
+            @test af(1..11) ⊈ bf(0..10)
+            @test af(1..11) ⊉ bf(0..10)
+            @test af(-1..9) ⊈ bf(0..10)
+            @test af(-1..9) ⊉ bf(0..10)
+            @test af(20..30) ⊈ bf(0..10)
+            @test af(20..30) ⊉ bf(0..10)
+        end
     end
 
     @testset "intersect" begin
         @testset "overlapping" begin
-            a = Interval{Closed, Closed}(-10, 5)
-            b = Interval{Closed, Closed}(-2, 10)
-            @test intersect(a, b) == Interval{Closed, Closed}(-2, 5)
-            @test intersect(b, a) == intersect(a, b)
+            for (af, bf) in [(identity, identity), (vcat, identity), (identity, vcat), (vcat, vact)]
+                a = af(Interval{Closed, Closed}(-10, 5))
+                b = bf(Interval{Closed, Closed}(-2, 10))
+                @test intersect(a, b) == Interval{Closed, Closed}(-2, 5)
+                @test intersect(b, a) == intersect(a, b)
 
-            a = Interval{Closed, Open}(-10, 5)
-            b = Interval{Closed, Closed}(-2, 10)
-            @test intersect(a, b) == Interval{Closed, Open}(-2, 5)
-            @test intersect(b, a) == intersect(a, b)
+                a = af(Interval{Closed, Open}(-10, 5))
+                b = bf(Interval{Closed, Closed}(-2, 10))
+                @test intersect(a, b) == Interval{Closed, Open}(-2, 5)
+                @test intersect(b, a) == intersect(a, b)
 
-            a = Interval{Closed, Closed}(-10, 5)
-            b = Interval{Open, Closed}(-2, 10)
-            @test intersect(a, b) == Interval{Open, Closed}(-2, 5)
-            @test intersect(b, a) == intersect(a, b)
+                a = af(Interval{Closed, Closed}(-10, 5))
+                b = bf(Interval{Open, Closed}(-2, 10))
+                @test intersect(a, b) == Interval{Open, Closed}(-2, 5)
+                @test intersect(b, a) == intersect(a, b)
 
-            a = Interval{Closed, Open}(-10, 5)
-            b = Interval{Open, Closed}(-2, 10)
-            @test intersect(a, b) == Interval{Open, Open}(-2, 5)
-            @test intersect(b, a) == intersect(a, b)
+                a = af(Interval{Closed, Open}(-10, 5))
+                b = bf(Interval{Open, Closed}(-2, 10))
+                @test intersect(a, b) == Interval{Open, Open}(-2, 5)
+                @test intersect(b, a) == intersect(a, b)
+            end
         end
 
         @testset "adjacent" begin
-            a = Interval{Closed, Closed}(-10, 0)
-            b = Interval{Closed, Closed}(0, 10)
-            @test intersect(a, b) == Interval{Closed, Closed}(0, 0)
-            @test intersect(b, a) == intersect(a, b)
+            for (af, bf) in [(identity, identity), (vcat, identity), (identity, vcat), (vcat, vact)]
+                a = af(Interval{Closed, Closed}(-10, 0))
+                b = bf(Interval{Closed, Closed}(0, 10))
+                @test intersect(a, b) == Interval{Closed, Closed}(0, 0)
+                @test intersect(b, a) == intersect(a, b)
 
-            a = Interval{Closed, Open}(-10, 0)
-            b = Interval{Closed, Closed}(0, 10)
-            @test isempty(intersect(a, b))
-            @test isempty(intersect(b, a))
+                a = af(Interval{Closed, Open}(-10, 0))
+                b = bf(Interval{Closed, Closed}(0, 10))
+                @test isempty(intersect(a, b))
+                @test isempty(intersect(b, a))
 
-            a = Interval{Closed, Closed}(-10, 0)
-            b = Interval{Open, Closed}(0, 10)
-            @test isempty(intersect(a, b))
-            @test isempty(intersect(b, a))
+                a = af(Interval{Closed, Closed}(-10, 0))
+                b = bf(Interval{Open, Closed}(0, 10))
+                @test isempty(intersect(a, b))
+                @test isempty(intersect(b, a))
 
-            a = Interval{Closed, Open}(-10, 0)
-            b = Interval{Open, Closed}(0, 10)
-            @test isempty(intersect(a, b))
-            @test isempty(intersect(b, a))
+                a = af(Interval{Closed, Open}(-10, 0))
+                b = bf(Interval{Open, Closed}(0, 10))
+                @test isempty(intersect(a, b))
+                @test isempty(intersect(b, a))
+            end
         end
 
         @testset "identical" begin

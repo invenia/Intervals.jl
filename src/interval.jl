@@ -390,7 +390,6 @@ true
 # unbunch: represent one or more intervals as a sequence of endpoints and their indices into the original intervals
 endpoint_type(::Type{<:AbstractInterval{T}}) where T = Endpoint{T}
 endpoint_type(::Type{<:AbstractVector{T}}) where T <: AbstractInterval = endpoint_type(T)
-endpoint_type(::Type) = missing
 endpoint_type(x) = endpoint_type(typeof(x))
 
 leftpoint(x::AbstractInterval, ::Type{<:Endpoint}) = LeftEndpoint(x)
@@ -439,11 +438,9 @@ function unbunch(a, b; enumerate=false, sortby=identity)
 end
 
 # represent a sequence of endpoints as a sequence of one or more intervals
-bunch(intervals::AbstractVector{<:AbstractInterval}) = intervals
 intervaltype(::Type{<:Endpoint{T}}) where T = Interval{T}
 intervaltype(::Type{<:HalfOpenEndpoint{T, LeftClosed}}) where T = Interval{T, Closed, Open}
 intervaltype(::Type{<:HalfOpenEndpoint{T, RightClosed}}) where T = Interval{T, Open, Closed}
-intervaltype(::Type{<:Tuple{Int, E}}) where E = intervaltype(E)
 function bunch(endpoints)
     @assert iseven(length(endpoints))
     isempty(endpoints) && return intervaltype(eltype(endpoints))[]
@@ -737,16 +734,13 @@ end
 function isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(intersect(x, y))
 end
-Base.in(x::AbstractInterval, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
+Base.in(x, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y = mergeclean(x,y)
     return x == y
 end
 
-asarray(x) = [x]
-asarray(x::AbstractArray) = x
-alength(x) = 1
-alength(x::AbstractArray) = length(x)
+Base.length(x::AbstractInterval) = 1
 
 # sort endpoints so that a closed left endpoint comes before
 # a closed right endpoint (used by `intersectmap`)
@@ -771,9 +765,10 @@ all intervals in `y` that intersect with `x[i]`.
 
 """
 function intersectmap(x_::AbstractIntervals, y_::AbstractIntervals)
-    x = unbunch(asarray(x_); enumerate=true, sortby=offset)
-    y = unbunch(asarray(y_); enumerate=true, sortby=offset)
-    result = [Vector{Int}() for _ in 1:alength(x_)]
+    xa = vcat(x_)
+    x = unbunch(xa; enumerate=true, sortby=offset)
+    y = unbunch(vcat(y_); enumerate=true, sortby=offset)
+    result = [Vector{Int}() for _ in 1:length(xa)]
 
     intersectmap_helper(result, x, y)
 end

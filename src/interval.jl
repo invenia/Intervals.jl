@@ -56,8 +56,11 @@ Set operations can also be performed over two pairs interval arrays. These set
 operations take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})`
 and intrepret `x` and `y` as representing a set covered by the provided
 intervals. The return value is an array of non-overalping intervals representing
-the result of `op` over these sets. You can also pass a single
-interval to either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
+the result of `op` over these sets. You can also pass a single interval to
+either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
+
+These mutli-interval set operations currently only support intervals that are
+bounded.
 
 See also: [`AnchoredInterval`](@ref)
 """

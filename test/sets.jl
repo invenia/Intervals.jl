@@ -19,7 +19,7 @@ using Random
         @test !isdisjoint(a, a)
         
         intersections = intersectmap(copy(a), b)
-        a, b = Intervals.asarray.((a,b))
+        a, b = vcat.((a,b))
         # verify that all indices returned in `intersectmap` correspond to sets
         # in b that overlap with the given set in a
         @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 

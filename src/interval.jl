@@ -410,8 +410,8 @@ end
 
 function unbunch(intervals, t::Type{T}=endpoint_type(intervals); enumerate=false,
                  sortby=identity) where {T}
-    isempty(intervals) && return T[]
     filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
+    isempty(filtered) && return enumerate ? Tuple{Int, T}[] : T[]
     if enumerate
         result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)),
                                     (i, rightpoint(intervals[i], T))]), vcat, filtered)
@@ -740,7 +740,7 @@ end
 Base.in(x, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y = mergeclean(x,y)
-    return x == y
+    return x == y || (all(isempty, bunch(x)) && all(isempty, bunch(y)))
 end
 
 Base.length(x::AbstractInterval) = 1

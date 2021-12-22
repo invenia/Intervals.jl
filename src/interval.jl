@@ -746,7 +746,7 @@ end
 Base.length(x::AbstractInterval) = 1
 
 # sort endpoints so that a closed left endpoint comes before
-# a closed right endpoint (used by `intersectmap`)
+# a closed right endpoint (used by `find_intersections`)
 struct EndpointOffset{E <: Endpoint}
     data::E
 end
@@ -760,22 +760,22 @@ function Base.isless(x::EndpointOffset, y::EndpointOffset)
 end
 
 """
-    intersectmap(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
-                 y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
+    find_intersections(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
+                       y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
 
 Returns a Vector{Vector{Int}} where the value at index i gives the indices to
 all intervals in `y` that intersect with `x[i]`.
 
 """
-function intersectmap(x_::AbstractIntervals, y_::AbstractIntervals)
+function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
     xa = vcat(x_)
     x = unbunch(xa; enumerate=true, sortby=offset)
     y = unbunch(vcat(y_); enumerate=true, sortby=offset)
     result = [Vector{Int}() for _ in 1:length(xa)]
 
-    intersectmap_helper(result, x, y)
+    find_intersections_helper(result, x, y)
 end
-function intersectmap_helper(result, x, y)
+function find_intersections_helper(result, x, y)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)

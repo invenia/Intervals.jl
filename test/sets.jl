@@ -18,14 +18,14 @@ using Random
         @test isdisjoint(setdiff(a, b), b)
         @test !isdisjoint(a, a)
         
-        intersections = intersectmap(copy(a), b)
+        intersections = find_intersections(copy(a), b)
         a, b = vcat.((a,b))
-        # verify that all indices returned in `intersectmap` correspond to sets
+        # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
         @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 
                   enumerate(intersections))
 
-        # verify that all indices not returned in `intersectmap` correspond to
+        # verify that all indices not returned in `find_intersections` correspond to
         # sets in b that do not overlap with the given set in akk
         @test all(ix -> isempty(intersect(a[ix[1]], b[Not(ix[2])])), 
                   enumerate(intersections))

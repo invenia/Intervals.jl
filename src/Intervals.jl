@@ -59,6 +59,6 @@ export Bound,
        greater_than_disjoint,
        superset,
        startedge, stopedge,
-       intersectmap,
+       find_intersections,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
 end

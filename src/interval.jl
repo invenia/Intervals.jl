@@ -365,7 +365,7 @@ function Base.issubset(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)
 end
 
-function isdisjoint(a::AbstractInterval, b::AbstractInterval)
+function Base.isdisjoint(a::AbstractInterval, b::AbstractInterval)
     return RightEndpoint(a) < LeftEndpoint(b) || LeftEndpoint(a) > RightEndpoint(b)
 end
 

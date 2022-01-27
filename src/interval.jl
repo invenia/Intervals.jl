@@ -237,9 +237,9 @@ end
     only(interval::AbstractInterval)
 
 Returns the only element of a closed interval with coinciding endpoints (throws a
-DomainError otherwise).
+`DomainError` otherwise).
 """
-function Base.only(interval::Interval)
+function Base.only(interval::AbstractInterval)
     if first(interval) == last(interval) && isclosed(interval)
         return first(interval)
     else

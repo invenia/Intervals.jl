@@ -97,7 +97,7 @@
         @test hash(a) == hash(b)
     end
 
-    @testset "conversion" begin
+    @testset "only" begin
         @test_throws DomainError only(Interval{Open, Open}(10, 10))
         @test_throws DomainError only(Interval{Open, Closed}(10, 10))
         @test_throws DomainError only(Interval{Closed, Open}(10, 10))

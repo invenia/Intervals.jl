@@ -6,8 +6,7 @@ const Right = Direction{:Right}()
 const Beginning = Left
 const Ending = Right
 
-abstract type AbstractEndpoint{T}; end
-struct Endpoint{T, D, B <: Bound} <: AbstractEndpoint{T}
+struct Endpoint{T, D, B <: Bound}
     endpoint::T
 
     function Endpoint{T,D,B}(ep::T) where {T, D, B <: Bounded}
@@ -26,27 +25,6 @@ struct Endpoint{T, D, B <: Bound} <: AbstractEndpoint{T}
 end
 
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
-Base.eltype(::AbstractEndpoint{T}) where T = T
-Base.eltype(::Type{<:AbstractEndpoint{T}}) where T = T
-
-# when all intervals are half-closed in the same direction (all [a, b) or all
-# (b, a]) set operations over them are closed (e.g. all resulting intervals will
-# be the same type). In these cases we can improve type invariance by using a
-# `HalfOpenEndpoint`, which indicates whether the bounds are left-closed or
-# right-closed, storing the left/right-ness as a flag
-struct DirectionBound{T} end
-const LeftClosed = DirectionBound{:LeftClosed}()
-const RightClosed = DirectionBound{:RightClosed}()
-struct HalfOpenEndpoint{T, B} <: AbstractEndpoint{T}
-    endpoint::T
-    left::Bool
-
-    function HalfOpenEndpoint{T, B}(ep::T, left) where {T, B}
-        @assert B isa DirectionBound
-        new{T,B}(ep, left)
-    end
-end
-HalfOpenEndpoint{T,B}(ep) where {T,B} = HalfOpenEndpoint{T,B}(convert(T, ep))
 
 const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
 const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
@@ -56,28 +34,13 @@ RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
 LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
 RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
-LeftHalfOpenEndpoint(i::AbstractInterval{T, Closed, Open}) where T = HalfOpenEndpoint{T, LeftClosed}(first(i), true)
-LeftHalfOpenEndpoint(i::AbstractInterval{T, Open, Closed}) where T = HalfOpenEndpoint{T, RightClosed}(first(i), true)
-RightHalfOpenEndpoint(i::AbstractInterval{T, Closed, Open}) where T = HalfOpenEndpoint{T, LeftClosed}(last(i), false)
-RightHalfOpenEndpoint(i::AbstractInterval{T, Open, Closed}) where T = HalfOpenEndpoint{T, RightClosed}(last(i), false)
 
-endpoint(x::AbstractEndpoint) = isbounded(x) ? x.endpoint : nothing
-bound_type(::Endpoint{T,D,B}) where {T,D,B} = B
-bound_type(x::HalfOpenEndpoint{<:Any, LeftClosed}) = x.left ? Closed : Open
-bound_type(x::HalfOpenEndpoint{<:Any, RightClosed}) = !x.left ? Closed : Open
-
-isunbounded(x::Number) = !isinf(x)
+endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
+bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
 
 isclosed(x::Endpoint) = bound_type(x) === Closed
-isclosed(x::HalfOpenEndpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 isbounded(x::Endpoint) = bound_type(x) !== Unbounded
-isbounded(x::HalfOpenEndpoint) = true
-isunbounded(x::HalfOpenEndpoint) = false
-
-isleft(x::LeftEndpoint) = true
-isleft(x::RightEndpoint) = false
-isleft(x::HalfOpenEndpoint) = x.left
 
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     h = hash(:Endpoint, h)
@@ -92,16 +55,7 @@ function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     return h
 end
 
-function Base.hash(x::HalfOpenEndpoint{T,B}, h::UInt) where {T,B}
-    h = hash(:HalfOpenEndpoint, h)
-    h = hash(B, h)
-    return hash(x.endpoint, h)
-end
-
 Base.broadcastable(e::Endpoint) = Ref(e)
-Base.broadcastable(e::HalfOpenEndpoint) = Ref(e)
-
-offset_value(x::AbstractEndpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 
 """
     ==(a::Endpoint, b::Endpoint) -> Bool
@@ -122,78 +76,96 @@ Visualizing two contiguous intervals can assist in understanding this logic:
     [x..y](y..z] -> RightEndpoint != LeftEndpoint
     [x..y)(y..z] -> RightEndpoint != LeftEndpoint
 """
-function Base.:(==)(a::AbstractEndpoint, b::AbstractEndpoint)
+function Base.:(==)(a::Endpoint, b::Endpoint)
     return (
-        isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b)||
-        a.endpoint == b.endpoint && 
-        (isleft(a) == isleft(b) ? isclosed(a) == isclosed(b) :
-             isclosed(a) && isclosed(b))
+        isunbounded(a) && isunbounded(b) ||
+        a.endpoint == b.endpoint && bound_type(a) == bound_type(b)
     )
 end
 
-function Base.isequal(a::AbstractEndpoint, b::AbstractEndpoint)
-    if isunbounded(a) || isunbounded(b)
-        return (isunbounded(a) && isunbounded(b) && isleft(a) == isleft(b))
-    elseif !isequal(a.endpoint, b.endpoint)
-        return false
-    elseif isleft(a) == isleft(b)
-        return isclosed(a) == isclosed(b) 
-    else 
-        return isclosed(a) && isclosed(b)
-    end
+function Base.:(==)(a::LeftEndpoint, b::RightEndpoint)
+    a.endpoint == b.endpoint && isclosed(a) && isclosed(b)
 end
 
-function Base.isless(a::AbstractEndpoint, b::AbstractEndpoint)
-    if isleft(a) == isleft(b)
-        if isunbounded(a) || isunbounded(b)
-            return isleft(a) ? 
-                isbounded(a) < isbounded(b) :
-                isunbounded(a) < isunbounded(b)
-        elseif a.endpoint == b.endpoint 
-            return offset_value(a) < offset_value(b)
-        else
-            a.endpoint < b.endpoint
-        end
-    else
-        if isunbounded(a)
-            return isleft(a)
-        elseif isunbounded(b)
-            return !isleft(b)
-        elseif a.endpoint == b.endpoint
-            return !(isclosed(a) && isclosed(b)) && isleft(a) < isleft(b)
-        else
-            a.endpoint < b.endpoint
-        end
-    end
+function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
+    b == a
+end
+
+function Base.isequal(a::Endpoint, b::Endpoint)
+    return (
+        isunbounded(a) && isunbounded(b) ||
+        isequal(a.endpoint, b.endpoint) && isequal(bound_type(a), bound_type(b))
+    )
+end
+
+function Base.isequal(a::LeftEndpoint, b::RightEndpoint)
+    isequal(a.endpoint, b.endpoint) && isclosed(a) && isclosed(b)
+end
+
+function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
+    isequal(b, a)
+end
+
+function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
+    return (
+        !isunbounded(b) && (
+            isunbounded(a) ||
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && isclosed(a) && !isclosed(b)
+        )
+    )
+end
+
+function Base.isless(a::RightEndpoint, b::RightEndpoint)
+    return (
+        !isunbounded(a) && (
+            isunbounded(b) ||
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && !isclosed(a) && isclosed(b)
+        )
+    )
+end
+
+function Base.isless(a::LeftEndpoint, b::RightEndpoint)
+    return (
+        isunbounded(a) ||
+        isunbounded(b) ||
+        a.endpoint < b.endpoint
+    )
+end
+
+function Base.isless(a::RightEndpoint, b::LeftEndpoint)
+    return (
+        !isunbounded(a) && !isunbounded(b) &&
+        (
+            a.endpoint < b.endpoint ||
+            a.endpoint == b.endpoint && !(isclosed(a) && isclosed(b))
+        )
+    )
 end
 
 # Comparisons between Scalars and Endpoints
-Base.:(==)(a::Number, b::Endpoint) = a == b.endpoint && isclosed(b)
-Base.:(==)(a::Endpoint, b::Number) = b == a
+Base.:(==)(a, b::Endpoint) = a == b.endpoint && isclosed(b)
+Base.:(==)(a::Endpoint, b) = b == a
 
-function Base.isless(a, b::AbstractEndpoint)
-    if isleft(b)
-        return (
-            !isunbounded(b) && (
-                a < b.endpoint ||
-                a == b.endpoint && !isclosed(b)
-            )
+function Base.isless(a, b::LeftEndpoint)
+    return (
+        !isunbounded(b) && (
+            a < b.endpoint ||
+            a == b.endpoint && !isclosed(b)
         )
-    else
-        return isunbounded(b) || a < b.endpoint
-    end
+    )
 end
 
-function Base.isless(a::AbstractEndpoint, b)
-    if !isleft(a)
-        return (
-            !isunbounded(a) &&
-            (
-                a.endpoint < b ||
-                a.endpoint == b && !isclosed(a)
-            )
+function Base.isless(a::RightEndpoint, b)
+    return (
+        !isunbounded(a) &&
+        (
+            a.endpoint < b ||
+            a.endpoint == b && !isclosed(a)
         )
-    else
-        return isunbounded(a) || a.endpoint < b
-    end
+    )
 end
+
+Base.isless(a, b::RightEndpoint) = isunbounded(b) || a < b.endpoint
+Base.isless(a::LeftEndpoint, b)  = isunbounded(a) || a.endpoint < b

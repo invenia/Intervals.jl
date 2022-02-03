@@ -52,12 +52,11 @@ Note that the bounds are also reversed in this case.
 
 ### Multi-interval set operations
 
-Set operations can also be performed over two pairs interval arrays. These set
-operations take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})`
-and intrepret `x` and `y` as representing a set covered by the provided
-intervals. The return value is an array of non-overalping intervals representing
-the result of `op` over these sets. You can also pass a single interval to
-either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
+Set operations can also be performed over two pairs of interval arrays. These set operations
+take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})` and intrepret `x` and 
+`y` as representing a set covered by the provided intervals. The return value is an array of
+non-overalping intervals representing the result of `op` over these sets. You can also pass 
+a single interval to either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
 
 These mutli-interval set operations currently only support intervals that are
 bounded.
@@ -391,59 +390,29 @@ true
 ###### Set-related Helpers #####
 
 # unbunch: represent one or more intervals as a sequence of endpoints and their indices into the original intervals
-endpoint_type(::Type{<:AbstractInterval{T}}) where T = Endpoint{T}
-endpoint_type(::Type{<:AbstractVector{T}}) where T <: AbstractInterval = endpoint_type(T)
-endpoint_type(x) = endpoint_type(typeof(x))
-
-leftpoint(x::AbstractInterval, ::Type{<:Endpoint}) = LeftEndpoint(x)
-rightpoint(x::AbstractInterval, ::Type{<:Endpoint}) = RightEndpoint(x)
-leftpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = LeftHalfOpenEndpoint(x)
-rightpoint(x::AbstractInterval, ::Type{<:HalfOpenEndpoint}) = RightHalfOpenEndpoint(x)
-
-function unbunch(interval::AbstractInterval, ::Type{T}; enumerate=false, sortby=identity) where T
+function unbunch(interval::AbstractInterval; enumerate=false, sortby=identity) where T
     if enumerate
-        return [(1, leftpoint(interval, T)), (1, rightpoint(interval, T))]
+        return [(1, LeftEndpoint(interval, T)), (1, RightEndpoint(interval, T))]
     else
-        return [leftpoint(interval, T), rightpoint(interval, T)]
+        return [LeftEndpoint(interval, T), RightEndpoint(interval, T)]
     end
 end
 
-function unbunch(intervals, t::Type{T}=endpoint_type(intervals); enumerate=false,
-                 sortby=identity) where {T}
+function unbunch(intervals; enumerate=false, lt=isless) where {T}
     filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
     isempty(filtered) && return enumerate ? Tuple{Int, T}[] : T[]
     if enumerate
-        result = mapreduce(((i) -> [(i, leftpoint(intervals[i], T)),
-                                    (i, rightpoint(intervals[i], T))]), vcat, filtered)
-        return sort!(convert(Array{Tuple{Int,T}}, result); by=sortby ∘ last)
+        result = mapreduce(((i) -> [(i, LeftEndpoint(intervals[i], T)),
+                                    (i, RightEndpoint(intervals[i], T))]), vcat, filtered)
+        return sort!(convert(Array{Tuple{Int,T}}, result); by=last, lt)
     else
-        result = mapreduce(((i) -> [leftpoint(intervals[i], T), rightpoint(intervals[i], T)]),
+        result = mapreduce(((i) -> [LeftEndpoint(intervals[i], T), RightEndpoint(intervals[i], T)]),
                            vcat, filtered)
-        return sort!(convert(Array{T}, result); by=sortby)
+        return sort!(convert(Array{T}, result); by=sortby, lt)
     end
-end
-function unbunch(a::AbstractVector{<:AbstractInterval{T,Closed,Open}},
-                 b::AbstractVector{<:AbstractInterval{S,Closed,Open}}; enumerate=false,
-                 sortby=identity) where {T,S}
-    E = HalfOpenEndpoint{promote_type(T, S),LeftClosed}
-    return unbunch(a, E; enumerate, sortby), unbunch(b, E; enumerate, sortby)
-end
-function unbunch(a::AbstractVector{<:AbstractInterval{T,Open,Closed}},
-                 b::AbstractVector{<:AbstractInterval{S,Open,Closed}}; enumerate=false,
-                 sortby=identity) where {T,S}
-    E = HalfOpenEndpoint{promote_type(T, S),RightClosed}
-    return unbunch(a, E; enumerate, sortby), unbunch(b, E; enumerate, sortby)
-end
-function unbunch(a, b; enumerate=false, sortby=identity) 
-    T = promote_type(eltype(endpoint_type(typeof(a))), 
-                     eltype(endpoint_type(typeof(b))))
-    unbunch.((a, b), Endpoint{T}; enumerate, sortby)
 end
 
 # represent a sequence of endpoints as a sequence of one or more intervals
-intervaltype(::Type{<:Endpoint{T}}) where T = Interval{T}
-intervaltype(::Type{<:HalfOpenEndpoint{T, LeftClosed}}) where T = Interval{T, Closed, Open}
-intervaltype(::Type{<:HalfOpenEndpoint{T, RightClosed}}) where T = Interval{T, Open, Closed}
 function bunch(endpoints)
     @assert iseven(length(endpoints))
     isempty(endpoints) && return intervaltype(eltype(endpoints))[]
@@ -482,10 +451,21 @@ function first_is_closed(x, by=identity)
 end
 
 first_is_left(x; by=identity) = isempty(x) ? false : isleft(by(first(x)))
-endpoint_dir_type(::Type) = NaN # a value unequal to itself
-endpoint_dir_type(::Type{<:HalfOpenEndpoint{T, B}}) where {T, B} = B
-endpoint_dir_type(::Type{<:AbstractArray{T}}) where T = endpoint_dir_type(T)
-endpoint_dir_type(x::T) where T = endpoint_dir_type(T)
+isleftopen(::AbstractInterval{<:Any,Closed,Open}) = true
+isleftopen(::AbstractInterval) = false
+ishalfopen(::AbstractInterval{<:Any,A,A}) where A = false
+ishalfopen(::AbstractInterval{<:Any,A,B}) where {A,B} = true
+interval_type(::AbstractVector{T}) where T<:AbstractInterval = T
+interval_type(::T) where T = T
+function track_endpoints(a, b)
+    if ishalfopen(a) && ishalfopen(b)
+        # if intervals are the same type of half open, 
+        # we can ignore tracking endpoints
+        return isleftopen(a) != isleftopen(b)
+    else
+        return true
+    end
+end
 
 #     mergesets(op, x, y)
 #
@@ -512,7 +492,7 @@ endpoint_dir_type(x::T) where T = endpoint_dir_type(T)
 # endpoint ([1,1]) such as when to closed endpoints intersect with one another
 # (e.g. (0, 1] ∩ [1, 2))
 #
-function mergesets(op, x, y)
+function mergesets(op, x, y, track_endpoints=false)
     result = promote_type(eltype(x), eltype(y))[]
     sizehint!(result, length(x) + length(y))
 
@@ -525,28 +505,27 @@ function mergesets(op, x, y)
     # objects 
     # NOTE: since this statement relies only on types, the branches using this
     # flag should compile away
-    track_endpoint = endpoint_dir_type(x) != endpoint_dir_type(y)
+    track_endpoints = endpoint_dir_type(x) != endpoint_dir_type(y)
 
     while !(isempty(x) && isempty(y))
-        # println("-------------------")
-        #=@show=# t = first_is_less(x, y) ? first(x) : first(y)
-        #=@show=# x_isless = first_is_less(x, y)
-        #=@show=# x_equal = first_is_equal(x, y)
-        keep_x_endpoint = track_endpoint ? inx : nothing
-        keep_y_endpoint = track_endpoint ? iny : nothing
+        t = first_is_less(x, y) ? first(x) : first(y)
+        x_isless = first_is_less(x, y)
+        x_equal = first_is_equal(x, y)
+        keep_x_endpoint = track_endpoints ? inx : nothing
+        keep_y_endpoint = track_endpoints ? iny : nothing
 
         if x_isless || x_equal
             inx = first_is_left(x)
-            keep_x_endpoint = track_endpoint ? first_is_closed(x) : nothing
+            keep_x_endpoint = track_endpoints ? first_is_closed(x) : nothing
             x = Iterators.peel(x)[2]
         end
         if !x_isless 
             iny = first_is_left(y)
-            keep_y_endpoint = track_endpoint ? first_is_closed(y) : nothing
+            keep_y_endpoint = track_endpoints ? first_is_closed(y) : nothing
             y = Iterators.peel(y)[2]
         end
 
-        keep_endpoint = track_endpoint ? op(keep_x_endpoint, keep_y_endpoint) : nothing
+        keep_endpoint = track_endpoints ? op(keep_x_endpoint, keep_y_endpoint) : nothing
 
         #=@show=# inx
         #=@show=# iny
@@ -560,7 +539,7 @@ function mergesets(op, x, y)
             # interval (e.g. [1, 1) or (1, 1]), we need to instead remove the
             # most recent left endpoint
             elseif !isempty(result) && endpoint(t) == endpoint(result[end]) && 
-                (!track_endpoint || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
+                (!track_endpoints || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
                 pop!(result)
                 inresult = false
             # stop including points
@@ -571,7 +550,7 @@ function mergesets(op, x, y)
         # edgecase: if we're supposed to keep the endpoint but we're not including
         # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
         # [1, 2])
-        elseif track_endpoint && keep_endpoint && !inresult
+        elseif track_endpoints && keep_endpoint && !inresult
             push!(result, left_endpoint(t, true))
             push!(result, right_endpoint(t, true))
         end
@@ -716,6 +695,7 @@ end
 
 Base.union(x::AbstractInterval) = x
 
+# TODO: revised based on new `track_endpoints` function
 const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 mergeclean(x, y) = unbunch(union(x), union(y))
 function Base.intersect(x::AbstractIntervals, y::AbstractIntervals)
@@ -769,8 +749,8 @@ all intervals in `y` that intersect with `x[i]`.
 """
 function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
     xa = vcat(x_)
-    x = unbunch(xa; enumerate=true, sortby=offset)
-    y = unbunch(vcat(y_); enumerate=true, sortby=offset)
+    x = unbunch(xa; enumerate=true, lt=byoffset)
+    y = unbunch(vcat(y_); enumerate=true, lt=byoffset)
     result = [Vector{Int}() for _ in 1:length(xa)]
 
     find_intersections_helper(result, x, y)

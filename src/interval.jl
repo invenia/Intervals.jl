@@ -434,9 +434,10 @@ Base.isequal(::SentinelEndpoint, ::SentinelEndpoint) = true
 Base.isclosed(::SentinelEndpoint) = true
 Base.isleft(::SentinelEndpoint) = false
 
-# During merge opreations used to compute unions, intersections etc...,
+# During merge operations used to compute unions, intersections etc...,
 # endpoints types can change (from left to right, and from open to closed,
 # etc...). The following structures indicate how endpoints should be tracked.
+
 # TrackEachEndpoint tracks endpoints dynamically using a boolean flag that
 # depends on the closed or open nature of the endpoints to be merged.
 struct TrackEachEndpoint; end
@@ -445,42 +446,39 @@ struct TrackEachEndpoint; end
 # output will always be all left open (or all right open).
 struct TrackLeftOpen; end
 struct TrackRightOpen; end
-function endpoint_tracking(a, b)
-    if ishalfopen(a) && ishalfopen(b)
-        if isleftopen(a) != isleftopen(b)
-            return TrackEachEndpoint()
-        elseif isleftopen(a)
-            return TrackLeftOpen()
-        else
-            return TrackRightOpen()
-        end
-    else
-        return TrackEachEndpoint()
-    end
-end
+
 isleftopen(::AbstractInterval{<:Any,Closed,Open}) = true
 isleftopen(::AbstractInterval) = false
 ishalfopen(::AbstractInterval{<:Any,A,A}) where A = false
 ishalfopen(::AbstractInterval{<:Any,A,B}) where {A,B} = true
-interval_type(::AbstractVector{T}) where T<:AbstractInterval = T
-interval_type(::T) where T = T
+function endpoint_tracking(a::Endpoint{T}, b::Endpoint{T}) where T
+    if ishalfopen(a) && ishalfopen(b) && isleftopen(a) == isleftopen(b)
+        return isleftopen(a) ? TrackLeftOpen{T}() : TrackRightOpen{T}()
+    end
+    return TrackEachEndpoint()
+end
 
-# track recording the open or closed nature of the current endpoints as a flag
+# track: records the open or closed nature of the current endpoints as a flag
 track(inx, iny, ::TrackEachEndpoint) = (inx, iny)
 # but only if required
 track(inx, iny, _) = (nothing, nothing)
-# update_track revises the flag based on the current endpoint
+# update_track: revises the flag based on the current endpoint
 update_track(x, ::TrackEachEndpoint) = isclosed(first_endpoint(x))
 # but only if requried
 update_track(x, _) = nothing
-# finally endpoint_closure indicates how to close end points
+# finally endpoint_closure indicates how to close endpoints
 # using a flag that combine the two streams of endpoints being merged
 endpoint_closure(op, x, y, ::TrackEachEndpoint) = op(x,y)
 # or it just notes the uniform type used to track all intervals
 endpoint_closure(op, x, y, tracking) = tracking
+# track_closure: indicates if a flag is used to track closures
 track_closures(::TrackEachEndpoint) = true
 track_closures(_) = false
 
+# tracking also adds type assertions, as an additional error check
+bunch(endpoints, tracking) = bunch(endpoints)
+bunch(endpoints, ::TrackLeftOpen{T}) where T = bunch(endpoints)::Vector{Interval{T,Open,Closed}}
+bunch(endpoints, ::TrackRightOpen{T}) where T = bunch(endpoints)::Vector{Interval{T,Closed,Open}}
 
 #     mergesets(op, x, y)
 #
@@ -562,7 +560,7 @@ function mergesets(op, x, y, endpoint_tracking)
 
     end
 
-    return bunch(result)
+    return bunch(result, endpoint_tracking)
 end
 # the below methods create a left or a right endpoint from the endpoint t: note
 # that t might not be the same type of endpoint (e.g.

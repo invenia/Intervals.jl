@@ -421,51 +421,66 @@ function bunch(endpoints)
     end
 end
 
-# conditions to check on sequences of endpoint (handling empty sequence endpoint cases)
-function first_is_less(x, y; by=identity)
-    if isempty(x)
-        return false
-    elseif isempty(y)
-        return true
+# the sentinel endpoint reduces the number of edgecases 
+# we have to deal with when comparing endpoints in `mergesets`
+struct SentinelEndpoint; end
+first_endpoint(x) = isempty(x) ? SentinelEndpoint() : first(x)
+Base.isless(::Endpoint, ::SentinelEndpoint) = true
+Base.isless(::SentinelEndpoint, ::Endpoint) = false
+Base.isless(::SentinelEndpoint, ::SentinelEndpoint) = false
+Base.isequal(::Endpoint, ::SentinelEndpoint) = false
+Base.isequal(::SentinelEndpoint, ::Endpoint) = false
+Base.isequal(::SentinelEndpoint, ::SentinelEndpoint) = true
+Base.isclosed(::SentinelEndpoint) = true
+Base.isleft(::SentinelEndpoint) = false
+
+# During merge opreations used to compute unions, intersections etc...,
+# endpoints types can change (from left to right, and from open to closed,
+# etc...). The following structures indicate how endpoints should be tracked.
+# TrackEachEndpoint tracks endpoints dynamically using a boolean flag that
+# depends on the closed or open nature of the endpoints to be merged.
+struct TrackEachEndpoint; end
+# TrackLeftOpen and TrackRightOpen track the endpoints statically:
+# if intervals are all left open (or all right open), the resulting 
+# output will always be all left open (or all right open).
+struct TrackLeftOpen; end
+struct TrackRightOpen; end
+function endpoint_tracking(a, b)
+    if ishalfopen(a) && ishalfopen(b)
+        if isleftopen(a) != isleftopen(b)
+            return TrackEachEndpoint()
+        elseif isleftopen(a)
+            return TrackLeftOpen()
+        else
+            return TrackRightOpen()
+        end
     else
-        return isless(by(first(x)), by(first(y)))
+        return TrackEachEndpoint()
     end
 end
-
-function first_is_equal(x, y, by=identity)
-    if isempty(x)
-        return false
-    elseif isempty(y)
-        return false
-    else
-        return isequal(by(first(x)), by(first(y)))
-    end
-end
-
-function first_is_closed(x, by=identity)
-    if isempty(x)
-        true
-    else
-        return isclosed(by(first(x)))
-    end
-end
-
-first_is_left(x; by=identity) = isempty(x) ? false : isleft(by(first(x)))
 isleftopen(::AbstractInterval{<:Any,Closed,Open}) = true
 isleftopen(::AbstractInterval) = false
 ishalfopen(::AbstractInterval{<:Any,A,A}) where A = false
 ishalfopen(::AbstractInterval{<:Any,A,B}) where {A,B} = true
 interval_type(::AbstractVector{T}) where T<:AbstractInterval = T
 interval_type(::T) where T = T
-function track_endpoints(a, b)
-    if ishalfopen(a) && ishalfopen(b)
-        # if intervals are the same type of half open, 
-        # we can ignore tracking endpoints
-        return isleftopen(a) != isleftopen(b)
-    else
-        return true
-    end
-end
+
+# track recording the open or closed nature of the current endpoints as a flag
+track(inx, iny, ::TrackEachEndpoint) = (inx, iny)
+# but only if required
+track(inx, iny, _) = (nothing, nothing)
+# update_track revises the flag based on the current endpoint
+update_track(x, ::TrackEachEndpoint) = isclosed(first_endpoint(x))
+# but only if requried
+update_track(x, _) = nothing
+# finally endpoint_closure indicates how to close end points
+# using a flag that combine the two streams of endpoints being merged
+endpoint_closure(op, x, y, ::TrackEachEndpoint) = op(x,y)
+# or it just notes the uniform type used to track all intervals
+endpoint_closure(op, x, y, tracking) = tracking
+track_closures(::TrackEachEndpoint) = true
+track_closures(_) = false
+
 
 #     mergesets(op, x, y)
 #
@@ -492,7 +507,7 @@ end
 # endpoint ([1,1]) such as when to closed endpoints intersect with one another
 # (e.g. (0, 1] ∩ [1, 2))
 #
-function mergesets(op, x, y, track_endpoints=false)
+function mergesets(op, x, y, endpoint_tracking)
     result = promote_type(eltype(x), eltype(y))[]
     sizehint!(result, length(x) + length(y))
 
@@ -501,56 +516,46 @@ function mergesets(op, x, y, track_endpoints=false)
     inx = false
     iny = false
 
-    # we do not have to track the endpoints if we're using HalfOpenEndpoint
-    # objects 
-    # NOTE: since this statement relies only on types, the branches using this
-    # flag should compile away
-    track_endpoints = endpoint_dir_type(x) != endpoint_dir_type(y)
-
     while !(isempty(x) && isempty(y))
-        t = first_is_less(x, y) ? first(x) : first(y)
-        x_isless = first_is_less(x, y)
-        x_equal = first_is_equal(x, y)
-        keep_x_endpoint = track_endpoints ? inx : nothing
-        keep_y_endpoint = track_endpoints ? iny : nothing
+        x_isless = first_endpoint(x) < first_endpoint(y)
+        x_equal = first_endpoint(x) == first_endpoint(y)
+        t = x_isless ? first(x) : first(y)
+        closed_x_endpoint, closed_y_endpoint = track(inx, iny, endpoint_tracking)
 
         if x_isless || x_equal
-            inx = first_is_left(x)
-            keep_x_endpoint = track_endpoints ? first_is_closed(x) : nothing
+            inx = isleft(first_endpoint(x))
+            closed_x_endpoint = update_track(x, endpoint_tracking)
             x = Iterators.peel(x)[2]
         end
         if !x_isless 
             iny = first_is_left(y)
-            keep_y_endpoint = track_endpoints ? first_is_closed(y) : nothing
+            closed_y_endpoint = update_track(y, endpoint_tracking)
             y = Iterators.peel(y)[2]
         end
 
-        keep_endpoint = track_endpoints ? op(keep_x_endpoint, keep_y_endpoint) : nothing
-
-        #=@show=# inx
-        #=@show=# iny
-        if #=@show=#(op(inx, iny)) != #=@show=#(inresult)
+        close_endpoint = endpoint_closure(op, closed_x_endpoint, closed_y_endpoint, endpoint_tracking)
+        if (op(inx, iny)) != (inresult)
             # start including points
             if !inresult
-                push!(result, left_endpoint(t, keep_endpoint))
+                push!(result, left_endpoint(t, close_endpoint))
                 inresult = true
             # edgecase: if `inresult == true` we want to add a right endpoint
             # (what `else` does below); *but* if this would create an empty
             # interval (e.g. [1, 1) or (1, 1]), we need to instead remove the
             # most recent left endpoint
             elseif !isempty(result) && endpoint(t) == endpoint(result[end]) && 
-                (!track_endpoints || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
+                (track_closures(endpoint_tracking) || !isclosed(t) || !isclosed(result[end])) # at least one open endpoint
                 pop!(result)
                 inresult = false
             # stop including points
             else
-                push!(result, right_endpoint(t, keep_endpoint))
+                push!(result, right_endpoint(t, close_endpoint))
                 inresult = false
             end
-        # edgecase: if we're supposed to keep the endpoint but we're not including
+        # edgecase: if we're supposed to close the endpoint but we're not including
         # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
         # [1, 2])
-        elseif track_endpoints && keep_endpoint && !inresult
+        elseif track_endpoints && close_endpoint && !inresult
             push!(result, left_endpoint(t, true))
             push!(result, right_endpoint(t, true))
         end
@@ -559,10 +564,16 @@ function mergesets(op, x, y, track_endpoints=false)
 
     return bunch(result)
 end
-left_endpoint(t::AbstractEndpoint{T}, closed) where T = LeftEndpoint{T,closed ? Closed : Open}(endpoint(t))
-right_endpoint(t::AbstractEndpoint{T}, closed) where T = RightEndpoint{T,closed ? Closed : Open}(endpoint(t))
-left_endpoint(t::HalfOpenEndpoint{T,B}, ::Nothing) where {T,B} = HalfOpenEndpoint{T,B}(endpoint(t), true)
-right_endpoint(t::HalfOpenEndpoint{T,B}, ::Nothing) where {T,B} = HalfOpenEndpoint{T,B}(endpoint(t), false)
+# the below methods create a left or a right endpoint from the endpoint t: note
+# that t might not be the same type of endpoint (e.g.
+# `left_endpoint(RightEndpoint(...))` is perfectly valid). `mergesets` may
+# change which side of an interval an endpoint is on.
+left_endpoint(t::AbstractEndpoint{T}, closed::Bool) where T = LeftEndpoint{T,closed ? Closed : Open}(endpoint(t))
+right_endpoint(t::AbstractEndpoint{T}, closed::Bool) where T = RightEndpoint{T,closed ? Closed : Open}(endpoint(t))
+left_endpoint(t::AbstractEndpoint{T}, ::TrackLeftOpen) where T = LeftEndpoint{T, Open}(endpoint(t))
+right_endpoint(t::AbstractEndpoint{T}, ::TrackLeftOpen) where T = RightEndpoint{T, Closed}(endpoint(t))
+left_endpoint(t::AbstractEndpoint{T}, ::TrackRightOpen) where T = LeftEndpoint{T, Closed}(endpoint(t))
+right_endpoint(t::AbstractEndpoint{T}, ::TrackRightOpen) where T = RightEndpoint{T, Open}(endpoint(t))
 
 ##### SET OPERATIONS #####
 
@@ -697,18 +708,21 @@ Base.union(x::AbstractInterval) = x
 
 # TODO: revised based on new `track_endpoints` function
 const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
-mergeclean(x, y) = unbunch(union(x), union(y))
 function Base.intersect(x::AbstractIntervals, y::AbstractIntervals)
-    return mergesets((inx, iny) -> inx && iny, mergeclean(x, y)...)
+    x, y = unbunch(union(x)), unbunch(union(y))
+    return mergesets((inx, iny) -> inx && iny, x, y, track_endpoints(x, y))
 end
 function Base.union(x::AbstractIntervals, y::AbstractIntervals)
-    return mergesets((inx, iny) -> inx || iny, mergeclean(x, y)...)
+    x, y = unbunch(union(x)), unbunch(union(y))
+    return mergesets((inx, iny) -> inx || iny, x, y, track_endpoints(x, y))
 end
 function Base.setdiff(x::AbstractIntervals, y::AbstractIntervals)
-    return mergesets((inx, iny) -> inx && !iny, mergeclean(x, y)...)
+    x, y = unbunch(union(x)), unbunch(union(y))
+    return mergesets((inx, iny) -> inx && !iny, x, y, track_endpoints(x, y))
 end
 function Base.symdiff(x::AbstractIntervals, y::AbstractIntervals)
-    return mergesets((inx, iny) -> inx ⊻ iny, mergeclean(x, y)...)
+    x, y = unbunch(union(x)), unbunch(union(y))
+    return mergesets((inx, iny) -> inx ⊻ iny, x, y, track_endpoints(x, y))
 end
 function Base.issubset(x::AbstractIntervals, y::AbstractIntervals)
     return isempty(setdiff(x, y))
@@ -719,7 +733,7 @@ function isdisjoint(x::AbstractIntervals, y::AbstractIntervals)
 end
 Base.in(x, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
-    x, y = mergeclean(x,y)
+    x, y = unbunch(union(x)), unbunch(union(y))
     return x == y || (all(isempty, bunch(x)) && all(isempty, bunch(y)))
 end
 
@@ -739,6 +753,15 @@ function Base.isless(x::EndpointOffset, y::EndpointOffset)
     end
 end
 
+offset(x::AbstractEndpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
+function offset_isless(x::Endpoint, y::Endpoint)
+    if isequal(x.endpoint, y.endpoint)
+        return isless(offset(x), offset(y))
+    else
+        return isless(x.endpoint, y.endpoint)
+    end
+end
+
 """
     find_intersections(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
                        y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
@@ -749,8 +772,8 @@ all intervals in `y` that intersect with `x[i]`.
 """
 function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
     xa = vcat(x_)
-    x = unbunch(xa; enumerate=true, lt=byoffset)
-    y = unbunch(vcat(y_); enumerate=true, lt=byoffset)
+    x = unbunch(xa; enumerate=true, lt=offset_isless)
+    y = unbunch(vcat(y_); enumerate=true, lt=offset_isless)
     result = [Vector{Int}() for _ in 1:length(xa)]
 
     find_intersections_helper(result, x, y)
@@ -759,8 +782,8 @@ function find_intersections_helper(result, x, y)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)
-        x_less = first_is_less(x, y, by=offset∘last)
-        y_less = first_is_less(y, x, by=offset∘last)
+        x_less = first_is_less(x, y, by=last, lt=offset_isless)
+        y_less = first_is_less(y, x, by=last, lt=offset_isless)
 
         if !y_less
             if first_is_left(x, by=last) 

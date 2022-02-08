@@ -259,6 +259,7 @@ function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
         print(io, ")")
     end
 end
+Base.show(io::IO, ::MIME"text/plain", interval::Interval) = print(io, interval)
 
 function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
     # Print to io in order to keep properties like :limit and :compact

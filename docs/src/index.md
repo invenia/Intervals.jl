@@ -32,23 +32,23 @@ This package defines:
 
 ```jldoctest
 julia> a = 1..10
-Interval{Int64, Closed, Closed}(1, 10)
+[1 .. 10]
 
 julia> b = 5..15
-Interval{Int64, Closed, Closed}(5, 15)
+[5 .. 15]
 
 julia> intersect(a, b)
-Interval{Int64, Closed, Closed}(5, 10)
+[5 .. 10]
 ```
 
 ### Bounds
 
 ```jldoctest
 julia> a = Interval{Closed, Closed}(1, 10)
-Interval{Int64, Closed, Closed}(1, 10)
+[1 .. 10]
 
 julia> b = Interval{Open, Open}(5, 15)
-Interval{Int64, Open, Open}(5, 15)
+(5 .. 15)
 
 julia> 5 in a
 true
@@ -57,10 +57,10 @@ julia> 5 in b
 false
 
 julia> intersect(a, b)
-Interval{Int64, Open, Closed}(5, 10)
+(5 .. 10]
 
 julia> c = Interval(15, 20)
-Interval{Int64, Closed, Closed}(15, 20)
+[15 .. 20]
 
 julia> isempty(intersect(b, c))
 true
@@ -70,7 +70,10 @@ true
 
 ```jldoctest
 julia> a = Interval('a', 'z')
-Interval{Char, Closed, Closed}('a', 'z')
+[a .. z]
+
+julia> repr(a)
+"Interval{Char, Closed, Closed}('a', 'z')"
 
 julia> string(a)
 "[a .. z]"
@@ -78,7 +81,10 @@ julia> string(a)
 julia> using Dates
 
 julia> b = Interval{Closed, Open}(Date(2013), Date(2016))
-Interval{Date, Closed, Open}(Date("2013-01-01"), Date("2016-01-01"))
+[2013-01-01 .. 2016-01-01)
+
+julia> repr(b)
+"Interval{Date, Closed, Open}(Date(\"2013-01-01\"), Date(\"2016-01-01\"))"
 
 julia> string(b)
 "[2013-01-01 .. 2016-01-01)"
@@ -169,10 +175,10 @@ endpoints (taking bounds into account):
 
 ```jldoctest
 julia> a = Interval{Closed, Open}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime, Closed, Open}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
+[2013-02-13T00:00:00 .. 2013-02-13T01:00:00)
 
 julia> b = Interval{Open, Closed}(DateTime(2013, 2, 13), DateTime(2013, 2, 13, 1))
-Interval{DateTime, Open, Closed}(DateTime("2013-02-13T00:00:00"), DateTime("2013-02-13T01:00:00"))
+(2013-02-13T00:00:00 .. 2013-02-13T01:00:00]
 
 julia> c = HourEnding(DateTime(2013, 2, 13, 1))
 HourEnding{DateTime, Open, Closed}(DateTime("2013-02-13T01:00:00"))
@@ -219,13 +225,13 @@ endpoint should be used for rounding. Valid options are `:left`, `:right`, or
 
 ```jldoctest
 julia> floor(Interval(0.0, 1.0), on=:left)
-Interval{Float64, Closed, Closed}(0.0, 1.0)
+[0.0 .. 1.0]
 
 julia> floor(Interval(0.5, 1.0), on=:left)
-Interval{Float64, Closed, Closed}(0.0, 0.5)
+[0.0 .. 0.5]
 
 julia> floor(Interval(0.5, 1.5), on=:right)
-Interval{Float64, Closed, Closed}(0.0, 1.0)
+[0.0 .. 1.0]
 ```
 
 Anchored intervals default to rounding using the anchor point.

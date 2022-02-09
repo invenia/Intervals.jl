@@ -34,11 +34,9 @@ using Random
     # verify empty interval set
     @test isempty(union(Interval[]))
     
-    translate(x, by) = Interval(first(x) + by, last(x) + by)
-
     # a few taylored interval sets
     intervals = [Interval(i, i+3) for i in 1:5:15]
-    intervals = [intervals; translate.(intervals, 1:2:5)]
+    intervals = [intervals; intervals .+ (1:2:5)]
     @test all(first.(intervals) .∈ intervals)
     testsets(intervals[1:3], intervals[4:end])
     testsets(intervals[1], intervals[4:end])

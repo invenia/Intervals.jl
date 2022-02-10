@@ -5,6 +5,7 @@ using Random
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
     area(x::AbstractVector{<:AbstractInterval{T}}) where T = reduce(+, map(area, x), init = zero(T))
+    ares(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
     myunion(x::Interval) = x
     myunion(x::AbstractVector{<:Interval}) = union(x)
 
@@ -50,7 +51,7 @@ using Random
     Random.seed!(2020_10_21)
     starts = rand(1:100_000, 25)
     intervals = Interval.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; translate.(intervals, round.(Int, area.(intervals) .*
+    intervals = [intervals; intervals .+ (round.(Int, area.(intervals) .*
                                        (2.0.*rand(length(intervals)) .- 1.0)))]
     a, b = intervals[1:25], intervals[26:end]
     @test all(first.(intervals) .∈ intervals)
@@ -61,7 +62,7 @@ using Random
     randint(a,b) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(a,b)
     randint(a::Interval) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(first(a), last(a))
     intervals = randint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; randint.(translate.(intervals, round.(Int, area.(intervals) .*
+    intervals = [intervals; randint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
@@ -70,7 +71,7 @@ using Random
     leftint(a,b) = Interval{Int, Closed, Open}(a, b)
     leftint(a::Interval) = Interval{Int, Closed, Open}(first(a), last(a))
     intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; leftint.(translate.(intervals, round.(Int, area.(intervals) .*
+    intervals = [intervals; leftint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
@@ -79,14 +80,14 @@ using Random
     rightint(a,b) = Interval{Int, Open, Closed}(a, b)
     rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
     intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; rightint.(translate.(intervals, round.(Int, area.(intervals) .*
+    intervals = [intervals; rightint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])
 
     intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; leftint.(translate.(intervals, round.(Int, area.(intervals) .*
+    intervals = [intervals; leftint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
     testsets(intervals[1:25], randint.(intervals[26:end]))
     testsets(intervals[1], randint.(intervals[26:end]))

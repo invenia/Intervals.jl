@@ -5,7 +5,7 @@ using Random
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
     area(x::AbstractVector{<:AbstractInterval{T}}) where T = reduce(+, map(area, x), init = zero(T))
-    ares(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
+    area(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
     myunion(x::Interval) = x
     myunion(x::AbstractVector{<:Interval}) = union(x)
 

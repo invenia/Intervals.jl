@@ -37,19 +37,6 @@ julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
 
-### Note on Ordering
-
-The `Interval` constructor will compare `first` and `last`; if it finds that
-`first > last`, they will be reversed to ensure that `first < last`. This
-simplifies calls to `in` and `intersect`:
-
-```julia
-julia> i = Interval{Open,Closed}(Date(2016, 8, 11), Date(2013, 2, 13))
-Interval{Date,Closed,Open}(2013-02-13, 2016-08-11)
-```
-
-Note that the bounds are also reversed in this case.
-
 ### Multi-interval set operations
 
 Set operations can also be performed over two pairs of interval arrays. These set operations
@@ -561,7 +548,7 @@ isleft(::RightEndpoint) = false
 
 function mergesets(op, x, y)
     x_, y_, tracking = unbunch(union(x), union(y))
-    return mergesets_helper(op, x_, y_, endpoint_tracking(x, y))
+    return mergesets_helper(op, x_, y_, tracking)
 end
 function mergesets_helper(op, x, y, endpoint_tracking)
     result = endpoint_types(endpoint_tracking)[]
@@ -795,7 +782,7 @@ end
 
 """
     find_intersections(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
-                       y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}; sorted=false)
+                       y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}})
 
 Returns a Vector{Vector{Int}} where the value at index i gives the indices to
 all intervals in `y` that intersect with `x[i]`.
@@ -809,9 +796,9 @@ function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
     y = unbunch(y_, tracking; enumerate=true, lt)
     result = [Vector{Int}() for _ in 1:length(xa)]
 
-    find_intersections_helper(result, x, y, lt)
+    return find_intersections_helper!(result, x, y, lt)
 end
-function find_intersections_helper(result, x, y, lt)
+function find_intersections_helper!(result, x, y, lt)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
     while !isempty(x)

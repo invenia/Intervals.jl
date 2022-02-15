@@ -42,9 +42,6 @@ isclosed(x::Endpoint) = bound_type(x) === Closed
 isunbounded(x::Endpoint) = bound_type(x) === Unbounded
 isbounded(x::Endpoint) = bound_type(x) !== Unbounded
 
-endtype(x::Endpoint) = endtype(typeof(x))
-endtype(::Type{<:Endpoint{T}}) where T = T
-
 function Base.hash(x::Endpoint{T,D,B}, h::UInt) where {T,D,B}
     h = hash(:Endpoint, h)
     h = hash(D, h)

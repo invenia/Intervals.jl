@@ -59,6 +59,7 @@ using StableRNGs
     testsets(a[1], b)
     testsets(a, b[1])
 
+    randint(x::Interval) = randint(first(x), last(x))
     randint(a,b) = Interval{Int, rand((Closed, Open)), rand((Closed, Open))}(a,b)
     a = randint.(starts, starts .+ rand(rng, 1:10_000, 25))
     b = randint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))

@@ -1,6 +1,7 @@
 using Intervals
 using InvertedIndices
 using Random
+using StableRNGs
 
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
@@ -37,69 +38,62 @@ using Random
     @test isempty(union(Interval[]))
     
     # a few taylored interval sets
-    intervals = [Interval(i, i+3) for i in 1:5:15]
-    intervals = [intervals; intervals .+ (1:2:5)]
-    @test all(first.(intervals) .∈ intervals)
-    testsets(intervals[1:3], intervals[4:end])
-    testsets(intervals[1], intervals[4:end])
-    testsets(intervals[1:3], intervals[4])
+    a = [Interval(i, i+3) for i in 1:5:15]
+    b = a .+ (1:2:5)
+    @test all(first.(a) .∈ a)
+    testsets(a, b)
+    testsets(a[1], b)
+    testsets(a, b[1])
 
     # verify that `last` need not be ordered
     intervals = [Interval(0, 5), Interval(0, 3)]
     @test superset(union(intervals)) == Interval(0, 5)
 
     # try out some more involved (random) intervals
-    Random.seed!(2020_10_21)
-    starts = rand(1:100_000, 25)
-    intervals = Interval.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; intervals .+ (round.(Int, area.(intervals) .*
-                                       (2.0.*rand(length(intervals)) .- 1.0)))]
-    a, b = intervals[1:25], intervals[26:end]
-    @test all(first.(intervals) .∈ intervals)
-    testsets(intervals[1:25], intervals[26:end])
-    testsets(intervals[1], intervals[26:end])
-    testsets(intervals[1:25], intervals[26])
+    rng = StableRNG(2020_10_21)
+    starts = rand(rng, 1:100_000, 25)
+    a = Interval.(starts, starts .+ rand(rng, 1:10_000, 25))
+    b = a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0)))
+    @test all(first.(a) .∈ a)
+    testsets(a, b)
+    testsets(a[1], b)
+    testsets(a, b[1])
 
-    randint(a,b) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(a,b)
-    randint(a::Interval) = Interval{Int, Intervals.bound_type(rand(Bool)), Intervals.bound_type(rand(Bool))}(first(a), last(a))
-    intervals = randint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; randint.(intervals .+ (round.(Int, area.(intervals) .*
-                                                (2.0.*rand(length(intervals)) .- 1.0))))]
-    testsets(intervals[1:25], intervals[26:end])
-    testsets(intervals[1], intervals[26:end])
-    testsets(intervals[1:25], intervals[26])
+    randint(a,b) = Interval{Int, rand((Closed, Open)), rand((Closed, Open))}(a,b)
+    a = randint.(starts, starts .+ rand(rng, 1:10_000, 25))
+    b = randint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    testsets(a, b)
+    testsets(a[1], b)
+    testsets(a, b[1])
 
     leftint(a,b) = Interval{Int, Closed, Open}(a, b)
     leftint(a::Interval) = Interval{Int, Closed, Open}(first(a), last(a))
-    intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; leftint.(intervals .+ (round.(Int, area.(intervals) .*
-                                                (2.0.*rand(length(intervals)) .- 1.0))))]
-    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26:end]) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(intervals[1], intervals[26:end]) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26]) isa Intervals.TrackStatically
-    testsets(intervals[1:25], intervals[26:end])
-    testsets(intervals[1], intervals[26:end])
-    testsets(intervals[1:25], intervals[26])
+    a = leftint.(starts, starts .+ rand(rng, 1:10_000, 25))
+    b = leftint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
+    testsets(a, b)
+    testsets(a[1], b)
+    testsets(a, b[1])
 
     rightint(a,b) = Interval{Int, Open, Closed}(a, b)
     rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
-    intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; rightint.(intervals .+ (round.(Int, area.(intervals) .*
-                                                (2.0.*rand(length(intervals)) .- 1.0))))]
-    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26:end]) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(intervals[1], intervals[26:end]) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26]) isa Intervals.TrackStatically
-    testsets(intervals[1:25], intervals[26:end])
-    testsets(intervals[1], intervals[26:end])
-    testsets(intervals[1:25], intervals[26])
+    a = rightint.(starts, starts .+ rand(rng, 1:10_000, 25))
+    b = rightint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
+    testsets(a, b)
+    testsets(a[1], b)
+    testsets(a, b[1])
 
-    intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
-    intervals = [intervals; leftint.(intervals .+ (round.(Int, area.(intervals) .*
-                                                (2.0.*rand(length(intervals)) .- 1.0))))]
-    testsets(intervals[1:25], randint.(intervals[26:end]))
-    testsets(intervals[1], randint.(intervals[26:end]))
-    testsets(intervals[1:25], leftint(intervals[26]))
-    testsets(intervals[1:25], rightint.(intervals[26:end]))
-    testsets(intervals[1], rightint.(intervals[26:end]))
-    testsets(intervals[1:25], rightint(intervals[26]))
+    a = leftint.(starts, starts .+ rand(rng, 1:10_000, 25))
+    b = leftint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    testsets(a, randint.(b))
+    testsets(a[1], randint.(b))
+    testsets(a, leftint(b[1]))
+    testsets(a, rightint.(b))
+    testsets(a[1], rightint.(b))
+    testsets(a, rightint(b[1]))
 end

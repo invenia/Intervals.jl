@@ -1,13 +1,12 @@
 """
     Interval{T, L <: Bound, R <: Bound}
 
-An `Interval` represents a non-iterable range or span of values (non-interable
-because, unlike a `StepRange`, no step is defined).
+An `Interval` represents a non-iterable range or span of values (non-interable because,
+unlike a `StepRange`, no step is defined).
 
-An `Interval` can be closed (both `first` and `last` are included in the
-interval), open (neither `first` nor `last` are included), or half-open. This
-openness is defined by the bounds information which is stored as the type
-parameters `L` and `R`.
+An `Interval` can be closed (both `first` and `last` are included in the interval), open
+(neither `first` nor `last` are included), or half-open. This openness is defined by the
+bounds information which is stored as the type parameters `L` and `R`.
 
 ### Example
 
@@ -39,14 +38,14 @@ Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 
 ### Multi-interval set operations
 
-Set operations can also be performed over two pairs of interval arrays. These set operations
-take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})` and intrepret `x` and 
-`y` as representing a set covered by the provided intervals. The return value is an array of
-non-overlaping intervals representing the result of `op` over these sets. You can also pass 
-a single interval to either arugment (e.g. op(x::Interval, y::Vector{<:Interval})).
+Set operations can also be performed over two pairs of interval arrays. These set
+operations take the form of `op(x::Vector{<:Interval}, y::Vector{<:Interval})` and
+interpret `x` and `y` as representing a set covered by the provided intervals. The return
+value is an array of non-overlapping intervals representing the result of `op` over these
+sets. You can also pass a single interval to either argument
+(e.g. `op(x::Interval, y::Vector{<:Interval})`).
 
-These multi-interval set operations currently only support intervals that are
-bounded.
+These multi-interval set operations currently only support intervals that are bounded.
 
 See also: [`AnchoredInterval`](@ref)
 """

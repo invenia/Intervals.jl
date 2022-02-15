@@ -4,7 +4,8 @@ using Random
 
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
-    area(x::AbstractVector{<:AbstractInterval{T}}) where T = mapreduce(area, +, init = zero(T))
+    # not `mapreduce` fails here for empty vectors
+    area(x::AbstractVector{<:AbstractInterval{T}}) where T = reduce(+, map(area, x), init = zero(T))
     area(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
     myunion(x::Interval) = x
     myunion(x::AbstractVector{<:Interval}) = union(x)
@@ -19,7 +20,7 @@ using Random
         @test isdisjoint(setdiff(a, b), b)
         @test !isdisjoint(a, a)
         
-        intersections = find_intersections(copy(a), b)
+        intersections = find_intersections(a, b)
         a, b = vcat.((a,b))
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
@@ -73,6 +74,9 @@ using Random
     intervals = leftint.(starts, starts .+ rand(1:10_000, 25))
     intervals = [intervals; leftint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
+    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26:end]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(intervals[1], intervals[26:end]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26]) isa Intervals.TrackStatically
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])
@@ -82,6 +86,9 @@ using Random
     intervals = rightint.(starts, starts .+ rand(1:10_000, 25))
     intervals = [intervals; rightint.(intervals .+ (round.(Int, area.(intervals) .*
                                                 (2.0.*rand(length(intervals)) .- 1.0))))]
+    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26:end]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(intervals[1], intervals[26:end]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(intervals[1:25], intervals[26]) isa Intervals.TrackStatically
     testsets(intervals[1:25], intervals[26:end])
     testsets(intervals[1], intervals[26:end])
     testsets(intervals[1:25], intervals[26])

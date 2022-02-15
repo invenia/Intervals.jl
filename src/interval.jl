@@ -367,14 +367,15 @@ true
 
 # most set-related methods can operate over both individual intervals and
 # vectors of intervals
+const AbstractIntervalsOf{T,L,R} = Union{AbstractInterval{T,L,R}, AbstractVector{<:AbstractInterval{T,L,R}}}
 const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 
 # During merge operations used to compute unions, intersections etc...,
 # endpoint types can change (from left to right, and from open to closed,
 # etc...). The following structures indicate how endpoints should be tracked.
 
-# TrackEachEndpoint tracks endpoints dynamically using a boolean flag that
-# depends on the closed or open nature of the endpoints to be merged.
+# TrackEachEndpoint tracks endpoints on a case-by-case basis
+# computing closed/open with boolean flags
 abstract type EndpointTracking; end
 struct TrackEachEndpoint <: EndpointTracking; end
 # TrackLeftOpen and TrackRightOpen track the endpoints statically: if the
@@ -385,85 +386,54 @@ struct TrackLeftOpen{T} <: TrackStatically{T}; end
 struct TrackRightOpen{T} <: TrackStatically{T}; end
 
 function endpoint_tracking(
-    ::AbstractVector{<:AbstractInterval{T,Open,Closed}},
-    ::AbstractVector{<:AbstractInterval{U,Open,Closed}},
+    ::AbstractIntervalsOf{T,Open,Closed},
+    ::AbstractIntervalsOf{U,Open,Closed},
 ) where {T,U}
     W = promote_type(T, U)
     return TrackLeftOpen{W}()
 end
 function endpoint_tracking(
-    ::AbstractVector{<:AbstractInterval{T,Closed,Open}},
-    ::AbstractVector{<:AbstractInterval{U,Closed,Open}},
+    ::AbstractIntervalsOf{T,Closed,Open},
+    ::AbstractIntervalsOf{U,Closed,Open},
 ) where {T,U}
     W = promote_type(T, U)
     return TrackRightOpen{W}()
 end
 endpoint_tracking(a, b) = TrackEachEndpoint()
 
-# track: register the open closed nature of a new endpoint or track an existing flag
-track(x::Endpoint, ::TrackEachEndpoint) = isclosed(x)
-track(x::Bool, ::TrackEachEndpoint) = x
-# but only if required
-track(_, ::TrackStatically) = nothing
-# combine tracked endpoints into a final descion for a new endpoint
-# using the appropriate boolean operator (e.g. || for union, && for intersection)
-endpoint_closure(op, x, y, ::TrackEachEndpoint) = op(x,y)
-# alaternatively, just note the static type used to determine all endpoints
-endpoint_closure(op, x, y, tracking::TrackStatically) = tracking
-# track_closure: indicates if a boolean flag is used to track closures
-track_closures(::TrackEachEndpoint) = true
-track_closures(::TrackStatically) = false
+# track: run a thunk, but only if we are tracking endpoints dynamically
+track(fn::Function, ::TrackEachEndpoint, args...) = fn(args...)
+track(_, tracking::TrackStatically, args...) = tracking
 
-# simple endpoints are used for `TrackStatically`, when we don't want to keep
-# track of the open/closed nature of intervals. Without SimpleEndpoint the
-# return value for mergetypes would always be an array of abstract types; this
-# allows the result to be type stable when possible
-struct SimpleEndpoint{T}
-    left::Bool
-    val::T
-end
-endpoint(x::SimpleEndpoint) = x.val
-isleft(x::SimpleEndpoint) = x.left
-Base.isless(x::SimpleEndpoint, y::SimpleEndpoint) = isless(x.val, y.val)
-Base.:(==)(x::SimpleEndpoint, y::SimpleEndpoint) = x.val == y.val
-
-endpoint_types(::TrackEachEndpoint) = Endpoint
-endpoint_types(::TrackStatically{T}) where T = SimpleEndpoint{T} # see just below
+endpoint_type(::TrackEachEndpoint) = Endpoint
+endpoint_type(::TrackLeftOpen{T}) where T = Union{LeftEndpoint{T,Open}, RightEndpoint{T, Closed}}
+endpoint_type(::TrackRightOpen{T}) where T = Union{LeftEndpoint{T,Closed}, RightEndpoint{T, Open}}
+interval_type(::TrackEachEndpoint) = Interval
+interval_type(::TrackLeftOpen{T}) where T = Interval{T, Open, Closed}
+interval_type(::TrackRightOpen{T}) where T = Interval{T, Closed, Open}
 
 # `unbunch/bunch`: the generic operation used to implement all set operations operates on a
 # series of sorted endpoints (see `mergesets` below); this first requires that
 # all vectors of sets be represented by their endpoints. The functions unbunch
 # and bunch convert between an interval and an endpoint representation
 
-# when tracking endpoints dynamically we return a different type for left and right
-function unbunch_helper(interval, enumerate, i, ::TrackEachEndpoint)
-    if enumerate
-        return [(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
-    else
-        return [LeftEndpoint(interval), RightEndpoint(interval)]
-    end
+function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isless) 
+    return endpoint_type(tracking)[LeftEndpoint(interval), RightEndpoint(interval)]
 end
-
-# when statically tracking endpoints we ignore the closed/open nature of each
-# endpoint using `SimpleEndpoint`
-function unbunch_helper(interval, enumerate, i, ::TrackStatically)
-    if enumerate
-        return [(i, SimpleEndpoint(true, first(interval))), (i, SimpleEndpoint(false, last(interval)))]
-    else
-        return [SimpleEndpoint(true, first(interval)), SimpleEndpoint(false, last(interval))]
-    end
+unbunch_by_fn(_) = identity
+function unbunch(intervals::Union{AbstractIntervals, Base.Iterators.Enumerate{<:AbstractIntervals}}, 
+                 tracking::EndpointTracking; lt=isless)
+    by = unbunch_by_fn(intervals)
+    filtered = Iterators.filter(!isempty ∘ by, intervals)
+    isempty(filtered) && return endpoint_type(tracking)[]
+    result = mapreduce(x -> unbunch(x, tracking), vcat, filtered)
+    return sort!(result; lt, by)
 end
-
-function unbunch(interval::AbstractInterval, tracking::EndpointTracking; enumerate=false, lt=isless) where T
-    return unbunch_helper(interval, enumerate, 1, tracking)
-end
-function unbunch(intervals::AbstractIntervals, tracking::EndpointTracking; enumerate=false, lt=isless)
-    filtered = filter(i -> !isempty(intervals[i]), eachindex(intervals))
-    isempty(filtered) && return Union{}[]
-    result = mapreduce(vcat, filtered) do i
-        return unbunch_helper(intervals[i], enumerate, i, tracking)
-    end
-    return sort!(result; lt, by=enumerate ? last : identity)
+# support for `unbunch(enumerate(vcat(x)))` (transforming [(i, interval)] -> [(i, endpoint), (i,endpoint)])
+unbunch_by_fn(::Base.Iterators.Enumerate) = last
+function unbunch((i, interval)::Tuple, tracking; lt=isless) 
+    eltype = Tuple{Int, endpoint_type(tracking)}
+    return eltype[(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
 end
 
 function unbunch(a::AbstractIntervals, b::AbstractIntervals; kwds...)
@@ -476,41 +446,38 @@ end
 # represent a sequence of endpoints as a sequence of one or more intervals
 function bunch(endpoints, tracking)
     @assert iseven(length(endpoints))
-    isempty(endpoints) && return Union{}[]
+    isempty(endpoints) && return interval_type(tracking)[]
     return map(Iterators.partition(endpoints, 2)) do pair
         return Interval(pair..., tracking)
     end
 end
-Interval(a, b, ::TrackEachEndpoint) = Interval(a, b)
-Interval(a, b, ::TrackLeftOpen{T}) where T = Interval{T,Open,Closed}(a.val, b.val)
-Interval(a, b, ::TrackRightOpen{T}) where T = Interval{T,Closed,Open}(a.val, b.val)
+Interval(a::Endpoint, b::Endpoint, ::TrackEachEndpoint) = Interval(a, b)
+Interval(a::Endpoint, b::Endpoint, ::TrackLeftOpen{T}) where T = Interval{T,Open,Closed}(a.endpoint, b.endpoint)
+Interval(a::Endpoint, b::Endpoint, ::TrackRightOpen{T}) where T = Interval{T,Closed,Open}(a.endpoint, b.endpoint)
 
 # the sentinel endpoint reduces the number of edgecases 
 # we have to deal with when comparing endpoints during a merge
 struct SentinelEndpoint; end
 function first_endpoint(x)
     isempty(x) && return SentinelEndpoint()
+    # if the endpoints are enumerated, eltype will be a tuple
     return eltype(x) <: Tuple ? last(first(x)) : first(x)
 end
 function last_endpoint(x)
     isempty(x) && return SentinelEndpoint() 
+    # if the endpoints are enumerated, eltype will be a tuple
     return eltype(x) <: Tuple ? last(last(x)) : last(x)
 end
 
-Base.isless(::SimpleEndpoint, ::SentinelEndpoint) = true
-Base.isless(::SentinelEndpoint, ::SimpleEndpoint) = false
 
 Base.isless(::LeftEndpoint, ::SentinelEndpoint) = true
 Base.isless(::RightEndpoint, ::SentinelEndpoint) = true
 Base.isless(::SentinelEndpoint, ::LeftEndpoint) = false
 Base.isless(::SentinelEndpoint, ::RightEndpoint) = false
-
 Base.isless(::SentinelEndpoint, ::SentinelEndpoint) = false
 
-Base.isequal(::SimpleEndpoint, ::SentinelEndpoint) = false
 Base.isequal(::LeftEndpoint, ::SentinelEndpoint) = false
 Base.isequal(::RightEndpoint, ::SentinelEndpoint) = false
-Base.isequal(::SentinelEndpoint, ::SimpleEndpoint) = false
 Base.isequal(::SentinelEndpoint, ::LeftEndpoint) = false
 Base.isequal(::SentinelEndpoint, ::RightEndpoint) = false
 Base.isequal(::SentinelEndpoint, ::SentinelEndpoint) = true
@@ -551,7 +518,7 @@ function mergesets(op, x, y)
     return mergesets_helper(op, x_, y_, tracking)
 end
 function mergesets_helper(op, x, y, endpoint_tracking)
-    result = endpoint_types(endpoint_tracking)[]
+    result = endpoint_type(endpoint_tracking)[]
     sizehint!(result, length(x) + length(y))
 
     # to start, points are not included (until we see the starting endpoint of a set)
@@ -560,33 +527,35 @@ function mergesets_helper(op, x, y, endpoint_tracking)
     iny = false
 
     while !(isempty(x) && isempty(y))
-        xᵢ = first_endpoint(x)
-        yᵢ = first_endpoint(y)
+        xᵢ, yᵢ = first_endpoint.((x,y))
         t = xᵢ < yᵢ ? xᵢ : yᵢ
-        x_closed_endpoint, y_closed_endpoint = track.((inx, iny), Ref(endpoint_tracking))
 
+        # whether to include (close) an endpoint
+        close_endpoint = track(endpoint_tracking) do
+            x_closed_end = xᵢ ≤ yᵢ ? isclosed(xᵢ) : inx
+            y_closed_end = yᵢ ≤ xᵢ ? isclosed(yᵢ) : iny
+            return op(x_closed_end, y_closed_end)
+        end
+
+        # update endpoints
         if xᵢ ≤ yᵢ
             inx = isleft(xᵢ)
-            x_closed_endpoint = track(xᵢ, endpoint_tracking)
             x = @view(x[2:end])
         end
         if yᵢ ≤ xᵢ
             iny = isleft(yᵢ)
-            y_closed_endpoint = track(yᵢ, endpoint_tracking)
             y = @view(y[2:end])
         end
 
-        close_endpoint = endpoint_closure(op, x_closed_endpoint, y_closed_endpoint, endpoint_tracking)
+        # does (new point inclusion) match (current inclusion state)?
         if (op(inx, iny)) != (inresult)
             # start including points
             if !inresult
                 push!(result, left_endpoint(t, close_endpoint))
                 inresult = true
-            # edgecase: if `inresult == true` we want to add a right endpoint
-            # (what `else` does below); *but* if this would create an empty
-            # interval (e.g. (1, ), [1, 1) or (1, 1]), we need to instead remove the
-            # most recent left endpoint
+            # remove intervals that would be empty
             elseif empty_interval(last_endpoint(result), t, endpoint_tracking)
+                # remove the previously added endpoint in this case
                 pop!(result)
                 inresult = false
             # stop including points
@@ -597,22 +566,24 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         # edgecase: if we're supposed to close the endpoint but we're not including
         # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
         # [1, 2])
-        elseif track_closures(endpoint_tracking) && close_endpoint && !inresult
-            push!(result, left_endpoint(t, true))
-            push!(result, right_endpoint(t, true))
+        else
+            track(endpoint_tracking) do
+                if close_endpoint && !inresult
+                    push!(result, left_endpoint(t, true))
+                    push!(result, right_endpoint(t, true))
+                end
+            end
         end
 
     end
 
     return bunch(result, endpoint_tracking)
 end
-# empty_interval: true if the left and right endpoints would create an empty interval
-empty_interval(::SentinelEndpoint, stop, _) = false # sentinal means there was no starting endpoint; there is thus no interval, and so no empty interval
-function empty_interval(start, stop, ::TrackStatically)
-    return endpoint(start) == endpoint(stop)
-end
+# empty_interval: true if the given left and right endpoints would create an empty interval
+empty_interval(::SentinelEndpoint, _, _) = false # sentinal means there was no starting endpoint; there is thus no interval, and so no empty interval
+empty_interval(start, stop, ::TrackStatically) = start.endpoint == stop.endpoint
 function empty_interval(start, stop, ::TrackEachEndpoint)
-    endpoint(start) == endpoint(stop) && any(!isclosed, (start, stop))
+    return start.endpoint == stop.endpoint && any(!isclosed, (start, stop))
 end
 # the below methods create a left or a right endpoint from the endpoint t: note
 # that t might not be the same type of endpoint (e.g.
@@ -620,8 +591,10 @@ end
 # change which side of an interval an endpoint is on.
 left_endpoint(t::Endpoint{T}, closed::Bool) where T = LeftEndpoint{T,closed ? Closed : Open}(endpoint(t))
 right_endpoint(t::Endpoint{T}, closed::Bool) where T = RightEndpoint{T,closed ? Closed : Open}(endpoint(t))
-left_endpoint(t::SimpleEndpoint{T}, _) where T = SimpleEndpoint(true, t.val)
-right_endpoint(t::SimpleEndpoint{T}, _) where T = SimpleEndpoint(false, t.val)
+left_endpoint(t, ::TrackLeftOpen{T}) where T = LeftEndpoint{T,Open}(endpoint(t))
+left_endpoint(t, ::TrackRightOpen{T}) where T = LeftEndpoint{T,Closed}(endpoint(t))
+right_endpoint(t, ::TrackLeftOpen{T}) where T = RightEndpoint{T,Closed}(endpoint(t))
+right_endpoint(t, ::TrackRightOpen{T}) where T = RightEndpoint{T,Open}(endpoint(t))
 
 ##### SET OPERATIONS #####
 
@@ -771,7 +744,7 @@ Base.length(x::AbstractInterval) = 1
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
-intersection_isless_fn(_::TrackStatically) = isless
+intersection_isless_fn(::TrackStatically) = isless
 intersection_isless_fn(::TrackEachEndpoint) = function(x,y)
     if isequal(x, y)
         return isless(intersection_order(x), intersection_order(y))
@@ -785,19 +758,20 @@ end
                        y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}})
 
 Returns a Vector{Vector{Int}} where the value at index i gives the indices to
-all intervals in `y` that intersect with `x[i]`.
+all intervals in `y` that intersect with `x[i]`. 
 
 """
 function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
-    xa = vcat(x_)
-    tracking = endpoint_tracking(x_, y_)
+    xa, ya = vcat(x_), vcat(y_)
+    tracking = endpoint_tracking(xa, ya)
     lt = intersection_isless_fn(tracking)
-    x = unbunch(xa, tracking; enumerate=true, lt)
-    y = unbunch(y_, tracking; enumerate=true, lt)
+    x = unbunch(enumerate(xa), tracking; lt)
+    y = unbunch(enumerate(ya), tracking; lt)
     result = [Vector{Int}() for _ in 1:length(xa)]
 
     return find_intersections_helper!(result, x, y, lt)
 end
+
 function find_intersections_helper!(result, x, y, lt)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
@@ -812,16 +786,16 @@ function find_intersections_helper!(result, x, y, lt)
             else
                 delete!(active_xs, first(first(x)))
             end
-            x = Iterators.peel(x)[2]
+            x = @view x[2:end]
         end
 
         if !x_less
-            if isleft(yᵢ) && !x_less
+            if isleft(yᵢ)
                 push!(active_ys, first(first(y)))
             else
                 delete!(active_ys, first(first(y)))
             end
-            y = Iterators.peel(y)[2]
+            y = @view y[2:end]
         end
 
         for i in active_xs

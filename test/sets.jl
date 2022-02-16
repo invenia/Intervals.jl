@@ -5,7 +5,7 @@ using StableRNGs
 
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
-    # not `mapreduce` fails here for empty vectors
+    # note: `mapreduce` fails here for empty vectors
     area(x::AbstractVector{<:AbstractInterval{T}}) where T = reduce(+, map(area, x), init = zero(T))
     area(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
     myunion(x::Interval) = x

@@ -93,6 +93,9 @@ Interval(a::Endpoint, b::Endpoint, ::TrackRightOpen{T}) where T = Interval{T,Clo
 
 # the sentinel endpoint reduces the number of edgecases 
 # we have to deal with when comparing endpoints during a merge
+# NOTE: it's tempting to replace this with an unbounded endpoint
+# but if we ever want to support unbounded endpoints in mergesets
+# then SentinalEndpoint needs to be greater than those endpointss
 struct SentinelEndpoint; end
 function first_endpoint(x)
     isempty(x) && return SentinelEndpoint()

@@ -307,7 +307,7 @@ Base.setdiff(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) 
 Base.symdiff(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
 Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
 # may or may not be from Base (see top of `Intervals.jl`)
-isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
+Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
 Base.in(x, y::AbstractVector{<:AbstractInterval}) = any(yᵢ -> x ∈ yᵢ, y)
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)

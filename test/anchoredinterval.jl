@@ -238,9 +238,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         #
         # When the minimum version of TimeZones requires that `repr` is fixed
         # - `repr(ZonedDateTime(...))` and `$ZonedDateTime` can be changed to be hardcoded
-        #
-        # When dropping VERSION < v"1.2.0-DEV.29" (https://github.com/JuliaLang/julia/pull/30200)
-        # - `repr(Date(...))` and `repr(DateTime(...))` can be converted to hardcode strings
 
         where_lr = "where {L<:$Bounded, R<:$Bounded}"
         where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
@@ -278,58 +275,37 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             (
                 HourEnding(dt),
                 "(2016-08-11 HE02]",
-                string(
-                    "HourEnding{DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:00:00\"))",
             ),
             (
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13)),
                 "[2013-02-12 HE24)",
-                string(
-                    "HourEnding{DateTime, Closed, Open}",
-                    "($(repr(DateTime(2013, 2, 13))))",
-                ),
+                "HourEnding{DateTime, Closed, Open}(DateTime(\"2013-02-13T00:00:00\"))",
             ),
             (
                 HourEnding(dt + Minute(15) + Second(30)),
                 "(2016-08-11 HE02:15:30]",
-                string(
-                    "HourEnding{DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 15, 30))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:15:30\"))",
             ),
             (
                 HourEnding(dt + Millisecond(2)),
                 "(2016-08-11 HE02:00:00.002]",
-                string(
-                    "HourEnding{DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0, 2))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:00:00.002\"))",
             ),
             (
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13, 0, 1)),
                 "[2013-02-13 HE00:01:00)",
-                string(
-                    "HourEnding{DateTime, Closed, Open}",
-                    "($(repr(DateTime(2013, 2, 13, 0, 1))))",
-                ),
+                "HourEnding{DateTime, Closed, Open}(DateTime(\"2013-02-13T00:01:00\"))",
             ),
             (
                 HourBeginning(dt),
                 "[2016-08-11 HB02)",
-                string(
-                    "HourBeginning{DateTime, Closed, Open}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
-                ),
+                "HourBeginning{DateTime, Closed, Open}(DateTime(\"2016-08-11T02:00:00\"))",
             ),
             (
                 HourBeginning{Open, Closed}(DateTime(2013, 2, 13)),
                 "(2013-02-13 HB00]",
-                string(
-                    "HourBeginning{DateTime, Open, Closed}",
-                    "($(repr(DateTime(2013, 2, 13))))",
-                ),
+                "HourBeginning{DateTime, Open, Closed}(DateTime(\"2013-02-13T00:00:00\"))",
             ),
             (
                 HourEnding(ZonedDateTime(dt, tz"America/Winnipeg")),
@@ -342,25 +318,19 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             (
                 AnchoredInterval{Year(-1)}(Date(dt)),
                 "(YE 2016-08-11]",
-                string(
-                    "AnchoredInterval{Year(-1), Date, Open, Closed}",
-                    "($(repr(Date(2016, 8, 11))))",
-                ),
+                "AnchoredInterval{Year(-1), Date, Open, Closed}(Date(\"2016-08-11\"))",
             ),
             (
                 AnchoredInterval{Year(-1)}(ceil(Date(dt), Year)),
                 "(YE 2017-01-01]",
-                string(
-                    "AnchoredInterval{Year(-1), Date, Open, Closed}",
-                    "($(repr(Date(2017, 1, 1))))",
-                ),
+                "AnchoredInterval{Year(-1), Date, Open, Closed}(Date(\"2017-01-01\"))",
             ),
             (
                 AnchoredInterval{Month(-1)}(dt),
                 "(MoE 2016-08-11 02:00:00]",
                 string(
                     "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0))))",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
@@ -368,7 +338,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(MoE 2016-09-01]",
                 string(
                     "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 9, 1))))",
+                    "(DateTime(\"2016-09-01T00:00:00\"))",
                 ),
             ),
             (
@@ -376,7 +346,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(DE 2016-08-11 02:00:00]",
                 string(
                     "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
@@ -384,7 +354,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(DE 2016-08-12]",
                 string(
                     "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 12))))",
+                    "(DateTime(\"2016-08-12T00:00:00\"))",
                 ),
             ),
             (
@@ -393,7 +363,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(DE 2016-08-11]",
                 string(
                     "AnchoredInterval{Day(-1), Date, Open, Closed}",
-                    "($(repr(Date(2016, 8, 11))))",
+                    "(Date(\"2016-08-11\"))",
                 ),
             ),
             (
@@ -413,7 +383,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(2016-08-11 5ME02:00]",
                 string(
                     "AnchoredInterval{Minute(-5), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
@@ -421,7 +391,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(2016-08-11 30SE02:00:00]",
                 string(
                     "AnchoredInterval{Second(-30), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
@@ -429,7 +399,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(2016-08-11 10msE02:00:00.000]",
                 string(
                     "AnchoredInterval{Millisecond(-10), DateTime, Open, Closed}",
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
            ),
         ]

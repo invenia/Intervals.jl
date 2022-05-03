@@ -241,9 +241,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         #
         # When dropping VERSION < v"1.2.0-DEV.29" (https://github.com/JuliaLang/julia/pull/30200)
         # - `repr(Date(...))` and `repr(DateTime(...))` can be converted to hardcode strings
-        #
-        # When dropping VERSION < v"1.2.0-DEV.223" (https://github.com/JuliaLang/julia/pull/30817)
-        # - `repr(Period(...))`can be converted to hardcode strings
 
         where_lr = "where {L<:$Bounded, R<:$Bounded}"
         where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
@@ -254,26 +251,26 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             @test sprint(show, AnchoredInterval{Hour(1)}) ==
                 "HourBeginning"
             @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{$(repr(Day(-1)))}"
+                "AnchoredInterval{Day(-1)}"
             @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{$(repr(Day(1)))}"
+                "AnchoredInterval{Day(1)}"
             @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(-1))), DateTime}"
+                "AnchoredInterval{Day(-1), DateTime}"
             @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(1))), DateTime}"
+                "AnchoredInterval{Day(1), DateTime}"
         else
             @test sprint(show, AnchoredInterval{Hour(-1)}) ==
                 "HourEnding{T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Hour(1)}) ==
                 "HourBeginning{T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{$(repr(Day(-1))), T, L, R} $where_tlr"
+                "AnchoredInterval{Day(-1), T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{$(repr(Day(1))), T, L, R} $where_tlr"
+                "AnchoredInterval{Day(1), T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(-1))), DateTime, L, R} $where_lr"
+                "AnchoredInterval{Day(-1), DateTime, L, R} $where_lr"
             @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(1))), DateTime, L, R} $where_lr"
+                "AnchoredInterval{Day(1), DateTime, L, R} $where_lr"
         end
 
         # Tuples contain fields: interval, printed, shown
@@ -346,7 +343,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Year(-1)}(Date(dt)),
                 "(YE 2016-08-11]",
                 string(
-                    "AnchoredInterval{$(repr(Year(-1))), Date, Open, Closed}",
+                    "AnchoredInterval{Year(-1), Date, Open, Closed}",
                     "($(repr(Date(2016, 8, 11))))",
                 ),
             ),
@@ -354,7 +351,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Year(-1)}(ceil(Date(dt), Year)),
                 "(YE 2017-01-01]",
                 string(
-                    "AnchoredInterval{$(repr(Year(-1))), Date, Open, Closed}",
+                    "AnchoredInterval{Year(-1), Date, Open, Closed}",
                     "($(repr(Date(2017, 1, 1))))",
                 ),
             ),
@@ -362,7 +359,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Month(-1)}(dt),
                 "(MoE 2016-08-11 02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Month(-1))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 11, 2, 0, 0))))",
                 ),
             ),
@@ -370,7 +367,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Month(-1)}(ceil(dt, Month)),
                 "(MoE 2016-09-01]",
                 string(
-                    "AnchoredInterval{$(repr(Month(-1))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 9, 1))))",
                 ),
             ),
@@ -378,7 +375,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Day(-1)}(DateTime(dt)),
                 "(DE 2016-08-11 02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
@@ -386,7 +383,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day)),
                 "(DE 2016-08-12]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 12))))",
                 ),
             ),
@@ -395,7 +392,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Day(-1)}(Date(dt)),
                 "(DE 2016-08-11]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))), Date, Open, Closed}",
+                    "AnchoredInterval{Day(-1), Date, Open, Closed}",
                     "($(repr(Date(2016, 8, 11))))",
                 ),
             ),
@@ -407,7 +404,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 ),
                 "(DE 2016-08-12 00:00:00-05:00]",
                 string(
-                    "AnchoredInterval{$(repr(Day(-1))), $ZonedDateTime, Open, Closed}",
+                    "AnchoredInterval{Day(-1), $ZonedDateTime, Open, Closed}",
                     "($(repr(ZonedDateTime(2016, 8, 12, tz"America/Winnipeg"))))",
                 ),
             ),
@@ -415,7 +412,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Minute(-5)}(dt),
                 "(2016-08-11 5ME02:00]",
                 string(
-                    "AnchoredInterval{$(repr(Minute(-5))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Minute(-5), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
@@ -423,7 +420,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Second(-30)}(dt),
                 "(2016-08-11 30SE02:00:00]",
                 string(
-                    "AnchoredInterval{$(repr(Second(-30))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Second(-30), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
             ),
@@ -431,7 +428,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Millisecond(-10)}(dt),
                 "(2016-08-11 10msE02:00:00.000]",
                 string(
-                    "AnchoredInterval{$(repr(Millisecond(-10))), DateTime, Open, Closed}",
+                    "AnchoredInterval{Millisecond(-10), DateTime, Open, Closed}",
                     "($(repr(DateTime(2016, 8, 11, 2))))",
                 ),
            ),

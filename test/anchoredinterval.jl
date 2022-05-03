@@ -234,11 +234,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "display" begin
-        # Notes on compatibility changes and when they can be updated:
-        #
-        # When the minimum version of TimeZones requires that `repr` is fixed
-        # - `repr(ZonedDateTime(...))` and `$ZonedDateTime` can be changed to be hardcoded
-
         where_lr = "where {L<:$Bounded, R<:$Bounded}"
         where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
 
@@ -312,7 +307,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(2016-08-11 HE02-05:00]",
                 string(
                     "HourEnding{$ZonedDateTime, Open, Closed}",
-                    "($(repr(ZonedDateTime(dt, tz"America/Winnipeg"))))",
+                    "(ZonedDateTime(2016, 8, 11, 2, tz\"America/Winnipeg\"))",
                 ),
             ),
             (
@@ -375,7 +370,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "(DE 2016-08-12 00:00:00-05:00]",
                 string(
                     "AnchoredInterval{Day(-1), $ZonedDateTime, Open, Closed}",
-                    "($(repr(ZonedDateTime(2016, 8, 12, tz"America/Winnipeg"))))",
+                    "(ZonedDateTime(2016, 8, 12, tz\"America/Winnipeg\"))",
                 ),
             ),
             (

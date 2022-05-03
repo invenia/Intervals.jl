@@ -17,8 +17,7 @@ makedocs(;
     authors="Invenia Technical Computing Corporation",
     checkdocs=:exports,
     strict=true,
-    # Note: The output of the doctests currently requires a newer version of Julia
-    doctest=(VERSION >= v"1.5.0-DEV.163"),  # https://github.com/JuliaLang/julia/pull/34387
+    doctest=true,
 )
 
 deploydocs(;

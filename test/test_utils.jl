@@ -1,10 +1,7 @@
-# Note: To support testing against the latest Julia nightly we'll assume the serialization
-# format is the same as the last version of Julia we've tested against.
-const SERIALIZED_HEADER = if VERSION >= v"1.5"
-    "7JL\n\x04\0\0"
-else
-    error("Julia versions earlier than 1.5 are unsupported")
-end
+# The serialization header can change between Julia versions. When the header does change
+# then we can expect the "legacy deserialization" testset to fail and we'll need to
+# conditionally set the value of the header here.
+const SERIALIZED_HEADER = "7JL\n\x04\0\0"  # Header for Julia 1.5+
 
 # Declare a new `isnan` and `isinf` functions to avoid type piracy. These new function work
 # with `Char` and `Period` types as well as other types.

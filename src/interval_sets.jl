@@ -3,6 +3,10 @@
 
 # most set-related methods can operate over both individual intervals and
 # vectors of intervals
+# we need both of the types here because most methods need `AbstractIntervals`: that
+# allows for e.g. an AbstractVector{AbstractInterval} type to match a method, whereas
+# `AbstractIntervalsOf` could not match this type because the type parameters imply a concrete
+# type for T, L and R.
 const AbstractIntervalsOf{T,L,R} = Union{AbstractInterval{T,L,R}, AbstractVector{<:AbstractInterval{T,L,R}}}
 const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 
@@ -96,7 +100,7 @@ Interval(a::Endpoint, b::Endpoint, ::TrackRightOpen{T}) where T = Interval{T,Clo
 # NOTE: it's tempting to replace this with an unbounded endpoint
 # but if we ever want to support unbounded endpoints in mergesets
 # then SentinalEndpoint needs to be greater than those endpointss
-struct SentinelEndpoint; end
+struct SentinelEndpoint <: AbstractEndpoint end
 function first_endpoint(x)
     isempty(x) && return SentinelEndpoint()
     # if the endpoints are enumerated, eltype will be a tuple
@@ -156,9 +160,10 @@ function mergesets(op, x, y)
     x_, y_, tracking = unbunch(union(x), union(y))
     return mergesets_helper(op, x_, y_, tracking)
 end
+length_(x::AbstractInterval) = 1
 function mergesets_helper(op, x, y, endpoint_tracking)
     result = endpoint_type(endpoint_tracking)[]
-    sizehint!(result, length(x) + length(y))
+    sizehint!(result, length_(x) + length_(y))
 
     # to start, points are not included (until we see the starting endpoint of a set)
     inresult = false
@@ -170,10 +175,10 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         t = xᵢ < yᵢ ? xᵢ : yᵢ
 
         # whether to include (close) an endpoint
-        close_endpoint = track(endpoint_tracking) do
+        bound = track(endpoint_tracking) do
             x_closed_end = xᵢ ≤ yᵢ ? isclosed(xᵢ) : inx
             y_closed_end = yᵢ ≤ xᵢ ? isclosed(yᵢ) : iny
-            return op(x_closed_end, y_closed_end)
+            return op(x_closed_end, y_closed_end) ? Closed : Open
         end
 
         # update endpoints
@@ -187,19 +192,18 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         end
 
         # does (new point inclusion) match (current inclusion state)?
-        if (op(inx, iny)) != (inresult)
-            # start including points
+        if op(inx, iny) != inresult
+            # start including points (left endpoint)
             if !inresult
-                push!(result, left_endpoint(t, close_endpoint))
+                push!(result, left_endpoint(t, bound))
                 inresult = true
-            # remove intervals that would be empty
-            elseif empty_interval(last_endpoint(result), t, endpoint_tracking)
-                # remove the previously added endpoint in this case
-                pop!(result)
+            # stop including points (right endpoint), as long as the result will be non-empty
+            elseif !empty_interval(last_endpoint(result), t, endpoint_tracking)
+                push!(result, right_endpoint(t, bound))
                 inresult = false
-            # stop including points
+            # the interval is empty: remove the previously added endpoint 
             else
-                push!(result, right_endpoint(t, close_endpoint))
+                pop!(result)
                 inresult = false
             end
         # edgecase: if we're supposed to close the endpoint but we're not including
@@ -207,7 +211,7 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         # [1, 2])
         else
             track(endpoint_tracking) do
-                if close_endpoint && !inresult
+                if bound === Closed && !inresult
                     push!(result, left_endpoint(t, true))
                     push!(result, right_endpoint(t, true))
                 end
@@ -221,15 +225,13 @@ end
 # empty_interval: true if the given left and right endpoints would create an empty interval
 empty_interval(::SentinelEndpoint, _, _) = false # sentinal means there was no starting endpoint; there is thus no interval, and so no empty interval
 empty_interval(start, stop, ::TrackStatically) = start.endpoint == stop.endpoint
-function empty_interval(start, stop, ::TrackEachEndpoint)
-    return start.endpoint == stop.endpoint && any(!isclosed, (start, stop))
-end
+empty_interval(start, stop, ::TrackEachEndpoint) = start > stop
 # the below methods create a left or a right endpoint from the endpoint t: note
 # that t might not be the same type of endpoint (e.g.
 # `left_endpoint(RightEndpoint(...))` is perfectly valid). `mergesets` may
 # change which side of an interval an endpoint is on.
-left_endpoint(t::Endpoint{T}, closed::Bool) where T = LeftEndpoint{T,closed ? Closed : Open}(endpoint(t))
-right_endpoint(t::Endpoint{T}, closed::Bool) where T = RightEndpoint{T,closed ? Closed : Open}(endpoint(t))
+left_endpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = LeftEndpoint{T, B}(endpoint(t))
+right_endpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = RightEndpoint{T, B}(endpoint(t))
 left_endpoint(t, ::TrackLeftOpen{T}) where T = LeftEndpoint{T,Open}(endpoint(t))
 left_endpoint(t, ::TrackRightOpen{T}) where T = LeftEndpoint{T,Closed}(endpoint(t))
 right_endpoint(t, ::TrackLeftOpen{T}) where T = RightEndpoint{T,Closed}(endpoint(t))
@@ -353,16 +355,17 @@ function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y, tracking = unbunch(union(x), union(y))
     return x == y || (all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking)))
 end
-Base.length(x::AbstractInterval) = 1
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 intersection_isless_fn(::TrackStatically) = isless
-intersection_isless_fn(::TrackEachEndpoint) = function(x,y)
-    if isequal(x, y)
-        return isless(intersection_order(x), intersection_order(y))
-    else
-        return isless(x, y)
+function intersection_isless_fn(::TrackEachEndpoint) 
+    function(x,y)
+        if isequal(x, y)
+            return isless(intersection_order(x), intersection_order(y))
+        else
+            return isless(x, y)
+        end
     end
 end
 

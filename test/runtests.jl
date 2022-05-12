@@ -7,7 +7,6 @@ using Intervals: isfinite
 using Serialization: deserialize
 using Test
 using TimeZones
-TimeZones.build() # (requried in new versions of TimeZones)
 
 const BOUND_PERMUTATIONS = product((Closed, Open), (Closed, Open))
 

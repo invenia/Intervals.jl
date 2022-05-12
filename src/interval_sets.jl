@@ -161,6 +161,7 @@ function mergesets(op, x, y)
     return mergesets_helper(op, x_, y_, tracking)
 end
 length_(x::AbstractInterval) = 1
+length_(x) = length(x)
 function mergesets_helper(op, x, y, endpoint_tracking)
     result = endpoint_type(endpoint_tracking)[]
     sizehint!(result, length_(x) + length_(y))
@@ -212,8 +213,8 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         else
             track(endpoint_tracking) do
                 if bound === Closed && !inresult
-                    push!(result, left_endpoint(t, true))
-                    push!(result, right_endpoint(t, true))
+                    push!(result, left_endpoint(t, Closed))
+                    push!(result, right_endpoint(t, Closed))
                 end
             end
         end

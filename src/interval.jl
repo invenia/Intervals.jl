@@ -36,19 +36,8 @@ julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
 
-### Multi-interval set operations
-
-Set operations can also be performed over two pairs of interval vectors. These set
-operations take the form of
-`op(x::AbstractVector{<:Interval}, y::AbstractVector{<:Interval})` and interpret
-`x` and `y` as representing a set covered by the provided intervals. The return value is an
-array of non-overlapping intervals representing the result of `op` over these sets. You can
-also pass a single interval to either argument
-(e.g. `op(x::Interval, y::AbstractVector{<:Interval})`).
-
-These multi-interval set operations currently only support intervals that are bounded.
-
-See also: [`AnchoredInterval`](@ref)
+See also: [`AnchoredInterval`](@ref), [`find_intersections`](@ref), [`union`](@ref), 
+[`intersect`](@ref), [`setdiff`](@ref), [`symdiff`](@ref), [`issubset`](@ref)
 """
 struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     first::T

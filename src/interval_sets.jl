@@ -253,11 +253,7 @@ end
 # allow a concretely typed array for `Interval` objects (as opposed to e.g. anchored intervals
 # which may change type during the union process)
 function Base.union(intervals::AbstractVector{T}) where T <: Interval
-    input = convert(Vector{T}, intervals)
-    if input === intervals
-        input = copy(intervals)
-    end
-    return union!(input)
+    return union!(copy(intervals))
 end
 
 """

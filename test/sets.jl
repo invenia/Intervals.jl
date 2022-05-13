@@ -28,13 +28,15 @@ using StableRNGs
 
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
-        @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 
-                  enumerate(intersections))
+        @test all(enumerate(intersections)) do (i, x)
+            isempty(x) || !isempty(intersect(a[i], b[x]))
+        end
 
         # verify that all indices not returned in `find_intersections` correspond to
         # sets in b that do not overlap with the given set in akk
-        @test all(ix -> isempty(intersect(a[ix[1]], b[Not(ix[2])])), 
-                  enumerate(intersections))
+        @test all(enumerate(intersections)) do (i, x)
+            isempty(intersect(a[i], b[Not(x)]))
+        end
     end
 
     # verify empty interval set

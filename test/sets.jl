@@ -11,6 +11,8 @@ using StableRNGs
     myunion(x::Interval) = x
     myunion(x::AbstractVector{<:Interval}) = union(x)
 
+    rand_bound_type(rng) = rand(rng, (Closed, Open))
+
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
         @test area(setdiff(a, b)) ≤ area(myunion(a))
@@ -52,26 +54,26 @@ using StableRNGs
 
     # try out some more involved (random) intervals
     rng = StableRNG(2020_10_21)
-    starts = rand(rng, 1:100_000, 25)
-    a = Interval.(starts, starts .+ rand(rng, 1:10_000, 25))
-    b = a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0)))
+    n = 25
+    starts = rand(rng, 1:100_000, n)
+    ends = starts .+ rand(rng, 1:10_000, n)
+    offsets = round.(Int, (ends .- starts) .* (2 .* rand(rng, n) .- 1))
+
+    a = Interval.(starts, ends)
+    b = Interval.(starts .+ offsets, ends .+ offsets)
     @test all(first.(a) .∈ a)
     testsets(a, b)
     testsets(a[1], b)
     testsets(a, b[1])
 
-    randint(x::Interval) = randint(first(x), last(x))
-    randint(a,b) = Interval{Int, rand((Closed, Open)), rand((Closed, Open))}(a,b)
-    a = randint.(starts, starts .+ rand(rng, 1:10_000, 25))
-    b = randint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    a = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts, ends)
+    b = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts .+ offsets, ends .+ offsets)
     testsets(a, b)
     testsets(a[1], b)
     testsets(a, b[1])
 
-    leftint(a,b) = Interval{Int, Closed, Open}(a, b)
-    leftint(a::Interval) = Interval{Int, Closed, Open}(first(a), last(a))
-    a = leftint.(starts, starts .+ rand(rng, 1:10_000, 25))
-    b = leftint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    a = Interval{Closed, Open}.(starts, ends)
+    b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
     @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
     @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
@@ -79,10 +81,8 @@ using StableRNGs
     testsets(a[1], b)
     testsets(a, b[1])
 
-    rightint(a,b) = Interval{Int, Open, Closed}(a, b)
-    rightint(a::Interval) = Interval{Int, Open, Closed}(first(a), last(a))
-    a = rightint.(starts, starts .+ rand(rng, 1:10_000, 25))
-    b = rightint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    a = Interval{Open, Closed}.(starts, ends)
+    b = Interval{Open, Closed}.(starts .+ offsets, ends .+ offsets)
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
     @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
     @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
@@ -90,8 +90,12 @@ using StableRNGs
     testsets(a[1], b)
     testsets(a, b[1])
 
-    a = leftint.(starts, starts .+ rand(rng, 1:10_000, 25))
-    b = leftint.(a .+ (round.(Int, area.(a) .* (2.0.*rand(rng, length(a)) .- 1.0))))
+    randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(first(x), last(x))
+    leftint(x::Interval) = Interval{Closed, Open}(first(x), last(x))
+    rightint(x::Interval) = Interval{Open, Closed}(first(x), last(x))
+
+    a = Interval{Closed, Open}.(starts, ends)
+    b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
     testsets(a, randint.(b))
     testsets(a[1], randint.(b))
     testsets(a, leftint(b[1]))

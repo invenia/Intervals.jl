@@ -3,6 +3,26 @@ using InvertedIndices
 using Random
 using StableRNGs
 
+using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_tracking
+
+@testset "Endpoint Tracking" begin
+    @test endpoint_tracking(
+        Interval{Int, Open, Closed}(1, 2),
+        Interval{Float64, Open, Closed}(1.0, 2.0),
+    ) == TrackLeftOpen{Float64}()
+
+    @test endpoint_tracking(
+        Interval{Int, Closed, Open}(1, 2),
+        Interval{Float64, Closed, Open}(1.0, 2.0),
+    ) == TrackRightOpen{Float64}()
+
+    # Fallback tracking for all other bound combinations
+    @test endpoint_tracking(
+        Interval{Int, Closed, Closed}(1, 2),
+        Interval{Float64, Closed, Closed}(1.0, 2.0),
+    ) == TrackEachEndpoint()
+end
+
 @testset "Set operations" begin
     area(x::Interval) = last(x) - first(x)
     # note: `mapreduce` fails here for empty vectors

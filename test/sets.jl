@@ -12,9 +12,9 @@ using StableRNGs
     myunion(x::AbstractVector{<:Interval}) = union(x)
 
     function testsets(a, b)
-        @test area((a ∪ b)) ≤ area(myunion(a)) + area(myunion(b))
+        @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
         @test area(setdiff(a, b)) ≤ area(myunion(a))
-        @test area((a ∩ b)) + area(symdiff(a, b)) == area(union(a,b))
+        @test area(a ∩ b) + area(symdiff(a, b)) == area(union(a,b))
         @test a ⊆ (a ∪ b)
         @test !issetequal(a, setdiff(a, b))
         @test issetequal(a, a)
@@ -22,7 +22,8 @@ using StableRNGs
         @test !isdisjoint(a, a)
         
         intersections = find_intersections(a, b)
-        a, b = vcat.((a,b))
+        a, b = vcat(a), vcat(b)  # Always make `a` / `b` vectors
+
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
         @test all(ix -> isempty(ix[2]) || !isempty(intersect(a[ix[1]], b[ix[2]])), 
@@ -38,7 +39,7 @@ using StableRNGs
     @test isempty(union(Interval[]))
     
     # a few taylored interval sets
-    a = [Interval(i, i+3) for i in 1:5:15]
+    a = [Interval(i, i + 3) for i in 1:5:15]
     b = a .+ (1:2:5)
     @test all(first.(a) .∈ a)
     testsets(a, b)

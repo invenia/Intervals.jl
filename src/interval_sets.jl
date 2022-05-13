@@ -349,14 +349,14 @@ Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(
 
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y, tracking = unbunch(union(x), union(y))
-    return x == y || (all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking)))
+    return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
 end
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 intersection_isless_fn(::TrackStatically) = isless
 function intersection_isless_fn(::TrackEachEndpoint) 
-    function(x,y)
+    function (x,y)
         if isequal(x, y)
             return isless(intersection_order(x), intersection_order(y))
         else
@@ -366,12 +366,13 @@ function intersection_isless_fn(::TrackEachEndpoint)
 end
 
 """
-    find_intersections(x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, 
-                       y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}})
+    find_intersections(
+        x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}},
+        y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}},
+    )
 
-Returns a Vector{Vector{Int}} where the value at index i gives the indices to
-all intervals in `y` that intersect with `x[i]`. 
-
+Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
+intervals in `y` that intersect with `x[i]`.
 """
 function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
     xa, ya = vcat(x_), vcat(y_)

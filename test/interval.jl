@@ -555,45 +555,42 @@
         )
     end
 
-    array_and_single(x) = [x, [x]]
     @testset "in" begin
         for (a, b, unit) in test_values
-            for interval in array_and_single(Interval(a, b))
-                @test  in(a, interval)
-                @test  in(a + unit, interval)
-                @test !in(a - unit, interval) || isinf(a)
-                @test  in(b, interval)
-                @test  in(b - unit, interval)
-                @test !in(b + unit, interval) || isinf(b)
-            end
+            interval = Interval(a, b)
+            @test  in(a, interval)
+            @test  in(a + unit, interval)
+            @test !in(a - unit, interval) || isinf(a)
+            @test  in(b, interval)
+            @test  in(b - unit, interval)
+            @test !in(b + unit, interval) || isinf(b)
 
-            for interval in array_and_single(Interval{Closed, Open}(a, b))
-                @test  in(a, interval)
-                @test  in(a + unit, interval)
-                @test !in(a - unit, interval) || isinf(a)
-                @test !in(b, interval)
-                @test  in(b - unit, interval) || isinf(b)
-                @test !in(b + unit, interval)
-            end
+            interval = Interval{Closed, Open}(a, b)
+            @test  in(a, interval)
+            @test  in(a + unit, interval)
+            @test !in(a - unit, interval) || isinf(a)
+            @test !in(b, interval)
+            @test  in(b - unit, interval) || isinf(b)
+            @test !in(b + unit, interval)
 
-            for interval in array_and_single(Interval{Open, Closed}(a, b))
-                @test !in(a, interval)
-                @test  in(a + unit, interval) || isinf(a)
-                @test !in(a - unit, interval)
-                @test  in(b, interval)
-                @test  in(b - unit, interval)
-                @test !in(b + unit, interval) || isinf(b)
-            end
+            interval = Interval{Open, Closed}(a, b)
+            @test !in(a, interval)
+            @test  in(a + unit, interval) || isinf(a)
+            @test !in(a - unit, interval)
+            @test  in(b, interval)
+            @test  in(b - unit, interval)
+            @test !in(b + unit, interval) || isinf(b)
 
-            for interval in array_and_single(Interval{Open, Open}(a, b))
-                @test !in(a, interval)
-                @test  in(a + unit, interval) || isinf(a)
-                @test !in(a - unit, interval) || isinf(a)
-                @test !in(b, interval)
-                @test  in(b - unit, interval) || isinf(b)
-                @test !in(b + unit, interval) || isinf(b)
-            end
+            interval = Interval{Open, Open}(a, b)
+            @test !in(a, interval)
+            @test  in(a + unit, interval) || isinf(a)
+            @test !in(a - unit, interval) || isinf(a)
+            @test !in(b, interval)
+            @test  in(b - unit, interval) || isinf(b)
+            @test !in(b + unit, interval) || isinf(b)
 
+            # As an Interval instance is itself a collection one could expect this to return
+            # `true`. The correct check in this case is `issubset`.
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
     end

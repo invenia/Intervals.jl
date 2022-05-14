@@ -92,7 +92,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test symdiff(earlier, later) == expected_xor
-                @test symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -165,7 +164,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test symdiff(earlier, later) == expected_xor
-                @test symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -238,7 +236,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test symdiff(earlier, later) == expected_xor
-                @test symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -311,7 +308,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test symdiff(earlier, later) == expected_xor
-                @test symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -389,7 +385,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test_broken symdiff(earlier, later) == expected_xor
-                @test_broken symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -467,7 +462,6 @@ end
                 @test setdiff(later, earlier) == expected_xor[2:2]
 
                 @test symdiff(earlier, later) == expected_xor
-                @test symdiff(later, earlier) == expected_xor
             end
         end
     end
@@ -527,7 +521,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test isempty(symdiff(a, b))
-                @test isempty(symdiff(b, a))
             end
         end
     end
@@ -588,7 +581,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test_broken symdiff(a, b) == expected_xor
-                @test_broken symdiff(b, a) == expected_xor
             end
         end
     end
@@ -649,7 +641,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test_broken symdiff(a, b) == expected_xor
-                @test_broken symdiff(b, a) == expected_xor
             end
         end
     end
@@ -714,7 +705,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test_broken symdiff(a, b) == expected_xor
-                @test_broken symdiff(b, a) == expected_xor
             end
         end
     end
@@ -777,7 +767,6 @@ end
                 @test_broken setdiff(b, a) == expected_xor
 
                 @test_broken symdiff(a, b) == expected_xor
-                @test_broken symdiff(b, a) == expected_xor
             end
         end
     end
@@ -840,7 +829,6 @@ end
                 @test_broken setdiff(b, a) == expected_xor
 
                 @test_broken symdiff(a, b) == expected_xor
-                @test_broken symdiff(b, a) == expected_xor
             end
         end
     end
@@ -900,7 +888,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test isempty(symdiff(a, b))
-                @test isempty(symdiff(b, a))
             end
         end
     end
@@ -961,7 +948,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test symdiff(a, b) == expected_xor
-                @test symdiff(b, a) == expected_xor
             end
         end
     end
@@ -1022,7 +1008,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test symdiff(a, b) == expected_xor
-                @test symdiff(b, a) == expected_xor
             end
         end
     end
@@ -1081,7 +1066,6 @@ end
                 @test isempty(setdiff(b, a))
 
                 @test isempty(symdiff(a, b))
-                @test isempty(symdiff(b, a))
             end
         end
     end
@@ -1130,7 +1114,6 @@ end
             @test isempty(setdiff(b, a))
 
             @test isempty(symdiff(a, b))
-            @test isempty(symdiff(b, a))
         end
     end
 
@@ -1214,7 +1197,6 @@ end
                 @test setdiff(larger, smaller) == expected_xor
 
                 @test symdiff(smaller, larger) == expected_xor
-                @test symdiff(larger, smaller) == expected_xor
             end
         end
     end

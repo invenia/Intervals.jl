@@ -57,6 +57,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -73,9 +74,6 @@ end
 
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
@@ -132,6 +130,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -148,9 +147,6 @@ end
 
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
@@ -207,6 +203,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -223,9 +220,6 @@ end
 
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
@@ -282,6 +276,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -298,9 +293,6 @@ end
 
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
@@ -362,6 +354,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -378,9 +371,6 @@ end
 
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
@@ -442,6 +432,7 @@ end
 
             @test earlier != later
             @test !isequal(earlier, later)
+            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -458,9 +449,6 @@ end
 
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
-
-            @test !issetequal(earlier, later)
-            @test !issetequal(later, earlier)
 
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
@@ -504,6 +492,7 @@ end
 
             @test a == b
             @test isequal(a, b)
+            @test issetequal(b, a)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -520,9 +509,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test issetequal(a, b)
-            @test issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -567,6 +553,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -583,9 +570,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -630,6 +614,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -646,9 +631,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -697,6 +679,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -713,9 +696,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -762,6 +742,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -778,9 +759,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -827,6 +805,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -843,9 +822,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -889,6 +865,7 @@ end
 
             @test a == b
             @test isequal(a, b)
+            @test issetequal(a, b)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -905,9 +882,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test issetequal(a, b)
-            @test issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -952,6 +926,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -968,9 +943,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -1015,6 +987,7 @@ end
 
             @test a != b
             @test !isequal(a, b)
+            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -1031,9 +1004,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test !issetequal(a, b)
-            @test !issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -1076,6 +1046,7 @@ end
 
             @test a == b
             @test isequal(a, b)
+            @test issetequal(a, b)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -1092,9 +1063,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test issetequal(a, b)
-            @test issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -1128,6 +1096,7 @@ end
 
             @test a == b
             @test !isequal(a, b)
+            @test issetequal(a, b)
             @test hash(a) != hash(b)
 
             # All other comparison should still work as expected
@@ -1145,9 +1114,6 @@ end
 
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
-
-            @test issetequal(a, b)
-            @test issetequal(b, a)
 
             @test overlaps(a, b)
             @test !contiguous(a, b)
@@ -1213,6 +1179,7 @@ end
 
             @test smaller != larger
             @test !isequal(smaller, larger)
+            @test !issetequal(smaller, larger)
             @test hash(smaller) != hash(larger)
 
             @test !isless(smaller, larger)
@@ -1229,9 +1196,6 @@ end
 
             @test !isdisjoint(smaller, larger)
             @test !isdisjoint(larger, smaller)
-
-            @test !issetequal(smaller, larger)
-            @test !issetequal(larger, smaller)
 
             @test overlaps(smaller, larger)
             @test !contiguous(smaller, larger)

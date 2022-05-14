@@ -53,6 +53,7 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
+            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
@@ -73,12 +74,28 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws ArgumentError merge(earlier, later)
-            @test union([earlier, later]) == [earlier, later]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
+            @test_throws ArgumentError merge(earlier, later)
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [earlier, later]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test union(earlier, later) == [earlier, later]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test symdiff(earlier, later) == expected_xor
+                @test symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -111,6 +128,7 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
+            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
@@ -131,12 +149,28 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws ArgumentError merge(earlier, later)
-            @test union([earlier, later]) == [earlier, later]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
+            @test_throws ArgumentError merge(earlier, later)
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [earlier, later]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test union(earlier, later) == [earlier, later]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test symdiff(earlier, later) == expected_xor
+                @test symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -169,6 +203,7 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
+            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
@@ -189,12 +224,28 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test merge(earlier, later) == expected_superset
-            @test union([earlier, later]) == [expected_superset]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
+            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test_broken union(earlier, later) == [expected_superset]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test symdiff(earlier, later) == expected_xor
+                @test symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -227,6 +278,7 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
+            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
@@ -247,12 +299,28 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test merge(earlier, later) == expected_superset
-            @test union([earlier, later]) == [expected_superset]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
+            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test_broken union(earlier, later) == [expected_superset]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test symdiff(earlier, later) == expected_xor
+                @test symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -286,6 +354,12 @@ end
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{Closed, Closed}(last(a), first(b))
 
+            L, R = first(bounds_types(a)), last(bounds_types(b))
+            expected_xor = [
+                Interval{L, Open}(first(a), first(b)),
+                Interval{Open, R}(last(a), last(b)),
+            ]
+
             @test earlier != later
             @test !isequal(earlier, later)
             @test hash(earlier) != hash(later)
@@ -305,12 +379,28 @@ end
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test merge(earlier, later) == expected_superset
-            @test union([earlier, later]) == [expected_superset]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
+            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test union(earlier, later) == [expected_superset]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test_broken symdiff(earlier, later) == expected_xor
+                @test_broken symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -344,6 +434,12 @@ end
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(a))
 
+            L, R = first(bounds_types(a)), last(bounds_types(b))
+            expected_xor = [
+                Interval{L, Open}(first(a), first(b)),
+                Interval{Open, R}(last(a), last(b)),
+            ]
+
             @test earlier != later
             @test !isequal(earlier, later)
             @test hash(earlier) != hash(later)
@@ -363,12 +459,28 @@ end
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
 
-            @test intersect(earlier, later) == expected_overlap
-            @test merge(earlier, later) == expected_superset
-            @test union([earlier, later]) == [expected_superset]
+            @test !issetequal(earlier, later)
+            @test !issetequal(later, earlier)
+
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
+            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
+
+            @test intersect(earlier, later) == expected_overlap
+            @test union([earlier, later]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(earlier) && isbounded(later)
+                @test union(earlier, later) == [expected_superset]
+
+                # TODO: Should these return vectors?
+                @test setdiff(earlier, later) == expected_xor[1:1]
+                @test setdiff(later, earlier) == expected_xor[2:2]
+
+                @test symdiff(earlier, later) == expected_xor
+                @test symdiff(later, earlier) == expected_xor
+            end
         end
     end
 
@@ -409,12 +521,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test issetequal(a, b)
+            @test issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(a, b))
+                @test isempty(setdiff(b, a))
+
+                @test isempty(symdiff(a, b))
+                @test isempty(symdiff(b, a))
+            end
         end
     end
 
@@ -435,6 +563,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_xor = [Interval{Closed, Open}(first(a), first(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -455,12 +584,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test_broken setdiff(a, b) == expected_xor
+                @test isempty(setdiff(b, a))
+
+                @test_broken symdiff(a, b) == expected_xor
+                @test_broken symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -481,6 +626,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_xor = [Interval{Open, Closed}(last(a), last(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -501,12 +647,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test_broken setdiff(a, b) == expected_xor
+                @test isempty(setdiff(b, a))
+
+                @test_broken symdiff(a, b) == expected_xor
+                @test_broken symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -516,7 +678,8 @@ end
                 Interval{Closed, Closed}(l, u),
                 Interval{Open, Open}(l, u),
             ]
-            for (l, u) in product((1, -Inf, -∞), (5, Inf, ∞))
+            # for (l, u) in product((1, -Inf, -∞), (5, Inf, ∞))
+            for (l, u) in product((1,), (5,))
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
@@ -527,6 +690,10 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_xor = [
+                Interval{Closed, Open}(first(a), first(a)),
+                Interval{Open, Closed}(last(a), last(a)),
+            ]
 
             @test a != b
             @test !isequal(a, b)
@@ -547,12 +714,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test_broken setdiff(a, b) == expected_xor
+                @test isempty(setdiff(b, a))
+
+                @test_broken symdiff(a, b) == expected_xor
+                @test_broken symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -573,6 +756,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_xor = [
+                Interval{Open, Closed}(last(b), last(b)),
+            ]
 
             @test a != b
             @test !isequal(a, b)
@@ -593,12 +779,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(a, b))
+                @test_broken setdiff(b, a) == expected_xor
+
+                @test_broken symdiff(a, b) == expected_xor
+                @test_broken symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -619,6 +821,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_xor = [
+                Interval{Closed, Open}(first(b), first(b)),
+            ]
 
             @test a != b
             @test !isequal(a, b)
@@ -639,12 +844,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(a, b))
+                @test_broken setdiff(b, a) == expected_xor
+
+                @test_broken symdiff(a, b) == expected_xor
+                @test_broken symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -685,12 +906,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test issetequal(a, b)
+            @test issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(a, b))
+                @test isempty(setdiff(b, a))
+
+                @test isempty(symdiff(a, b))
+                @test isempty(symdiff(b, a))
+            end
         end
     end
 
@@ -711,6 +948,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_xor = [Interval{Closed, Open}(first(a), first(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -731,12 +969,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test setdiff(a, b) == expected_xor
+                @test isempty(setdiff(b, a))
+
+                @test symdiff(a, b) == expected_xor
+                @test symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -757,6 +1011,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_xor = [Interval{Open, Closed}(last(a), last(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -777,12 +1032,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test !issetequal(a, b)
+            @test !issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test setdiff(a, b) == expected_xor
+                @test isempty(setdiff(b, a))
+
+                @test symdiff(a, b) == expected_xor
+                @test symdiff(b, a) == expected_xor
+            end
         end
     end
 
@@ -822,12 +1093,28 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test issetequal(a, b)
+            @test issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(a) && isbounded(b)
+                @test union(a, b) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(a, b))
+                @test isempty(setdiff(b, a))
+
+                @test isempty(symdiff(a, b))
+                @test isempty(symdiff(b, a))
+            end
         end
     end
 
@@ -859,12 +1146,25 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
-            @test intersect(a, b) == expected_overlap
-            @test merge(a, b) == expected_superset
-            @test union([a, b]) == [expected_superset]
+            @test issetequal(a, b)
+            @test issetequal(b, a)
+
             @test overlaps(a, b)
             @test !contiguous(a, b)
+            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
+
+            @test intersect(a, b) == expected_overlap
+            @test union([a, b]) == [expected_superset]
+
+            @test union(a, b) == [expected_superset]
+
+            # TODO: Should these return vectors? These could return an empty interval
+            @test isempty(setdiff(a, b))
+            @test isempty(setdiff(b, a))
+
+            @test isempty(symdiff(a, b))
+            @test isempty(symdiff(b, a))
         end
     end
 
@@ -905,6 +1205,12 @@ end
             expected_superset = Interval(larger)
             expected_overlap = Interval(smaller)
 
+            L, R = bounds_types(larger)
+            expected_xor = [
+                Interval{L, Open}(first(larger), first(smaller)),
+                Interval{Open, R}(last(smaller), last(larger)),
+            ]
+
             @test smaller != larger
             @test !isequal(smaller, larger)
             @test hash(smaller) != hash(larger)
@@ -921,15 +1227,31 @@ end
             @test issubset(smaller, larger)
             @test !issubset(larger, smaller)
 
-            @test !isdisjoint(a, b)
-            @test !isdisjoint(b, a)
+            @test !isdisjoint(smaller, larger)
+            @test !isdisjoint(larger, smaller)
 
-            @test intersect(smaller, larger) == expected_overlap
-            @test merge(smaller, larger) == expected_superset
-            @test union([smaller, larger]) == [expected_superset]
+            @test !issetequal(smaller, larger)
+            @test !issetequal(larger, smaller)
+
             @test overlaps(smaller, larger)
             @test !contiguous(smaller, larger)
+            @test merge(a, b) == expected_superset
             @test superset([smaller, larger]) == expected_superset
+
+            @test intersect(smaller, larger) == expected_overlap
+            @test union([smaller, larger]) == [expected_superset]
+
+            # TODO: These functions should be compatible with unbounded intervals
+            if isbounded(smaller) && isbounded(larger)
+                @test union(smaller, larger) == [expected_superset]
+
+                # TODO: Should these return vectors? These could return an empty interval
+                @test isempty(setdiff(smaller, larger))
+                @test setdiff(larger, smaller) == expected_xor
+
+                @test symdiff(smaller, larger) == expected_xor
+                @test symdiff(larger, smaller) == expected_xor
+            end
         end
     end
 end

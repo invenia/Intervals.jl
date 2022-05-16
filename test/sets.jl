@@ -7,19 +7,19 @@ using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_trac
 
 @testset "Endpoint Tracking" begin
     @test endpoint_tracking(
-        Interval{Int, Open, Closed}(1, 2),
-        Interval{Float64, Open, Closed}(1.0, 2.0),
+        Interval{Int, Open, Closed},
+        Interval{Float64, Open, Closed},
     ) == TrackLeftOpen{Float64}()
 
     @test endpoint_tracking(
-        Interval{Int, Closed, Open}(1, 2),
-        Interval{Float64, Closed, Open}(1.0, 2.0),
+        Interval{Int, Closed, Open},
+        Interval{Float64, Closed, Open},
     ) == TrackRightOpen{Float64}()
 
     # Fallback tracking for all other bound combinations
     @test endpoint_tracking(
-        Interval{Int, Closed, Closed}(1, 2),
-        Interval{Float64, Closed, Closed}(1.0, 2.0),
+        Interval{Int, Closed, Closed},
+        Interval{Float64, Closed, Closed},
     ) == TrackEachEndpoint()
 end
 

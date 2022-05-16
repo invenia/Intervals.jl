@@ -1,16 +1,8 @@
 
 ###### Set-related Helpers #####
 
-# most set-related methods can operate over both individual intervals and
-# vectors of intervals
-# we need both of the types here because most methods need `AbstractIntervals`: that
-# allows for e.g. an AbstractVector{AbstractInterval} type to match a method, whereas
-# `AbstractIntervalsOf` could not match this type because the type parameters imply a concrete
-# type for T, L and R.
-const AbstractIntervalsOf{T,L,R} = Union{AbstractInterval{T,L,R}, AbstractVector{<:AbstractInterval{T,L,R}}}
-const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
-
 const IntervalSet = AbstractVector{<:AbstractInterval}
+const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 
 # During merge operations used to compute unions, intersections etc...,
 # endpoint types can change (from left to right, and from open to closed,
@@ -28,20 +20,27 @@ struct TrackLeftOpen{T} <: TrackStatically{T}; end
 struct TrackRightOpen{T} <: TrackStatically{T}; end
 
 function endpoint_tracking(
-    ::AbstractIntervalsOf{T,Open,Closed},
-    ::AbstractIntervalsOf{U,Open,Closed},
+    ::Type{<:AbstractInterval{T,Open,Closed}},
+    ::Type{<:AbstractInterval{U,Open,Closed}},
 ) where {T,U}
     W = promote_type(T, U)
     return TrackLeftOpen{W}()
 end
 function endpoint_tracking(
-    ::AbstractIntervalsOf{T,Closed,Open},
-    ::AbstractIntervalsOf{U,Closed,Open},
+    ::Type{<:AbstractInterval{T,Closed,Open}},
+    ::Type{<:AbstractInterval{U,Closed,Open}},
 ) where {T,U}
     W = promote_type(T, U)
     return TrackRightOpen{W}()
 end
-endpoint_tracking(a, b) = TrackEachEndpoint()
+function endpoint_tracking(
+    ::Type{<:AbstractInterval},
+    ::Type{<:AbstractInterval},
+)
+    return TrackEachEndpoint()
+end
+endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b))
+endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b))
 
 # track: run a thunk, but only if we are tracking endpoints dynamically
 track(fn::Function, ::TrackEachEndpoint, args...) = fn(args...)

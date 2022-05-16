@@ -49,13 +49,13 @@ end
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
         @test all(enumerate(intersections)) do (i, x)
-            isempty(x) || !isempty(intersect(a[i], b[x]))
+            isempty(x) || !isempty(intersect(a[i:i], b[x]))
         end
 
         # verify that all indices not returned in `find_intersections` correspond to
         # sets in b that do not overlap with the given set in akk
         @test all(enumerate(intersections)) do (i, x)
-            isempty(intersect(a[i], b[Not(x)]))
+            isempty(intersect(a[i:i], b[Not(x)]))
         end
     end
 
@@ -67,8 +67,8 @@ end
     b = a .+ (1:2:5)
     @test all(first.(a) .∈ a)
     testsets(a, b)
-    testsets(a[1], b)
-    testsets(a, b[1])
+    testsets(a[1:1], b)
+    testsets(a, b[1:1])
 
     # verify that `last` need not be ordered
     intervals = [Interval(0, 5), Interval(0, 3)]
@@ -85,32 +85,32 @@ end
     b = Interval.(starts .+ offsets, ends .+ offsets)
     @test all(first.(a) .∈ a)
     testsets(a, b)
-    testsets(a[1], b)
-    testsets(a, b[1])
+    testsets(a[1:1], b)
+    testsets(a, b[1:1])
 
     a = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts, ends)
     b = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts .+ offsets, ends .+ offsets)
     testsets(a, b)
-    testsets(a[1], b)
-    testsets(a, b[1])
+    testsets(a[1:1], b)
+    testsets(a, b[1:1])
 
     a = Interval{Closed, Open}.(starts, ends)
     b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a[1:1], b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, b[1:1]) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(a[1], b)
-    testsets(a, b[1])
+    testsets(a[1:1], b)
+    testsets(a, b[1:1])
 
     a = Interval{Open, Closed}.(starts, ends)
     b = Interval{Open, Closed}.(starts .+ offsets, ends .+ offsets)
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a[1], b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, b[1]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a[1:1], b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, b[1:1]) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(a[1], b)
-    testsets(a, b[1])
+    testsets(a[1:1], b)
+    testsets(a, b[1:1])
 
     randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(first(x), last(x))
     leftint(x::Interval) = Interval{Closed, Open}(first(x), last(x))
@@ -119,9 +119,9 @@ end
     a = Interval{Closed, Open}.(starts, ends)
     b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
     testsets(a, randint.(b))
-    testsets(a[1], randint.(b))
-    testsets(a, leftint(b[1]))
+    testsets(a[1:1], randint.(b))
+    testsets(a, leftint.(b[1:1]))
     testsets(a, rightint.(b))
-    testsets(a[1], rightint.(b))
-    testsets(a, rightint(b[1]))
+    testsets(a[1:1], rightint.(b))
+    testsets(a, rightint.(b[1:1]))
 end

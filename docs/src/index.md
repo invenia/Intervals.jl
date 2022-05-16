@@ -269,13 +269,6 @@ isopen
 Intervals.isunbounded
 Intervals.isbounded
 Base.parse(::Type{Interval{T}}, ::AbstractString) where T
-Base.union(::AbstractVector{<:AbstractInterval})
-Base.union(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
-Base.intersect(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
-Base.setdiff(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
-Base.symdiff(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
-Base.issubset(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
-Base.isdisjoint(::Intervals.AbstractIntervals, ::Intervals.AbstractIntervals)
 ≪
 ≫
 ==

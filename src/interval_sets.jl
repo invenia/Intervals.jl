@@ -301,52 +301,13 @@ function superset(intervals::AbstractArray{<:AbstractInterval})
     return Interval(left, right)
 end
 
-set_docstring(op, return_array=true) = """
-    $op(x::Union{AbstractVector{<:AbstractInterval}, AbstractInterval}, 
-        y::Union{AbstractVector{<:AbstractInterval}), AbstractInterval})
-
-You can use `$op` over two pairs of interval vectors. It interprets `x` and `y` as
-representing a set covered by the provided intervals. 
-
-$(!return_array ? "" : """
-The return value is an array of non-overlapping intervals representing the $op over these 
-sets. If both arguments are single intervlas, the return value is always a single interval 
-(or an error if that's not possible). If you want to allow for multiple interval return 
-values for single intervals `a` and `b` you can call `$op([a], [b])`.
-    
-""")A limitation of $op is that it only supports intervals that are bounded.
-"""
 
 # set operations over multi-interval sets
-"""
-$(set_docstring("intersect"))
-"""
 Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && iny, x, y)
-
-"""
-$(set_docstring("union"))
-"""
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
-
-"""
-$(set_docstring("setdiff"))
-"""
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
-
-"""
-$(set_docstring("symdiff"))
-"""
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
-
-"""
-$(set_docstring("issubset", false))
-"""
 Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
-# may or may not be from Base (see top of `Intervals.jl`)
-
-"""
-$(set_docstring("isdisjoint", false))
-"""
 Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)

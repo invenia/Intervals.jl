@@ -10,6 +10,8 @@
 const AbstractIntervalsOf{T,L,R} = Union{AbstractInterval{T,L,R}, AbstractVector{<:AbstractInterval{T,L,R}}}
 const AbstractIntervals = Union{AbstractInterval, AbstractVector{<:AbstractInterval}}
 
+const IntervalSet = AbstractVector{<:AbstractInterval}
+
 # During merge operations used to compute unions, intersections etc...,
 # endpoint types can change (from left to right, and from open to closed,
 # etc...). The following structures indicate how endpoints should be tracked.
@@ -320,22 +322,22 @@ values for single intervals `a` and `b` you can call `$op([a], [b])`.
 """
 $(set_docstring("intersect"))
 """
-Base.intersect(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) -> inx && iny, x, y)
+Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && iny, x, y)
 
 """
 $(set_docstring("union"))
 """
-Base.union(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx || iny, x, y)
+Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 
 """
 $(set_docstring("setdiff"))
 """
-Base.setdiff(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx && !iny, x, y)
+Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 
 """
 $(set_docstring("symdiff"))
 """
-Base.symdiff(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
+Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
 
 """
 $(set_docstring("issubset", false))

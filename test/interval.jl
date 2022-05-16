@@ -596,107 +596,97 @@
     end
 
     @testset "issubset" begin
-        for (af, bf) in Iterators.product((identity, vcat), (identity, vcat))
-            @test af(0..10) ⊆ bf(0..10)
-            @test af(0..10) ⊇ bf(0..10)
-            @test af(Interval{Open, Open}(0, 10)) ⊆ bf(0..10)
-            @test af(Interval{Open, Open}(0, 10)) ⊉ bf(0..10)
-            @test af(0..10) ⊈ bf(Interval{Open, Open}(0, 10))
-            @test af(0..10) ⊇ bf(Interval{Open, Open}(0, 10))
-            @test af(1..9) ⊆ bf(0..10)
-            @test af(1..9) ⊉ bf(0..10)
-            @test af(0..10) ⊈ bf(1..9)
-            @test af(0..10) ⊇ bf(1..9)
-            @test af(1..11) ⊈ bf(0..10)
-            @test af(1..11) ⊉ bf(0..10)
-            @test af(-1..9) ⊈ bf(0..10)
-            @test af(-1..9) ⊉ bf(0..10)
-            @test af(20..30) ⊈ bf(0..10)
-            @test af(20..30) ⊉ bf(0..10)
-        end
+        @test 0..10 ⊆ 0..10
+        @test 0..10 ⊇ 0..10
+        @test Interval{Open, Open}(0, 10) ⊆ 0..10
+        @test Interval{Open, Open}(0, 10) ⊉ 0..10
+        @test 0..10 ⊈ Interval{Open, Open}(0, 10)
+        @test 0..10 ⊇ Interval{Open, Open}(0, 10)
+        @test 1..9 ⊆ 0..10
+        @test 1..9 ⊉ 0..10
+        @test 0..10 ⊈ 1..9
+        @test 0..10 ⊇ 1..9
+        @test 1..11 ⊈ 0..10
+        @test 1..11 ⊉ 0..10
+        @test -1..9 ⊈ 0..10
+        @test -1..9 ⊉ 0..10
+        @test 20..30 ⊈ 0..10
+        @test 20..30 ⊉ 0..10
     end
 
     @testset "intersect" begin
         @testset "overlapping" begin
-            for (af, bf) in Iterators.product((identity, vcat), (identity, vcat))
-                a = af(Interval{Closed, Closed}(-10, 5))
-                b = bf(Interval{Closed, Closed}(-2, 10))
-                @test issetequal(intersect(a, b), Interval{Closed, Closed}(-2, 5))
-                @test issetequal(intersect(b, a), intersect(a, b))
+            a = Interval{Closed, Closed}(-10, 5)
+            b = Interval{Closed, Closed}(-2, 10)
+            @test intersect(a, b) == Interval{Closed, Closed}(-2, 5)
+            @test intersect(b, a) == intersect(a, b)
 
-                a = af(Interval{Closed, Open}(-10, 5))
-                b = bf(Interval{Closed, Closed}(-2, 10))
-                @test issetequal(intersect(a, b), Interval{Closed, Open}(-2, 5))
-                @test issetequal(intersect(b, a), intersect(a, b))
+            a = Interval{Closed, Open}(-10, 5)
+            b = Interval{Closed, Closed}(-2, 10)
+            @test intersect(a, b) == Interval{Closed, Open}(-2, 5)
+            @test intersect(b, a) == intersect(a, b)
 
-                a = af(Interval{Closed, Closed}(-10, 5))
-                b = bf(Interval{Open, Closed}(-2, 10))
-                @test issetequal(intersect(a, b), Interval{Open, Closed}(-2, 5))
-                @test issetequal(intersect(b, a), intersect(a, b))
+            a = Interval{Closed, Closed}(-10, 5)
+            b = Interval{Open, Closed}(-2, 10)
+            @test intersect(a, b) == Interval{Open, Closed}(-2, 5)
+            @test intersect(b, a) == intersect(a, b)
 
-                a = af(Interval{Closed, Open}(-10, 5))
-                b = bf(Interval{Open, Closed}(-2, 10))
-                @test issetequal(intersect(a, b), Interval{Open, Open}(-2, 5))
-                @test issetequal(intersect(b, a), intersect(a, b))
-            end
+            a = Interval{Closed, Open}(-10, 5)
+            b = Interval{Open, Closed}(-2, 10)
+            @test intersect(a, b) == Interval{Open, Open}(-2, 5)
+            @test intersect(b, a) == intersect(a, b)
         end
 
         @testset "adjacent" begin
-            for (af, bf) in Iterators.product((identity, vcat), (identity, vcat))
-                a = af(Interval{Closed, Closed}(-10, 0))
-                b = bf(Interval{Closed, Closed}(0, 10))
-                @test issetequal(intersect(a, b), Interval{Closed, Closed}(0, 0))
-                @test issetequal(intersect(b, a), intersect(a, b))
+            a = Interval{Closed, Closed}(-10, 0)
+            b = Interval{Closed, Closed}(0, 10)
+            @test intersect(a, b) == Interval{Closed, Closed}(0, 0)
+            @test intersect(b, a) == intersect(a, b)
 
-                a = af(Interval{Closed, Open}(-10, 0))
-                b = bf(Interval{Closed, Closed}(0, 10))
-                @test isempty(intersect(a, b))
-                @test isempty(intersect(b, a))
+            a = Interval{Closed, Open}(-10, 0)
+            b = Interval{Closed, Closed}(0, 10)
+            @test isempty(intersect(a, b))
+            @test isempty(intersect(b, a))
 
-                a = af(Interval{Closed, Closed}(-10, 0))
-                b = bf(Interval{Open, Closed}(0, 10))
-                @test isempty(intersect(a, b))
-                @test isempty(intersect(b, a))
+            a = Interval{Closed, Closed}(-10, 0)
+            b = Interval{Open, Closed}(0, 10)
+            @test isempty(intersect(a, b))
+            @test isempty(intersect(b, a))
 
-                a = af(Interval{Closed, Open}(-10, 0))
-                b = bf(Interval{Open, Closed}(0, 10))
-                @test isempty(intersect(a, b))
-                @test isempty(intersect(b, a))
-            end
+            a = Interval{Closed, Open}(-10, 0)
+            b = Interval{Open, Closed}(0, 10)
+            @test isempty(intersect(a, b))
+            @test isempty(intersect(b, a))
         end
 
         @testset "identical" begin
-            for (af, bf) in Iterators.product((identity, vcat), (identity, vcat))
-                for (L, R) in BOUND_PERMUTATIONS
-                    x = Interval{L, R}(1, 10)
-                    @test issetequal(intersect(af(x), bf(x)), x)
-                end
-
-                x = Interval{Open, Open}(0, 0)
-                @test issetequal(intersect(af(x), bf(x)), x)
-                @test isempty(intersect(af(x), bf(x)))
-
-                # But what if their inclusivities are different?
-                expected = Interval{Open, Open}(1, 10)
-                @test issetequal(intersect(
-                    af(Interval{Closed, Closed}(1, 10)),
-                    bf(Interval{Open, Open}(1, 10)),
-                ), expected)
-                @test issetequal(intersect(
-                    af(Interval{Closed, Open}(1, 10)),
-                    bf(Interval{Open, Closed}(1, 10)),
-                ), expected)
+            for (L, R) in BOUND_PERMUTATIONS
+                x = Interval{L, R}(1, 10)
+                @test intersect(x, x) == x
             end
+
+            x = Interval{Open, Open}(0, 0)
+            @test intersect(x, x) == x
+            @test isempty(intersect(x, x))
+
+            # But what if their inclusivities are different?
+            expected = Interval{Open, Open}(1, 10)
+            @test intersect(
+                Interval{Closed, Closed}(1, 10),
+                Interval{Open, Open}(1, 10),
+            ) == expected
+            @test intersect(
+                Interval{Closed, Open}(1, 10),
+                Interval{Open, Closed}(1, 10),
+            ) == expected
         end
 
         @testset "disjoint" begin
-            for (af, bf) in Iterators.product((identity, vcat), (identity, vcat))
-                for (L, R) in BOUND_PERMUTATIONS
-                    a = Interval{L, R}(-100, -1)
-                    b = Interval{L, R}(1, 100)
-                    @test isempty(intersect(af(a), bf(b)))
-                    @test isempty(intersect(af(b), bf(a)))
-                end
+            for (L, R) in BOUND_PERMUTATIONS
+                a = Interval{L, R}(-100, -1)
+                b = Interval{L, R}(1, 100)
+                @test isempty(intersect(a, b))
+                @test isempty(intersect(b, a))
             end
         end
     end

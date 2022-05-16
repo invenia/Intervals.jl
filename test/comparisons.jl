@@ -22,11 +22,6 @@ function viable_convert(::Type{AnchoredInterval{Ending}}, interval::AbstractInte
     return isbounded(interval) && isfinite(last(interval))
 end
 
-# TODO: Working around issue with constructing empty interval with type `Infinite`
-empty_interval(::Type{Infinite}) = Interval{Infinite, Open, Open}(∞, ∞)
-empty_interval(::Type{T}) where T = Interval{T}()
-
-
 @testset "comparisons: $A vs. $B" for (A, B) in unique_paired_permutation(INTERVAL_TYPES)
 
     # Compare two intervals which are non-overlapping:
@@ -86,24 +81,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == []
             @test union([earlier, later]) == [earlier, later]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test union([earlier], [later]) == [earlier, later]
+                @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -170,24 +160,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == []
             @test union([earlier, later]) == [earlier, later]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test union([earlier], [later]) == [earlier, later]
+                @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -254,24 +239,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == []
             @test union([earlier, later]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test_broken union([earlier], [later]) == [expected_superset]
+                @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -338,24 +318,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == []
             @test union([earlier, later]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test_broken union([earlier], [later]) == [expected_superset]
+                @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -427,24 +402,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == [expected_overlap]
             @test union([earlier, later]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test union([earlier], [later]) == [expected_superset]
+                @test intersect([earlier], [later]) == [expected_overlap]
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -516,24 +486,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([earlier, later]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(earlier, later) == expected_overlap
             @test_throws MethodError union(earlier, later)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test setdiff(earlier, later) == expected_xor[1]
-                @test setdiff(later, earlier) == expected_xor[2]
-            end
-
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws MethodError setdiff(earlier, later)
+            @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test intersect([earlier], [later]) == [expected_overlap]
             @test union([earlier, later]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
                 @test union([earlier], [later]) == [expected_superset]
+                @test intersect([earlier], [later]) == [expected_overlap]
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
@@ -558,7 +523,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
 
@@ -588,24 +552,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test setdiff(a, b) == empty_interval(T)
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
                 @test setdiff([b], [a]) == []
@@ -630,7 +589,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_xor = [Interval{Closed, Open}(first(a), first(a))]
@@ -661,24 +619,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test_broken setdiff(a, b) == expected_xor[1]
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test_broken setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
@@ -703,7 +656,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_xor = [Interval{Open, Closed}(last(a), last(a))]
@@ -734,24 +686,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test_broken setdiff(a, b) == expected_xor[1]
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test_broken setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
@@ -777,7 +724,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_xor = [
@@ -811,24 +757,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test_broken setdiff(a, b) == expected_xor[1]
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test_broken setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
@@ -853,7 +794,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_xor = [
@@ -886,24 +826,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test setdiff(a, b) == empty_interval(T)
-                @test_broken setdiff(b, a) == expected_xor[1]
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
                 @test_broken setdiff([b], [a]) == expected_xor[1:1]
@@ -928,7 +863,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_xor = [
@@ -961,20 +895,15 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test setdiff(a, b) == empty_interval(T)
-                @test_broken setdiff(b, a) == expected_xor[1]
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
+            @test intersect([a], [b]) == [expected_overlap]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
@@ -1003,7 +932,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             a = convert(A, a)
             b = convert(B, b)
-            T = promote_type(eltype(a), eltype(b))
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
 
@@ -1033,24 +961,19 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b) && T != Infinite
-                @test setdiff(a, b) == empty_interval(T)
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test intersect([a], [b]) == [expected_overlap]
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
                 @test setdiff([b], [a]) == []
@@ -1105,15 +1028,10 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test setdiff(a, b) == expected_xor[1]
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
@@ -1121,8 +1039,8 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test intersect([a], [b]) == [expected_overlap]
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
@@ -1177,15 +1095,10 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test setdiff(a, b) == expected_xor[1]
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
@@ -1193,8 +1106,8 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test intersect([a], [b]) == [expected_overlap]
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
@@ -1247,15 +1160,10 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test setdiff(a, b) == empty_interval(T)
-                @test setdiff(b, a) == empty_interval(T)
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
@@ -1263,8 +1171,8 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test intersect([a], [b]) == [expected_overlap]
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
                 @test setdiff([b], [a]) == []
@@ -1309,21 +1217,17 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([a, b]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
-
             @test_throws MethodError union(a, b)
-
-            @test setdiff(a, b) == empty_interval(Float64)
-            @test setdiff(b, a) == empty_interval(Float64)
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
             @test union([a, b]) == [expected_superset]
+            @test union([a], [b]) == [expected_superset]
 
             @test intersect([a], [b]) == [expected_overlap]
-
-            @test union([a], [b]) == [expected_superset]
 
             @test setdiff([a], [b]) == []
             @test setdiff([b], [a]) == []
@@ -1369,7 +1273,6 @@ empty_interval(::Type{T}) where T = Interval{T}()
             expected_superset = Interval(larger)
             expected_overlap = Interval(smaller)
 
-            T = promote_type(eltype(a), eltype(b))
             L, R = bounds_types(larger)
             expected_xor = [
                 Interval{L, Open}(first(larger), first(smaller)),
@@ -1402,15 +1305,10 @@ empty_interval(::Type{T}) where T = Interval{T}()
             @test superset([smaller, larger]) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
-            @test intersect(a, b) == expected_overlap
             @test_throws MethodError union(a, b)
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test setdiff(a, b) == empty_interval(T)
-                @test_broken setdiff(b, a) == expected_xor[1]
-            end
-
+            @test intersect(a, b) == expected_overlap
+            @test_throws MethodError setdiff(a, b)
+            @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
@@ -1418,8 +1316,8 @@ empty_interval(::Type{T}) where T = Interval{T}()
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test intersect([a], [b]) == [expected_overlap]
                 @test union([a], [b]) == [expected_superset]
+                @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
                 @test setdiff([b], [a]) == expected_xor[1:2]

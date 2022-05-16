@@ -332,16 +332,6 @@ $(set_docstring("setdiff"))
 """
 Base.setdiff(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx && !iny, x, y)
 
-function Base.setdiff(x::AbstractInterval, y::AbstractInterval)
-    diff = setdiff([x], [y])
-
-    if isempty(diff)
-        return Interval{promote_type(eltype(x), eltype(y))}()
-    else
-        return only(diff)
-    end
-end
-
 """
 $(set_docstring("symdiff"))
 """

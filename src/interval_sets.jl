@@ -350,7 +350,7 @@ $(set_docstring("isdisjoint", false))
 Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
-    x, y, tracking = unbunch(union(x), union(y))
+    x, y, tracking = unbunch(union(vcat(x)), union(vcat(y)))
     return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
 end
 

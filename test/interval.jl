@@ -774,10 +774,6 @@
             Interval{Closed, Closed}(-10, -1)
         ]
         @test union(intervals) == [Interval{Open, Closed}(-100, -1)]
-
-        # Scalar
-        interval = Interval{Open, Open}(-100, -1)
-        @test union(interval) === interval
     end
 
     @testset "legacy deserialization" begin

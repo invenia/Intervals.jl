@@ -416,8 +416,6 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
     return Interval(left, right)
 end
 
-Base.union(x::AbstractInterval) = x
-
 ##### ROUNDING #####
 const RoundingFunctionTypes = Union{typeof(floor), typeof(ceil), typeof(round)}
 

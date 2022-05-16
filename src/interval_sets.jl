@@ -250,6 +250,7 @@ non-overlapping intervals.
 function Base.union(intervals::AbstractVector{<:AbstractInterval})
     return union!(convert(Vector{AbstractInterval}, intervals))
 end
+
 # allow a concretely typed array for `Interval` objects (as opposed to e.g. anchored intervals
 # which may change type during the union process)
 function Base.union(intervals::AbstractVector{T}) where T <: Interval
@@ -324,17 +325,27 @@ Base.intersect(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny
 """
 $(set_docstring("union"))
 """
-Base.union(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) -> inx || iny, x, y)
+Base.union(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx || iny, x, y)
 
 """
 $(set_docstring("setdiff"))
 """
-Base.setdiff(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) -> inx && !iny, x, y)
+Base.setdiff(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx && !iny, x, y)
+
+function Base.setdiff(x::AbstractInterval, y::AbstractInterval)
+    diff = setdiff([x], [y])
+
+    if isempty(diff)
+        return Interval{promote_type(eltype(x), eltype(y))}()
+    else
+        return only(diff)
+    end
+end
 
 """
 $(set_docstring("symdiff"))
 """
-Base.symdiff(x::AbstractIntervals, y::AbstractIntervals) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
+Base.symdiff(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
 
 """
 $(set_docstring("issubset", false))

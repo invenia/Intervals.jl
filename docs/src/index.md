@@ -135,31 +135,6 @@ julia> anchor(he)
 2013-02-13T01:00:00-06:00
 ```
 
-### Plotting
-`AbstractInterval` subtypes can be plotted with [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
-
-
-```julia
-julia> using Plots
-
-julia> start_dt = DateTime(2017,1,1,0,0,0);
-
-julia> end_dt = DateTime(2017,1,1,10,30,0);
-
-julia> datetimes = start_dt:Hour(1):end_dt
-DateTime("2017-01-01T00:00:00"):Hour(1):DateTime("2017-01-01T10:00:00")
-
-julia> intervals = HE.(datetimes);
-
-julia> plot(intervals, 1:11)
-```
-
-![Example Plot](assets/HE.png)
-
-In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
-
-
-
 ### Comparisons
 
 #### Equality
@@ -246,6 +221,30 @@ AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 julia> round(AnchoredInterval{+0.5}(0.5), on=:right)
 AnchoredInterval{0.5, Float64, Closed, Open}(0.5)
 ```
+
+### Plotting
+
+`AbstractInterval` subtypes can be plotted with [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
+
+```julia
+julia> using Plots
+
+julia> start_dt = DateTime(2017,1,1,0,0,0);
+
+julia> end_dt = DateTime(2017,1,1,10,30,0);
+
+julia> datetimes = start_dt:Hour(1):end_dt
+DateTime("2017-01-01T00:00:00"):Hour(1):DateTime("2017-01-01T10:00:00")
+
+julia> intervals = HE.(datetimes);
+
+julia> plot(intervals, 1:11)
+```
+
+![Example Plot](assets/HE.png)
+
+In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
+
 
 ## API
 

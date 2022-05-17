@@ -3,7 +3,8 @@ using InvertedIndices
 using Random
 using StableRNGs
 
-using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_tracking
+using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_tracking,
+    find_intersections
 
 @testset "Endpoint Tracking" begin
     @test endpoint_tracking(

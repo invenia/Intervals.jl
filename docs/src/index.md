@@ -275,5 +275,4 @@ Base.parse(::Type{Interval{T}}, ::AbstractString) where T
 union
 union!
 superset
-find_intersections
 ```

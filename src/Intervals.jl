@@ -59,6 +59,5 @@ export Bound,
        less_than_disjoint,
        greater_than_disjoint,
        superset,
-       find_intersections,
        .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
 end

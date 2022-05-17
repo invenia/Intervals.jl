@@ -36,8 +36,7 @@ julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
 
-See also: [`AnchoredInterval`](@ref), [`find_intersections`](@ref), [`Base.union`](@ref), 
-[`Base.intersect`](@ref), [`Base.setdiff`](@ref), [`Base.symdiff`](@ref), [`Base.issubset`](@ref)
+See also: [`AnchoredInterval`](@ref)
 """
 struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
     first::T

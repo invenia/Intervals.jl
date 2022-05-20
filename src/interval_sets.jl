@@ -197,15 +197,25 @@ function mergesets_helper(op, x, y, endpoint_tracking)
         if op(inx, iny) != inresult
             # start including points (left endpoint)
             if !inresult
-                push!(result, left_endpoint(t, bound))
+                endpoint = left_endpoint(t, bound)
+                # New endpoint does not abut old endpoint. Start including points
+                if !abuts(last_endpoint(result), endpoint, endpoint_tracking)
+                    push!(result, endpoint)
+                # Edgecase: new endpoint directly abuts the old endpoint. Remove it and keep
+                # including points e.g. [0, 1] ∪ (1, 2]
+                else
+                    pop!(result)
+                end
                 inresult = true
-            # stop including points (right endpoint), as long as the result will be non-empty
-            elseif !empty_interval(last_endpoint(result), t, endpoint_tracking)
-                push!(result, right_endpoint(t, bound))
-                inresult = false
-            # the interval is empty: remove the previously added endpoint 
             else
-                pop!(result)
+                # The interval is non-empty. Add the closing endpoint
+                if !empty_interval(last_endpoint(result), t, endpoint_tracking)
+                    push!(result, right_endpoint(t, bound))
+                # Edgecase: the interval is empty. Remove the previously added endpoint 
+                # e.g. [0, 1] ∩ (1, 2]
+                else
+                    pop!(result)
+                end
                 inresult = false
             end
         # edgecase: if we're supposed to close the endpoint but we're not including
@@ -224,6 +234,13 @@ function mergesets_helper(op, x, y, endpoint_tracking)
 
     return bunch(result, endpoint_tracking)
 end
+# abuts: true if unioning the two endpoints would lead to a single interval (e.g. (0 1] ∪ (1, 2)))
+abuts(::SentinelEndpoint, _, _) = false
+abuts(oldstop::Endpoint, newstart, ::TrackStatically) = oldstop.endpoint == newstart.endpoint
+function abuts(oldstop::Endpoint, newstart, ::TrackEachEndpoint)
+    oldstop.endpoint == newstart.endpoint && (isclosed(oldstop) || isclosed(newstart))
+end
+
 # empty_interval: true if the given left and right endpoints would create an empty interval
 empty_interval(::SentinelEndpoint, _, _) = false # sentinal means there was no starting endpoint; there is thus no interval, and so no empty interval
 empty_interval(start, stop, ::TrackStatically) = start.endpoint == stop.endpoint

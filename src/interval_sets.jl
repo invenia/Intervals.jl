@@ -132,30 +132,28 @@ isleft(::RightEndpoint) = false
 
 #     mergesets(op, x, y)
 #
-# `mergesets` is the primary internal function implementing set operations (see
-# below for its usage). It iterates through the left and right endpoints in x
-# and y, in order from lowest to highest. The implementation is based on the
-# insight that we can make a decision to include or exclude all points after a
-# given endpoint (based on `op`) and that decision will remain unchanged moving
-# left to right along the real-number line until we encounter a new endpoint.
+# `mergesets` is the primary internal function implementing set operations (see below for
+# its usage). It iterates through the left and right endpoints in x and y, in order from
+# lowest to highest. The implementation is based on the insight that we can make a decision
+# to include or exclude all points after a given endpoint (based on `op`) and that decision
+# will remain unchanged moving left to right along the real-number line until we encounter a
+# new endpoint.
 #
 # For each endpoint, we determine two things: 
-#   1. whether subsequent points should be included in the merge operation or
-#        not (based on its membership in both `x` and `y`) by using `op`
-#   2. whether the next step will define a left (start including) or right
-#        endpoint (stop includeing)
+#   1. whether subsequent points should be included in the merge operation or not (based on
+#        its membership in both `x` and `y`) by using `op`
+#   2. whether the next step will define a left (start including) or right endpoint (stop
+#        includeing)
 #
-# Then, we decide to add a new endpoint if 1 and 2 match (i.e. "should include"
-# points will create a time point when the next point will start including
-# points).
+# Then, we decide to add a new endpoint if 1 and 2 match (i.e. "should include" points will
+# create a time point when the next point will start including points).
 #
-# A final issue is handling the closed/open nature of each endpoint. In the
-# general case, we have to track whether to keep the endpoint (closed) or not
-# (open) separately. Keeping the endpoint may require we keep a singleton
-# endpoint ([1,1]) such as when to closed endpoints intersect with one another
-# (e.g. (0, 1] ∩ [1, 2)). In some cases we don't need track endpoints at all:
-# e.g. when all endpoints are open right ([1, 0)) or they are all open left ((1, 1])
-# then all resulting endpoints will follow the same pattern.
+# A final issue is handling the closed/open nature of each endpoint. In the general case, we
+# have to track whether to keep the endpoint (closed) or not (open) separately. Keeping the
+# endpoint may require we keep a singleton endpoint ([1,1]) such as when two closed
+# endpoints intersect with one another (e.g. (0, 1] ∩ [1, 2)). In some cases we don't need
+# track endpoints at all: e.g. when all endpoints are open right ([1, 0)) or they are all
+# open left ((1, 1]) then all resulting endpoints will follow the same pattern.
 
 function mergesets(op, x, y)
     x_, y_, tracking = unbunch(union(x), union(y))
@@ -198,34 +196,41 @@ function mergesets_helper(op, x, y, endpoint_tracking)
             # start including points (left endpoint)
             if !inresult
                 endpoint = left_endpoint(t, bound)
-                # New endpoint does not abut old endpoint. Start including points
+                # If we get here, *normally* we want to add a new left (starting)
+                # endpoint.
+                # EXCEPTION: new endpoint direclty abuts old endpoint e.g. [0, 1] ∪ (1, 2]
                 if !abuts(last_endpoint(result), endpoint, endpoint_tracking)
                     push!(result, endpoint)
-                # Edgecase: new endpoint directly abuts the old endpoint. Remove it and keep
-                # including points e.g. [0, 1] ∪ (1, 2]
+                # including points 
                 else
                     pop!(result)
                 end
                 inresult = true
             else
-                # The interval is non-empty. Add the closing endpoint
+                # If we get here, *normally* we want to add a right (stopping) end point
+                # EXCEPTION: the interval to be created would be empty e.g. [0, 1] ∩ (1, 2]
                 if !empty_interval(last_endpoint(result), t, endpoint_tracking)
                     push!(result, right_endpoint(t, bound))
-                # Edgecase: the interval is empty. Remove the previously added endpoint 
-                # e.g. [0, 1] ∩ (1, 2]
                 else
                     pop!(result)
                 end
                 inresult = false
             end
-        # edgecase: if we're supposed to close the endpoint but we're not including
-        # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
-        # [1, 2])
         else
             track(endpoint_tracking) do
+                # edgecase: if we're supposed to close the endpoint but we're not including
+                # any points right now, we need to add a singleton endpoint (e.g. [0, 1] ∩
+                # [1, 2])
                 if bound === Closed && !inresult
                     push!(result, left_endpoint(t, Closed))
                     push!(result, right_endpoint(t, Closed))
+                end
+
+                # edgecase: we have an open endpoint right at the edge of two intervals, but we
+                # are continuing to include points right now: e.g. symdiff of [0, 1] and [1, 2]
+                if bound === Open && inresult && xᵢ == yᵢ
+                    push!(result, right_endpoint(t, Open))
+                    push!(result, left_endpoint(t, Open))
                 end
             end
         end

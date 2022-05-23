@@ -250,13 +250,14 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test_broken union([earlier], [later]) == [expected_superset]
+                @test union([earlier], [later]) == [expected_superset]
                 @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test symdiff([earlier], [later]) == expected_xor
+                @test issetequal(symdiff([earlier], [later]), expected_xor)
+                @test length(symdiff([earlier], [later])) <= length(expected_xor)
             end
         end
     end
@@ -329,13 +330,14 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test_broken union([earlier], [later]) == [expected_superset]
+                @test union([earlier], [later]) == [expected_superset]
                 @test intersect([earlier], [later]) == []
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test symdiff([earlier], [later]) == expected_xor
+                @test issetequal(symdiff([earlier], [later]), expected_xor)
+                @test length(symdiff([earlier], [later])) <= length(expected_xor)
             end
         end
     end
@@ -419,7 +421,8 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test_broken symdiff([earlier], [later]) == expected_xor
+                @test issetequal(symdiff([earlier], [later]), expected_xor)
+                @test length(symdiff([earlier], [later])) <= length(expected_xor)
             end
         end
     end
@@ -591,7 +594,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Open}(first(a), first(a))]
+            expected_xor = [Interval{Closed, Closed}(first(a), first(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -629,14 +632,18 @@ end
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
+            # TODO: will have to think carefully about the `expected_` variables
+            # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test_broken setdiff([a], [b]) == expected_xor[1:1]
+                @test issetequal(setdiff([a], [b]), expected_xor[1:1])
+                @test length(setdiff([a], [b])) <= length(expected_xor[1:1])
                 @test setdiff([b], [a]) == []
 
-                @test_broken symdiff([a], [b]) == expected_xor
+                @test issetequal(symdiff([a], [b]), expected_xor)
+                @test length(symdiff([a], [b])) <= length(expected_xor)
             end
         end
     end
@@ -658,7 +665,7 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Open, Closed}(last(a), last(a))]
+            expected_xor = [Interval{Closed, Closed}(last(a), last(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -696,14 +703,18 @@ end
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
+            # TODO: will have to think carefully about the `expected_` variables
+            # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test_broken setdiff([a], [b]) == expected_xor[1:1]
+                @test issetequal(setdiff([a], [b]), expected_xor[1:1])
+                @test length(setdiff([a], [b])) <= length(expected_xor[1:1])
                 @test setdiff([b], [a]) == []
 
-                @test_broken symdiff([a], [b]) == expected_xor
+                @test issetequal(symdiff([a], [b]), expected_xor)
+                @test length(symdiff([a], [b])) <= length(expected_xor)
             end
         end
     end
@@ -727,8 +738,8 @@ end
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_xor = [
-                Interval{Closed, Open}(first(a), first(a)),
-                Interval{Open, Closed}(last(a), last(a)),
+                Interval{Closed, Closed}(first(a), first(a)),
+                Interval{Closed, Closed}(last(a), last(a)),
             ]
 
             @test a != b
@@ -767,14 +778,18 @@ end
             @test union([a, b]) == [expected_superset]
 
             # TODO: These functions should be compatible with unbounded intervals
+            # TODO: will have to think carefully about the `expected_` variables
+            # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test_broken setdiff([a], [b]) == expected_xor[1:1]
+                @test issetequal(setdiff([a], [b]), expected_xor)
+                @test length(setdiff([a], [b])) <= length(expected_xor)
                 @test setdiff([b], [a]) == []
 
-                @test_broken symdiff([a], [b]) == expected_xor
+                @test issetequal(symdiff([a], [b]), expected_xor)
+                @test length(symdiff([a], [b])) <= length(expected_xor)
             end
         end
     end
@@ -797,7 +812,7 @@ end
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_xor = [
-                Interval{Open, Closed}(last(b), last(b)),
+                Interval{Closed, Closed}(last(b), last(b)),
             ]
 
             @test a != b
@@ -841,9 +856,11 @@ end
                 @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
-                @test_broken setdiff([b], [a]) == expected_xor[1:1]
+                @test issetequal(setdiff([b], [a]), expected_xor[1:1])
+                @test length(setdiff([b], [a])) <= length(expected_xor[1:1])
 
-                @test_broken symdiff([a], [b]) == expected_xor
+                @test issetequal(symdiff([a], [b]), expected_xor)
+                @test length(symdiff([a], [b])) <= length(expected_xor)
             end
         end
     end
@@ -866,7 +883,7 @@ end
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_xor = [
-                Interval{Closed, Open}(first(b), first(b)),
+                Interval{Closed, Closed}(first(b), first(b)),
             ]
 
             @test a != b
@@ -910,9 +927,11 @@ end
                 @test union([a], [b]) == [expected_superset]
 
                 @test setdiff([a], [b]) == []
-                @test_broken setdiff([b], [a]) == expected_xor[1:1]
+                @test issetequal(setdiff([b], [a]), expected_xor[1:1])
+                @test length(setdiff([b], [a])) == length(expected_xor[1:1])
 
-                @test_broken symdiff([a], [b]) == expected_xor
+                @test issetequal(symdiff([a], [b]), expected_xor)
+                @test length(symdiff([a], [b])) == length(expected_xor)
             end
         end
     end

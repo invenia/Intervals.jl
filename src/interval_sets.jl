@@ -243,7 +243,7 @@ end
 abuts(::SentinelEndpoint, _, _) = false
 abuts(oldstop::Endpoint, newstart, ::TrackStatically) = oldstop.endpoint == newstart.endpoint
 function abuts(oldstop::Endpoint, newstart, ::TrackEachEndpoint)
-    oldstop.endpoint == newstart.endpoint && (isclosed(oldstop) || isclosed(newstart))
+    return oldstop.endpoint == newstart.endpoint && (isclosed(oldstop) || isclosed(newstart))
 end
 
 # empty_interval: true if the given left and right endpoints would create an empty interval

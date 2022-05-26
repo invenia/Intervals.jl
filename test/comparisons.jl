@@ -256,8 +256,7 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test issetequal(symdiff([earlier], [later]), expected_xor)
-                @test length(symdiff([earlier], [later])) <= length(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor
             end
         end
     end
@@ -336,8 +335,7 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test issetequal(symdiff([earlier], [later]), expected_xor)
-                @test length(symdiff([earlier], [later])) <= length(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor
             end
         end
     end
@@ -421,8 +419,7 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test issetequal(symdiff([earlier], [later]), expected_xor)
-                @test length(symdiff([earlier], [later])) <= length(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor
             end
         end
     end
@@ -638,12 +635,10 @@ end
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test issetequal(setdiff([a], [b]), expected_xor[1:1])
-                @test length(setdiff([a], [b])) <= length(expected_xor[1:1])
+                @test setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
 
-                @test issetequal(symdiff([a], [b]), expected_xor)
-                @test length(symdiff([a], [b])) <= length(expected_xor)
+                @test symdiff([a], [b]) == expected_xor
             end
         end
     end
@@ -709,12 +704,10 @@ end
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test issetequal(setdiff([a], [b]), expected_xor[1:1])
-                @test length(setdiff([a], [b])) <= length(expected_xor[1:1])
+                @test setdiff([a], [b]) == expected_xor[1:1]
                 @test setdiff([b], [a]) == []
 
-                @test issetequal(symdiff([a], [b]), expected_xor)
-                @test length(symdiff([a], [b])) <= length(expected_xor)
+                @test symdiff([a], [b]) == expected_xor
             end
         end
     end
@@ -784,12 +777,10 @@ end
                 @test union([a], [b]) == [expected_superset]
                 @test intersect([a], [b]) == [expected_overlap]
 
-                @test issetequal(setdiff([a], [b]), expected_xor)
-                @test length(setdiff([a], [b])) <= length(expected_xor)
+                @test setdiff([a], [b]) == expected_xor
                 @test setdiff([b], [a]) == []
 
-                @test issetequal(symdiff([a], [b]), expected_xor)
-                @test length(symdiff([a], [b])) <= length(expected_xor)
+                @test symdiff([a], [b]) == expected_xor
             end
         end
     end
@@ -856,11 +847,9 @@ end
                 @test intersect([a], [b]) == [expected_overlap]
 
                 @test setdiff([a], [b]) == []
-                @test issetequal(setdiff([b], [a]), expected_xor[1:1])
-                @test length(setdiff([b], [a])) <= length(expected_xor[1:1])
+                @test setdiff([b], [a]) == expected_xor[1:1]
 
-                @test issetequal(symdiff([a], [b]), expected_xor)
-                @test length(symdiff([a], [b])) <= length(expected_xor)
+                @test symdiff([a], [b]) == expected_xor
             end
         end
     end
@@ -927,11 +916,9 @@ end
                 @test union([a], [b]) == [expected_superset]
 
                 @test setdiff([a], [b]) == []
-                @test issetequal(setdiff([b], [a]), expected_xor[1:1])
-                @test length(setdiff([b], [a])) == length(expected_xor[1:1])
+                @test setdiff([b], [a]) == expected_xor[1:1]
 
-                @test issetequal(symdiff([a], [b]), expected_xor)
-                @test length(symdiff([a], [b])) == length(expected_xor)
+                @test symdiff([a], [b]) == expected_xor
             end
         end
     end

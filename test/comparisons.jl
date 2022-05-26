@@ -256,7 +256,7 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test symdiff([earlier], [later]) == expected_xor
+                @test symdiff([earlier], [later]) == union(expected_xor)
             end
         end
     end
@@ -335,7 +335,7 @@ end
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
 
-                @test symdiff([earlier], [later]) == expected_xor
+                @test symdiff([earlier], [later]) == union(expected_xor)
             end
         end
     end

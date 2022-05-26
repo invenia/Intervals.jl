@@ -198,10 +198,9 @@ function mergesets_helper(op, x, y, endpoint_tracking)
                 endpoint = left_endpoint(t, bound)
                 # If we get here, *normally* we want to add a new left (starting)
                 # endpoint.
-                # EXCEPTION: new endpoint direclty abuts old endpoint e.g. [0, 1] ∪ (1, 2]
+                # EXCEPTION: new endpoint directly abuts old endpoint e.g. [0, 1] ∪ (1, 2]
                 if !abuts(last_endpoint(result), endpoint, endpoint_tracking)
                     push!(result, endpoint)
-                # including points 
                 else
                     pop!(result)
                 end

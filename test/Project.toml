@@ -12,3 +12,7 @@ StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
+
+[compat]
+Documenter = "0.23, 0.24, 0.25, 0.26, 0.27"
+Infinity = "0.2.3"

@@ -53,11 +53,9 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
-            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -75,31 +73,12 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws ArgumentError merge(earlier, later)
+            @test union([earlier, later]) == [earlier, later]
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
-            @test_throws ArgumentError merge(earlier, later)
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [earlier, later]
-                @test intersect([earlier], [later]) == []
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == expected_xor
-            end
         end
     end
 
@@ -132,11 +111,9 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
-            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -154,31 +131,12 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test_throws ArgumentError merge(earlier, later)
+            @test union([earlier, later]) == [earlier, later]
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
-            @test_throws ArgumentError merge(earlier, later)
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [earlier, later]
-                @test intersect([earlier], [later]) == []
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == expected_xor
-            end
         end
     end
 
@@ -211,11 +169,9 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
-            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -233,31 +189,12 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
-            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [expected_superset]
-                @test intersect([earlier], [later]) == []
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == union(expected_xor)
-            end
         end
     end
 
@@ -290,11 +227,9 @@ end
             later = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
-            expected_xor = [earlier, later]
 
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -312,31 +247,12 @@ end
             @test isdisjoint(earlier, later)
             @test isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
-            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [expected_superset]
-                @test intersect([earlier], [later]) == []
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == union(expected_xor)
-            end
         end
     end
 
@@ -370,15 +286,8 @@ end
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval{Closed, Closed}(last(a), first(b))
 
-            L, R = first(bounds_types(a)), last(bounds_types(b))
-            expected_xor = [
-                Interval{L, Open}(first(a), first(b)),
-                Interval{Open, R}(last(a), last(b)),
-            ]
-
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -396,31 +305,12 @@ end
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
-            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [expected_superset]
-                @test intersect([earlier], [later]) == [expected_overlap]
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == expected_xor
-            end
         end
     end
 
@@ -454,15 +344,8 @@ end
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(a))
 
-            L, R = first(bounds_types(a)), last(bounds_types(b))
-            expected_xor = [
-                Interval{L, Open}(first(a), first(b)),
-                Interval{Open, R}(last(a), last(b)),
-            ]
-
             @test earlier != later
             @test !isequal(earlier, later)
-            @test !issetequal(earlier, later)
             @test hash(earlier) != hash(later)
 
             @test isless(earlier, later)
@@ -480,31 +363,12 @@ end
             @test !isdisjoint(earlier, later)
             @test !isdisjoint(later, earlier)
 
+            @test intersect(earlier, later) == expected_overlap
+            @test merge(earlier, later) == expected_superset
+            @test union([earlier, later]) == [expected_superset]
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
-            @test merge(earlier, later) == expected_superset
             @test superset([earlier, later]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(earlier, later)
-            @test intersect(earlier, later) == expected_overlap
-            @test_throws MethodError setdiff(earlier, later)
-            @test_throws MethodError setdiff(later, earlier)
-            @test_throws MethodError symdiff(earlier, later)
-
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) == [expected_superset]
-                @test intersect([earlier], [later]) == [expected_overlap]
-
-                @test setdiff([earlier], [later]) == expected_xor[1:1]
-                @test setdiff([later], [earlier]) == expected_xor[2:2]
-
-                @test symdiff([earlier], [later]) == expected_xor
-            end
         end
     end
 
@@ -528,7 +392,6 @@ end
 
             @test a == b
             @test isequal(a, b)
-            @test issetequal(b, a)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -546,31 +409,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == []
-            end
         end
     end
 
@@ -591,11 +435,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Closed}(first(a), first(a))]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -613,33 +455,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            # TODO: will have to think carefully about the `expected_` variables
-            # when we allow for unbounded values
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == expected_xor[1:1]
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 
@@ -660,11 +481,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Closed}(last(a), last(a))]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -682,33 +501,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            # TODO: will have to think carefully about the `expected_` variables
-            # when we allow for unbounded values
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == expected_xor[1:1]
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 
@@ -718,8 +516,7 @@ end
                 Interval{Closed, Closed}(l, u),
                 Interval{Open, Open}(l, u),
             ]
-            # for (l, u) in product((1, -Inf, -∞), (5, Inf, ∞))
-            for (l, u) in product((1,), (5,))
+            for (l, u) in product((1, -Inf, -∞), (5, Inf, ∞))
         )
 
         @testset "$a vs. $b" for (a, b) in test_intervals
@@ -730,14 +527,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [
-                Interval{Closed, Closed}(first(a), first(a)),
-                Interval{Closed, Closed}(last(a), last(a)),
-            ]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -755,33 +547,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            # TODO: will have to think carefully about the `expected_` variables
-            # when we allow for unbounded values
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == expected_xor
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 
@@ -802,13 +573,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_xor = [
-                Interval{Closed, Closed}(last(b), last(b)),
-            ]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -826,31 +593,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == expected_xor[1:1]
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 
@@ -871,13 +619,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
             expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_xor = [
-                Interval{Closed, Closed}(first(b), first(b)),
-            ]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -895,31 +639,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-            @test intersect([a], [b]) == [expected_overlap]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == expected_xor[1:1]
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 
@@ -943,7 +668,6 @@ end
 
             @test a == b
             @test isequal(a, b)
-            @test issetequal(a, b)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -961,31 +685,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == []
-            end
         end
     end
 
@@ -1006,11 +711,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Open}(first(a), first(a))]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test isless(a, b)
@@ -1028,31 +731,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == expected_xor[1:1]
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == []
-            end
         end
     end
 
@@ -1073,11 +757,9 @@ end
             b = convert(B, b)
             expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
             expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Open, Closed}(last(a), last(a))]
 
             @test a != b
             @test !isequal(a, b)
-            @test !issetequal(a, b)
             @test hash(a) != hash(b)
 
             @test !isless(a, b)
@@ -1095,31 +777,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == expected_xor[1:1]
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == []
-            end
         end
     end
 
@@ -1142,7 +805,6 @@ end
 
             @test a == b
             @test isequal(a, b)
-            @test issetequal(a, b)
             @test hash(a) == hash(b)
 
             @test !isless(a, b)
@@ -1160,31 +822,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == []
-
-                @test symdiff([a], [b]) == []
-            end
         end
     end
 
@@ -1198,7 +841,6 @@ end
 
             @test a == b
             @test !isequal(a, b)
-            @test issetequal(a, b)
             @test hash(a) != hash(b)
 
             # All other comparison should still work as expected
@@ -1217,28 +859,12 @@ end
             @test !isdisjoint(a, b)
             @test !isdisjoint(b, a)
 
+            @test intersect(a, b) == expected_overlap
+            @test merge(a, b) == expected_superset
+            @test union([a, b]) == [expected_superset]
             @test overlaps(a, b)
             @test !contiguous(a, b)
-            @test merge(a, b) == expected_superset
             @test superset([a, b]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-            @test union([a], [b]) == [expected_superset]
-
-            @test intersect([a], [b]) == [expected_overlap]
-
-            @test setdiff([a], [b]) == []
-            @test setdiff([b], [a]) == []
-
-            @test symdiff([a], [b]) == []
         end
     end
 
@@ -1279,15 +905,8 @@ end
             expected_superset = Interval(larger)
             expected_overlap = Interval(smaller)
 
-            L, R = bounds_types(larger)
-            expected_xor = [
-                Interval{L, Open}(first(larger), first(smaller)),
-                Interval{Open, R}(last(smaller), last(larger)),
-            ]
-
             @test smaller != larger
             @test !isequal(smaller, larger)
-            @test !issetequal(smaller, larger)
             @test hash(smaller) != hash(larger)
 
             @test !isless(smaller, larger)
@@ -1302,34 +921,15 @@ end
             @test issubset(smaller, larger)
             @test !issubset(larger, smaller)
 
-            @test !isdisjoint(smaller, larger)
-            @test !isdisjoint(larger, smaller)
+            @test !isdisjoint(a, b)
+            @test !isdisjoint(b, a)
 
+            @test intersect(smaller, larger) == expected_overlap
+            @test merge(smaller, larger) == expected_superset
+            @test union([smaller, larger]) == [expected_superset]
             @test overlaps(smaller, larger)
             @test !contiguous(smaller, larger)
-            @test merge(a, b) == expected_superset
             @test superset([smaller, larger]) == expected_superset
-
-            # Intervals acting as sets. Functions should return a single interval
-            @test_throws MethodError union(a, b)
-            @test intersect(a, b) == expected_overlap
-            @test_throws MethodError setdiff(a, b)
-            @test_throws MethodError setdiff(b, a)
-            @test_throws MethodError symdiff(a, b)
-
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
-
-            # TODO: These functions should be compatible with unbounded intervals
-            if isbounded(a) && isbounded(b)
-                @test union([a], [b]) == [expected_superset]
-                @test intersect([a], [b]) == [expected_overlap]
-
-                @test setdiff([a], [b]) == []
-                @test setdiff([b], [a]) == expected_xor[1:2]
-
-                @test symdiff([a], [b]) == expected_xor
-            end
         end
     end
 end

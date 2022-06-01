@@ -405,6 +405,60 @@ function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S
     return Interval(left, right)
 end
 
+# There is power in a union.
+"""
+    union(intervals::AbstractVector{<:AbstractInterval})
+
+Flattens a vector of overlapping intervals into a new, smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union(intervals::AbstractVector{<:AbstractInterval})
+    return union!(convert(Vector{AbstractInterval}, intervals))
+end
+
+"""
+    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
+
+Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
+non-overlapping intervals.
+"""
+function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
+    sort!(intervals)
+
+    i = 2
+    n = length(intervals)
+    while i <= n
+        prev = intervals[i - 1]
+        curr = intervals[i]
+
+        # If the current and previous intervals don't meet then move along
+        if !overlaps(prev, curr) && !contiguous(prev, curr)
+            i = i + 1
+
+        # If the two intervals meet then we absorb the current interval into
+        # the previous one.
+        else
+            intervals[i - 1] = merge(prev, curr)
+            deleteat!(intervals, i)
+            n -= 1
+        end
+    end
+
+    return intervals
+end
+
+"""
+    superset(intervals::AbstractArray{<:AbstractInterval}) -> Interval
+
+Create the smallest single interval which encompasses all of the provided intervals.
+"""
+function superset(intervals::AbstractArray{<:AbstractInterval})
+    left = minimum(LeftEndpoint.(intervals))
+    right = maximum(RightEndpoint.(intervals))
+
+    return Interval(left, right)
+end
+
 function Base.merge(a::AbstractInterval, b::AbstractInterval)
     if !overlaps(a, b) && !contiguous(a, b)
         throw(ArgumentError("$a and $b are neither overlapping or contiguous."))

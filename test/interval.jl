@@ -589,8 +589,6 @@
             @test  in(b - unit, interval) || isinf(b)
             @test !in(b + unit, interval) || isinf(b)
 
-            # As an Interval instance is itself a collection one could expect this to return
-            # `true`. The correct check in this case is `issubset`.
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
     end

@@ -195,4 +195,8 @@ function HB(anchor, inc::Inclusivity)
     return HourBeginning{L,R}(floor(anchor, Hour))
 end
 
+@deprecate union(intervals::AbstractVector{<:AbstractInterval}) collect(union(IntervalSet(intervals)))
+@deprecate union!(intervals::AbstractVector{<:AbstractInterval}) collect(union!(IntervalSet(intervals)))
+@deprecate superset(intervals::AbstractVector{<:AbstractInterval}) superset(IntervalSet(intervals))
+
 # END Intervals 1.X.Y deprecations

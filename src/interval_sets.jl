@@ -1,21 +1,27 @@
 
 ###### Set-related Helpers #####
+"""
+    IntervalSet{T<:AbstractInterval} <: AbstractSet{T}
 
-struct IntervalSet{T<:AbstractInterval}
-    items::Vector{<:AbstractInterval}
+A set type for performing multi-interval specific operations.
+https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
+"""
+struct IntervalSet{T<:AbstractInterval} <: AbstractSet{T}
+    # TODO: Use Dict internally once union!(Vector{AbstractInterval}) is fully deprecated
+    items::Vector{T}
 end
 
 IntervalSet(v::AbstractVector) = IntervalSet{eltype(v)}(v)
 IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T}([interval])
 IntervalSet(interval::IntervalSet) = interval
 IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
+IntervalSet() = IntervalSet{AbstractInterval}(AbstractInterval[])
 
 Base.copy(intervals::IntervalSet{T}) where T = IntervalSet{T}(copy(intervals.items))
 Base.length(intervals::IntervalSet) = length(intervals.items)
 Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...)
 Base.eltype(::IntervalSet{T}) where T = T
-Base.:(==)(a::IntervalSet, b::IntervalSet) = a.items == b.items
-Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a, b)
+Base.:(==)(a::IntervalSet, b::IntervalSet) = issetequal(a, b)
 
 const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 
@@ -300,7 +306,9 @@ Base.union(intervals::IntervalSet{<:Interval}) = union!(copy(intervals))
 # allocate a AbstractInterval vector
 function Base.union(intervals::IntervalSet{<:AbstractInterval})
     T = AbstractInterval
-    return union!(IntervalSet{T}(convert(Vector{T}, intervals.items)))
+    dest = Vector{T}(undef, length(intervals.items))
+    copyto!(dest, intervals.items)
+    return union!(IntervalSet{T}(dest))
 end
 
 """

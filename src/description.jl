@@ -60,7 +60,9 @@ function prefix(p::Period)
 end
 
 prefix(::Type{Year}) = "Y"
+prefix(::Type{Quarter}) = "Q"
 prefix(::Type{Month}) = "Mo"
+prefix(::Type{Week}) = "W"
 prefix(::Type{Day}) = "D"
 prefix(::Type{Hour}) = "H"
 prefix(::Type{Minute}) = "M"

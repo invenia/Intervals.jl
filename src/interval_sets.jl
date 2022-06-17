@@ -13,20 +13,21 @@ see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 ## Examples
 
 ```jldoctest
-julia> Array(union(IntervalSet([1..5]), IntervalSet[3..8]))
+julia> using Intervals
+julia> Array(union(IntervalSet(1..5), IntervalSet(3..8)))
 1-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(1, 8)
 
-julia> Array(intersect(IntervalSet([1..5]), IntervalSet([3..8])))
+julia> Array(intersect(IntervalSet(1..5), IntervalSet(3..8)))
 1-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(3, 5)
  
-julia> Array(symdiff(IntervalSet([1..5]), IntervalSet([3..8])))
+julia> Array(symdiff(IntervalSet(1..5), IntervalSet(3..8)))
 2-element Vector{Interval{Int64}}:
  Interval{Int64, Closed, Open}(1, 3)
  Interval{Int64, Open, Closed}(5, 8)
 
-julia> Array(union(IntervalSet([1..2, 2..5]), IntervalSet([6..7])))
+julia> Array(union(IntervalSet([1..2, 2..5]), IntervalSet(6..7)))
 2-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(1, 5)
  Interval{Int64, Closed, Closed}(6, 7)

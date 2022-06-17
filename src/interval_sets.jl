@@ -434,7 +434,7 @@ end
 Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
 intervals in `y` that intersect with `x[i]`.
 """
-function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
+function find_intersections(x_::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, y_::Union{AbstractInterval, AbstractVector{<:AbstractInterval}})
     xa, ya = vcat(x_), vcat(y_)
     tracking = endpoint_tracking(xa, ya)
     lt = intersection_isless_fn(tracking)

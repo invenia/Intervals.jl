@@ -48,8 +48,8 @@ julia> Array(setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
  Interval{Int64, Open, Closed}(9, 10)
 ```
 """
-struct IntervalSet{T<:AbstractInterval}
-    items::Vector{<:AbstractInterval}
+struct IntervalSet{A <: AbstractVector{<:AbstractInterval}}
+    items::A
 end
 
 IntervalSet(v::AbstractVector) = IntervalSet{eltype(v)}(v)

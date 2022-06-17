@@ -52,11 +52,11 @@ struct IntervalSet{I <: AbstractInterval, A <: AbstractVector{I}}
     items::A
 end
 
-IntervalSet(v::AbstractVector) = IntervalSet{eltype(v)}(v)
-IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T}([interval])
+IntervalSet{T}(intervals) where T <: AbstractInterval = IntervalSet{T, Vector{T}}(intervals)
+IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T, Vector{T}}([interval])
 IntervalSet(interval::IntervalSet) = interval
 IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
-IntervalSet() = IntervalSet{AbstractInterval}(AbstractInterval[])
+IntervalSet() = IntervalSet(AbstractInterval[])
 
 Base.copy(intervals::IntervalSet{T, A}) where {T, A} = IntervalSet{T, A}(copy(intervals.items))
 Base.length(intervals::IntervalSet) = length(intervals.items)

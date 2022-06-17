@@ -5,7 +5,45 @@
     IntervalSet(x::AbstractVector{<:AbstractInterval})
 
 Interpret an array of intervals as a set of points: the union of all points in the
-intervals.
+intervals. Set operations over intervals sets will return an IntervalSet containing the
+fewest number of intervals that can be used to represent the resulting point set. 
+
+## Examples
+
+```jldoctest
+julia> Array(union(IntervalSet([1..5]), IntervalSet[3..8]))
+1-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(1, 8)
+
+julia> Array(intersect(IntervalSet([1..5]), IntervalSet([3..8])))
+1-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(3, 5)
+ 
+julia> Array(symdiff(IntervalSet([1..5]), IntervalSet([3..8])))
+2-element Vector{Interval{Int64}}:
+ Interval{Int64, Closed, Open}(1, 3)
+ Interval{Int64, Open, Closed}(5, 8)
+
+julia> Array(union(IntervalSet([1..2, 2..5]), IntervalSet([6..7])))
+2-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(1, 5)
+ Interval{Int64, Closed, Closed}(6, 7)
+
+julia> Array(union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+2-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(1, 10)
+ Interval{Int64, Closed, Closed}(12, 14)
+
+julia> Array(intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+2-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(4, 5)
+ Interval{Int64, Closed, Closed}(8, 9)
+
+julia> Array(setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+2-element Vector{Interval{Int64}}:
+ Interval{Int64, Closed, Open}(1, 4)
+ Interval{Int64, Open, Closed}(9, 10)
+```
 """
 struct IntervalSet{T<:AbstractInterval}
     items::Vector{<:AbstractInterval}
@@ -22,6 +60,7 @@ Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...
 Base.eltype(::IntervalSet{T}) where T = T
 Base.:(==)(a::IntervalSet, b::IntervalSet) = a.items == b.items
 Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a, b)
+Base.Array(intervals::IntervalSet) = intervals.items
 
 const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 

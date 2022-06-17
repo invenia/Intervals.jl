@@ -1,7 +1,7 @@
 
 ###### Set-related Helpers #####
 """
-    IntervalSet{T<:AbstractInterval} <: AbstractSet{T}
+    IntervalSet{T<:AbstractInterval}
 
 An set of points represented by a sequence of intervals. Set operations over interval sets
 return a new IntervalSet, with the fewest number of intervals possible. Unbounded intervals
@@ -48,7 +48,7 @@ julia> Array(setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
  Interval{Int64, Open, Closed}(9, 10)
 ```
 """
-struct IntervalSet{A <: AbstractVector{<:AbstractInterval}}
+struct IntervalSet{I <: AbstractInterval, A <: AbstractVector{I}}
     items::A
 end
 
@@ -58,7 +58,7 @@ IntervalSet(interval::IntervalSet) = interval
 IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
 IntervalSet() = IntervalSet{AbstractInterval}(AbstractInterval[])
 
-Base.copy(intervals::IntervalSet{T}) where T = IntervalSet{T}(copy(intervals.items))
+Base.copy(intervals::IntervalSet{T, A}) where {T, A} = IntervalSet{T, A}(copy(intervals.items))
 Base.length(intervals::IntervalSet) = length(intervals.items)
 Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...)
 Base.eltype(::IntervalSet{T}) where T = T
@@ -110,8 +110,6 @@ end
 
 endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b))
 endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b))
-
-# TODO: Delete once union deprecation is gone.
 endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b))
 
 # track: run a thunk, but only if we are tracking endpoints dynamically

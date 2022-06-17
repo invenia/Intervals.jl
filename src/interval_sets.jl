@@ -1,13 +1,12 @@
 
 ###### Set-related Helpers #####
-
 """
-    IntervalSet(x::AbstractVector{<:AbstractInterval})
+    IntervalSet{T<:AbstractInterval} <: AbstractSet{T}
 
-Interpret an array of intervals as a set of points: the union of all points in the
-intervals. Set operations over them will return an IntervalSet containing the
-fewest number of intervals that can be used to represent the resulting point set. 
-Unbounded intervals are not supported.
+An set of points represented by a sequence of intervals. Set operations over interval sets
+return a new IntervalSet, with the fewest number of intervals possible. Unbounded intervals
+are not supported. The individual intervals in the set can be accessed using the iteration
+API or by passing the set to `Array`.
 
 see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 
@@ -56,6 +55,7 @@ IntervalSet(v::AbstractVector) = IntervalSet{eltype(v)}(v)
 IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T}([interval])
 IntervalSet(interval::IntervalSet) = interval
 IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
+IntervalSet() = IntervalSet{AbstractInterval}(AbstractInterval[])
 
 Base.copy(intervals::IntervalSet{T}) where T = IntervalSet{T}(copy(intervals.items))
 Base.length(intervals::IntervalSet) = length(intervals.items)
@@ -348,7 +348,9 @@ Base.union(intervals::IntervalSet{<:Interval}) = union!(copy(intervals))
 # allocate a AbstractInterval vector
 function Base.union(intervals::IntervalSet{<:AbstractInterval})
     T = AbstractInterval
-    return union!(IntervalSet{T}(convert(Vector{T}, intervals.items)))
+    dest = Vector{T}(undef, length(intervals.items))
+    copyto!(dest, intervals.items)
+    return union!(IntervalSet{T}(dest))
 end
 
 """

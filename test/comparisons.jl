@@ -97,7 +97,7 @@ end
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet([earlier, later])
 
                 @test intersect([earlier], [later]) == []
-                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(Interval[])
+                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet()
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
@@ -184,7 +184,7 @@ end
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet([earlier, later])
 
                 @test intersect([earlier], [later]) == []
-                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(Interval[])
+                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet()
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
@@ -267,11 +267,11 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) != [expected_superset]
+                @test union([earlier], [later]) == expected_xor != [expected_superset]
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_superset)
 
                 @test intersect([earlier], [later]) == []
-                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(Interval[])
+                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet()
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
@@ -279,7 +279,8 @@ end
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) != union(expected_xor)
+                # TODO: Sometimes expected_xor would get mutated in this call
+                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -355,11 +356,11 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) != [expected_superset]
+                @test union([earlier], [later]) == expected_xor != [expected_superset]
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_superset)
 
                 @test intersect([earlier], [later]) == []
-                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(Interval[])
+                @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet()
 
                 @test setdiff([earlier], [later]) == expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
@@ -367,7 +368,7 @@ end
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) != union(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -447,19 +448,20 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [earlier, later]
+                @test union([earlier], [later]) == [earlier, later] != [expected_superset]
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_superset)
 
-                @test intersect([earlier], [later]) != [expected_overlap]
+                @test intersect([earlier], [later]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_overlap)
 
-                @test setdiff([earlier], [later]) != expected_xor[1:1]
+                @test setdiff([earlier], [later]) == [earlier] != expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
 
-                @test setdiff([later], [earlier]) != expected_xor[2:2]
+                @test setdiff([later], [earlier]) == [later] != expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) != expected_xor
+                @test symdiff([earlier], [later]) == [earlier, later]
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
             end
         end
@@ -539,19 +541,20 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(earlier) && isbounded(later)
-                @test union([earlier], [later]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [earlier, later]
+                @test union([earlier], [later]) == [earlier, later] != [expected_superset]
                 @test union(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_superset)
 
-                @test intersect([earlier], [later]) != [expected_overlap]
+                @test intersect([earlier], [later]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_overlap)
 
-                @test setdiff([earlier], [later]) != expected_xor[1:1]
+                @test setdiff([earlier], [later]) == [earlier] != expected_xor[1:1]
                 @test setdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor[1:1])
 
-                @test setdiff([later], [earlier]) != expected_xor[2:2]
+                @test setdiff([later], [earlier]) == [later] != expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) != expected_xor
+                @test symdiff([earlier], [later]) == [earlier, later] != expected_xor
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
             end
         end
@@ -620,13 +623,13 @@ end
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
                 @test setdiff([a], [b]) == []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
                 @test setdiff([b], [a]) == []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
                 @test symdiff([a], [b]) == []
-                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
             end
         end
     end
@@ -690,19 +693,20 @@ end
             # TODO: will have to think carefully about the `expected_` variables
             # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != expected_xor[1:1]
+                @test setdiff([a], [b]) == [a] != expected_xor[1:1]
                 @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor[1:1])
 
-                @test setdiff([b], [a]) != []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff([b], [a]) == [b] != []
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end
@@ -767,19 +771,20 @@ end
             # TODO: will have to think carefully about the `expected_` variables
             # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != expected_xor[1:1]
+                @test setdiff([a], [b]) == [a] != expected_xor[1:1]
                 @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor[1:1])
 
-                @test setdiff([b], [a]) != []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff([b], [a]) == [b] != []
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end
@@ -848,19 +853,20 @@ end
             # TODO: will have to think carefully about the `expected_` variables
             # when we allow for unbounded values
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != expected_xor
+                @test setdiff([a], [b]) == [a] != expected_xor
                 @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
 
-                @test setdiff([b], [a]) != []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff([b], [a]) == [b] != []
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end
@@ -925,19 +931,20 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff([a], [b]) == [a] != []
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
-                @test setdiff([b], [a]) != expected_xor[1:1]
+                @test setdiff([b], [a]) == [b] != expected_xor[1:1]
                 @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(expected_xor[1:1])
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end
@@ -1004,19 +1011,20 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff([a], [b]) == [a] != []
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
-                @test setdiff([b], [a]) != expected_xor[1:1]
+                @test setdiff([b], [a]) == [b] != expected_xor[1:1]
                 @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(expected_xor[1:1])
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end
@@ -1085,13 +1093,13 @@ end
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
                 @test setdiff([a], [b]) == []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
                 @test setdiff([b], [a]) == []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
                 @test symdiff([a], [b]) == []
-                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
             end
         end
     end
@@ -1159,14 +1167,14 @@ end
                 @test intersect([a], [b]) == [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != expected_xor[1:1]
+                @test setdiff([a], [b]) == [a] != expected_xor[1:1]
                 @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor[1:1])
 
                 @test setdiff([b], [a]) == []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
                 @test symdiff([a], [b]) == []
-                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
             end
         end
     end
@@ -1234,14 +1242,14 @@ end
                 @test intersect([a], [b]) == [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != expected_xor[1:1]
+                @test setdiff([a], [b]) == [a] != expected_xor[1:1]
                 @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor[1:1])
 
                 @test setdiff([b], [a]) == []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
                 @test symdiff([a], [b]) == []
-                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
             end
         end
     end
@@ -1308,13 +1316,13 @@ end
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
                 @test setdiff([a], [b]) == []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
                 @test setdiff([b], [a]) == []
-                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+                @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
                 @test symdiff([a], [b]) == []
-                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
             end
         end
     end
@@ -1362,20 +1370,20 @@ end
 
             # Using a vector of intervals as sets
             @test union([a, b]) == [expected_superset]
-            @test union([a], [b]) != [expected_superset]
+            @test union([a], [b]) == [a, b] != [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
-            @test intersect([a], [b]) != [expected_overlap]
+            @test intersect([a], [b]) == [] != [expected_overlap]
             @test intersect(IntervalSet([a, b])) == IntervalSet(expected_overlap)
 
-            @test setdiff([a], [b]) != []
-            @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+            @test setdiff([a], [b]) == [a] != []
+            @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
-            @test setdiff([b], [a]) != []
-            @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(Interval[])
+            @test setdiff([b], [a]) == [b] != []
+            @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet()
 
-            @test symdiff([a], [b]) != []
-            @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+            @test symdiff([a], [b]) == [a, b] != []
+            @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
         end
     end
 
@@ -1460,19 +1468,20 @@ end
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
-                @test union([a], [b]) != [expected_superset]
+                # NOTE: expected_xor may have different bounds than [a, b]
+                @test union([a], [b]) == [a, b] != [expected_superset]
                 @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
-                @test intersect([a], [b]) != [expected_overlap]
+                @test intersect([a], [b]) == [] != [expected_overlap]
                 @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
-                @test setdiff([a], [b]) != []
-                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(Interval[])
+                @test setdiff([a], [b]) == [a] != []
+                @test setdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
 
-                @test setdiff([b], [a]) != expected_xor[1:2]
+                @test setdiff([b], [a]) == [b] != expected_xor[1:2]
                 @test setdiff(IntervalSet(b), IntervalSet(a)) == IntervalSet(expected_xor[1:2])
 
-                @test symdiff([a], [b]) != expected_xor
+                @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
             end
         end

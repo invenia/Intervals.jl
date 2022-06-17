@@ -66,7 +66,11 @@ Base.:(==)(a::IntervalSet, b::IntervalSet) = a.items == b.items
 Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a, b)
 Base.Array(intervals::IntervalSet) = intervals.items
 
-const AbstractIntervals = Union{AbstractInterval, IntervalSet}
+# currently (to avoid breaking changes) new methods for `Base`
+# accept `IntervalSet` objects and Interval singletons.
+const AbstractIntervalSets = Union{AbstractInterval, IntervalSet}
+# internal methods need to operate on both sets and arrays of intervals
+const AbstractIntervals = Union{AbstractIntervalSets, AbstractArray{<:AbstractInterval}}
 
 # During merge operations used to compute unions, intersections etc...,
 # endpoint types can change (from left to right, and from open to closed,
@@ -150,11 +154,6 @@ function unbunch(a::AbstractIntervals, b::AbstractIntervals; kwargs...)
     a_ = unbunch(a, tracking; kwargs...)
     b_ = unbunch(b, tracking; kwargs...)
     return a_, b_, tracking
-end
-
-# TODO: Delete fallback once union deprecation is removed
-function unbunch(a::Vector{<:AbstractInterval}, b::Vector{<:AbstractInterval}; kwargs...)
-    return unbunch(IntervalSet(a), IntervalSet(b); kwargs...)
 end
 
 # represent a sequence of endpoints as a sequence of one or more intervals
@@ -404,10 +403,10 @@ Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && 
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
-Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
-Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
+Base.issubset(x::AbstractIntervalSets, y::AbstractIntervalSets) = isempty(setdiff(x, y))
+Base.isdisjoint(x::AbstractIntervalSets, y::AbstractIntervalSets) = isempty(intersect(x, y))
 
-function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
+function Base.issetequal(x::AbstractIntervalSets, y::AbstractIntervalSets)
     x, y, tracking = unbunch(union(IntervalSet(x)), union(IntervalSet(y)))
     return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
 end

@@ -9,6 +9,8 @@ intervals. Set operations over them will return an IntervalSet containing the
 fewest number of intervals that can be used to represent the resulting point set. 
 Unbounded intervals are not supported.
 
+see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
+
 ## Examples
 
 ```jldoctest

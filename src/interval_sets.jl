@@ -5,8 +5,9 @@
     IntervalSet(x::AbstractVector{<:AbstractInterval})
 
 Interpret an array of intervals as a set of points: the union of all points in the
-intervals. Set operations over intervals sets will return an IntervalSet containing the
+intervals. Set operations over them will return an IntervalSet containing the
 fewest number of intervals that can be used to represent the resulting point set. 
+Unbounded intervals are not supported.
 
 ## Examples
 

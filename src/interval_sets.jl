@@ -1,6 +1,12 @@
 
 ###### Set-related Helpers #####
 
+"""
+    IntervalSet(x::AbstractVector{<:AbstractInterval})
+
+Interpret an array of intervals as a set of points: the union of all points in the
+intervals.
+"""
 struct IntervalSet{T<:AbstractInterval}
     items::Vector{<:AbstractInterval}
 end

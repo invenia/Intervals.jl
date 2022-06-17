@@ -36,6 +36,10 @@ end
 
     rand_bound_type(rng) = rand(rng, (Closed, Open))
 
+    # verify case where we interpret array as a set of intervals (rather than a set of
+    # points)
+    @test intersect([1..2, 2..3, 3..4, 4..5], [2..3, 3..4]) == [2..3, 3..4]
+
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
         @test area(setdiff(a, b)) ≤ area(myunion(a))

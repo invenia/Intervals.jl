@@ -14,35 +14,35 @@ see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 
 ```jldoctest
 julia> using Intervals
-julia> Array(union(IntervalSet(1..5), IntervalSet(3..8)))
+julia> convert(Array, union(IntervalSet(1..5), IntervalSet(3..8)))
 1-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(1, 8)
 
-julia> Array(intersect(IntervalSet(1..5), IntervalSet(3..8)))
+julia> convert(Array, intersect(IntervalSet(1..5), IntervalSet(3..8)))
 1-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(3, 5)
  
-julia> Array(symdiff(IntervalSet(1..5), IntervalSet(3..8)))
+julia> convert(Array, symdiff(IntervalSet(1..5), IntervalSet(3..8)))
 2-element Vector{Interval{Int64}}:
  Interval{Int64, Closed, Open}(1, 3)
  Interval{Int64, Open, Closed}(5, 8)
 
-julia> Array(union(IntervalSet([1..2, 2..5]), IntervalSet(6..7)))
+julia> convert(Array, union(IntervalSet([1..2, 2..5]), IntervalSet(6..7)))
 2-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(1, 5)
  Interval{Int64, Closed, Closed}(6, 7)
 
-julia> Array(union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+julia> convert(Array, union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
 2-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(1, 10)
  Interval{Int64, Closed, Closed}(12, 14)
 
-julia> Array(intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+julia> convert(Array, intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
 2-element Vector{Interval{Int64, Closed, Closed}}:
  Interval{Int64, Closed, Closed}(4, 5)
  Interval{Int64, Closed, Closed}(8, 9)
 
-julia> Array(setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
+julia> convert(Array, setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
 2-element Vector{Interval{Int64}}:
  Interval{Int64, Closed, Open}(1, 4)
  Interval{Int64, Open, Closed}(9, 10)
@@ -64,7 +64,7 @@ Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...
 Base.eltype(::IntervalSet{T}) where T = T
 Base.:(==)(a::IntervalSet, b::IntervalSet) = a.items == b.items
 Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a, b)
-Base.Array(intervals::IntervalSet) = intervals.items
+Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = convert(T, intervals.items)
 
 # currently (to avoid breaking changes) new methods for `Base`
 # accept `IntervalSet` objects and Interval singletons.

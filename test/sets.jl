@@ -50,7 +50,7 @@ end
         @test isdisjoint(setdiff(a, b), b)
         @test !isdisjoint(a, a)
 
-        intersections = find_intersections(Array(a), Array(b))
+        intersections = find_intersections(convert(Array, a), convert(Array, b))
 
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a

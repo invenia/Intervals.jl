@@ -68,9 +68,7 @@ Base.Array(intervals::IntervalSet) = intervals.items
 
 # currently (to avoid breaking changes) new methods for `Base`
 # accept `IntervalSet` objects and Interval singletons.
-const AbstractIntervalSets = Union{AbstractInterval, IntervalSet}
-# internal methods need to operate on both sets and arrays of intervals
-const AbstractIntervals = Union{AbstractIntervalSets, AbstractArray{<:AbstractInterval}}
+const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 
 # During merge operations used to compute unions, intersections etc...,
 # endpoint types can change (from left to right, and from open to closed,
@@ -132,7 +130,8 @@ function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isle
     return endpoint_type(tracking)[LeftEndpoint(interval), RightEndpoint(interval)]
 end
 unbunch_by_fn(_) = identity
-function unbunch(intervals::Union{AbstractIntervals, Base.Iterators.Enumerate{<:AbstractIntervals}},
+function unbunch(intervals::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals, 
+                                  Base.Iterators.Enumerate{<:AbstractIntervals}},
                  tracking::EndpointTracking; lt=isless)
     by = unbunch_by_fn(intervals)
     filtered = Iterators.filter(!isempty ∘ by, intervals)
@@ -147,7 +146,8 @@ function unbunch((i, interval)::Tuple, tracking; lt=isless)
     return eltype[(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
 end
 
-function unbunch(a::AbstractIntervals, b::AbstractIntervals; kwargs...)
+function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals, 
+                 b::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}; kwargs...)
     tracking = endpoint_tracking(a, b)
     a_ = unbunch(a, tracking; kwargs...)
     b_ = unbunch(b, tracking; kwargs...)
@@ -424,8 +424,8 @@ end
 
 """
     find_intersections(
-        x::Union{AbstractInterval, IntervalSet},
-        y::Union{AbstractInterval, IntervalSet},
+        x::AbstractVector{<:AbstractInterval},
+        y::AbstractVector{<:AbstractInterval}
     )
 
 Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all

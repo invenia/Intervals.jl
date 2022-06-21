@@ -146,7 +146,7 @@ function unbunch((i, interval)::Tuple, tracking; lt=isless)
     return eltype[(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
 end
 
-function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals, 
+function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}, 
                  b::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}; kwargs...)
     tracking = endpoint_tracking(a, b)
     a_ = unbunch(a, tracking; kwargs...)

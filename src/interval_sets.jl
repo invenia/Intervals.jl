@@ -131,7 +131,8 @@ function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isle
 end
 unbunch_by_fn(_) = identity
 function unbunch(intervals::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals, 
-                                  Base.Iterators.Enumerate{<:AbstractIntervals}},
+                                  Base.Iterators.Enumerate{<:Union{AbstractIntervals, 
+                                                                   AbstractVector{<:AbstractInterval}}}},
                  tracking::EndpointTracking; lt=isless)
     by = unbunch_by_fn(intervals)
     filtered = Iterators.filter(!isempty ∘ by, intervals)

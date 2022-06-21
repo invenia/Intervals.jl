@@ -401,10 +401,10 @@ Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && 
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
-Base.issubset(x::AbstractIntervalSets, y::AbstractIntervalSets) = isempty(setdiff(x, y))
-Base.isdisjoint(x::AbstractIntervalSets, y::AbstractIntervalSets) = isempty(intersect(x, y))
+Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
+Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
-function Base.issetequal(x::AbstractIntervalSets, y::AbstractIntervalSets)
+function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y, tracking = unbunch(union(IntervalSet(x)), union(IntervalSet(y)))
     return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
 end

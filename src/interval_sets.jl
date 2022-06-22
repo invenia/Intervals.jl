@@ -12,59 +12,54 @@ see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 
 ## Examples
 
-```jldoctest
-julia> using Intervals
-julia> convert(Array, union(IntervalSet(1..5), IntervalSet(3..8)))
-1-element Vector{Interval{Int64, Closed, Closed}}:
- Interval{Int64, Closed, Closed}(1, 8)
+```jldoctest; setup = :(using Intervals)
+julia> union(IntervalSet(1..5), IntervalSet(3..8))
+[1 .. 8]
 
-julia> convert(Array, intersect(IntervalSet(1..5), IntervalSet(3..8)))
-1-element Vector{Interval{Int64, Closed, Closed}}:
- Interval{Int64, Closed, Closed}(3, 5)
- 
-julia> convert(Array, symdiff(IntervalSet(1..5), IntervalSet(3..8)))
-2-element Vector{Interval{Int64}}:
- Interval{Int64, Closed, Open}(1, 3)
- Interval{Int64, Open, Closed}(5, 8)
+julia> intersect(IntervalSet(1..5), IntervalSet(3..8))
+[3 .. 5]
 
-julia> convert(Array, union(IntervalSet([1..2, 2..5]), IntervalSet(6..7)))
-2-element Vector{Interval{Int64, Closed, Closed}}:
- Interval{Int64, Closed, Closed}(1, 5)
- Interval{Int64, Closed, Closed}(6, 7)
+julia> symdiff(IntervalSet(1..5), IntervalSet(3..8))
+[1 .. 3) ∪ (5 .. 8]
 
-julia> convert(Array, union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
-2-element Vector{Interval{Int64, Closed, Closed}}:
- Interval{Int64, Closed, Closed}(1, 10)
- Interval{Int64, Closed, Closed}(12, 14)
+julia> union(IntervalSet([1..2, 2..5]), IntervalSet(6..7))
+[1 .. 5] ∪ [6 .. 7]
 
-julia> convert(Array, intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
-2-element Vector{Interval{Int64, Closed, Closed}}:
- Interval{Int64, Closed, Closed}(4, 5)
- Interval{Int64, Closed, Closed}(8, 9)
+julia> union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+[1 .. 10] ∪ [12 .. 14]
 
-julia> convert(Array, setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14])))
-2-element Vector{Interval{Int64}}:
- Interval{Int64, Closed, Open}(1, 4)
- Interval{Int64, Open, Closed}(9, 10)
+julia> intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+[4 .. 5] ∪ [8 .. 9]
+
+julia> setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+[1 .. 4) ∪ (9 .. 10]
 ```
 """
-struct IntervalSet{I <: AbstractInterval, A <: AbstractVector{I}}
-    items::A
+struct IntervalSet{T <: AbstractInterval}
+    items::Vector{T}
 end
 
-IntervalSet{T}(intervals) where T <: AbstractInterval = IntervalSet{T, Vector{T}}(intervals)
-IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T, Vector{T}}([interval])
+IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T}([interval])
 IntervalSet(interval::IntervalSet) = interval
 IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
 IntervalSet() = IntervalSet(AbstractInterval[])
 
-Base.copy(intervals::IntervalSet{T, A}) where {T, A} = IntervalSet{T, A}(copy(intervals.items))
+Base.copy(intervals::IntervalSet{T}) where {T} = IntervalSet{T}(copy(intervals.items))
 Base.length(intervals::IntervalSet) = length(intervals.items)
 Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...)
 Base.eltype(::IntervalSet{T}) where T = T
-Base.:(==)(a::IntervalSet, b::IntervalSet) = a.items == b.items
-Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a, b)
+Base.:(==)(a::IntervalSet, b::IntervalSet) = issetequal(a, b)
+Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a.items, b.items)
 Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = convert(T, intervals.items)
+function Base.show(io::IO, ::MIME"text/plain", x::IntervalSet) 
+    intervals = union(x)
+    iocompact = IOContext(io, :compact => true)
+    for interval in intervals.items[1:(end-1)]
+        show(iocompact, MIME"text/plain"(), interval)
+        print(io, " ∪ ")
+    end
+    show(iocompact, MIME"text/plain"(), intervals.items[end])
+end
 
 # currently (to avoid breaking changes) new methods for `Base`
 # accept `IntervalSet` objects and Interval singletons.
@@ -410,6 +405,9 @@ function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
 end
 
+# when `x` is number-like object (Number, Date, Time, etc...):
+Base.in(x, y::IntervalSet) = any(Base.Fix1(in, x), y)
+
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 intersection_isless_fn(::TrackStatically) = isless
@@ -432,15 +430,15 @@ end
 Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
 intervals in `y` that intersect with `x[i]`.
 """
-function find_intersections(x_::Union{AbstractInterval, AbstractVector{<:AbstractInterval}}, y_::Union{AbstractInterval, AbstractVector{<:AbstractInterval}})
-    xa, ya = vcat(x_), vcat(y_)
-    tracking = endpoint_tracking(xa, ya)
+find_intersections(x, y) = find_intersections(vcat(x), vcat(y))
+function find_intersections(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval})
+    tracking = endpoint_tracking(x, y)
     lt = intersection_isless_fn(tracking)
-    x = unbunch(enumerate(xa), tracking; lt)
-    y = unbunch(enumerate(ya), tracking; lt)
-    result = [Vector{Int}() for _ in 1:length(xa)]
+    x_endpoints = unbunch(enumerate(x), tracking; lt)
+    y_endpoints = unbunch(enumerate(y), tracking; lt)
+    result = [Vector{Int}() for _ in 1:length(x)]
 
-    return find_intersections_helper!(result, x, y, lt)
+    return find_intersections_helper!(result, x_endpoints, y_endpoints, lt)
 end
 
 function find_intersections_helper!(result, x, y, lt)

@@ -36,9 +36,19 @@ end
 
     rand_bound_type(rng) = rand(rng, (Closed, Open))
 
-    # verify case where we interpret array as a set of intervals (rather than a set of
-    # points)
+    # verify case where we interpret array as a set of elements (rather than an
+    # interval-bound point set)
     @test intersect([1..2, 2..3, 3..4, 4..5], [2..3, 3..4]) == [2..3, 3..4]
+
+    # verify that elements are in / subsets of interval sets
+    @test 2 ∈ IntervalSet([1..3, 5..10])
+    @test 0 ∉ IntervalSet([1..3, 5..10])
+    @test 4 ∉ IntervalSet([1..3, 5..10])
+    @test 11 ∉ IntervalSet([1..3, 5..10])
+    @test issubset(2, IntervalSet([1..3, 5..10]))
+    @test !issubset(0, IntervalSet([1..3, 5..10]))
+    @test !issubset(4, IntervalSet([1..3, 5..10]))
+    @test !issubset(11, IntervalSet([1..3, 5..10]))
 
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))

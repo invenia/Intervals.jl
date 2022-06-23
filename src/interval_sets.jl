@@ -14,25 +14,37 @@ see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 
 ```jldoctest; setup = :(using Intervals)
 julia> union(IntervalSet(1..5), IntervalSet(3..8))
+1-interval IntervalSet{Interval{Int64, Closed, Closed}}:
 [1 .. 8]
 
 julia> intersect(IntervalSet(1..5), IntervalSet(3..8))
+1-interval IntervalSet{Interval{Int64, Closed, Closed}}:
 [3 .. 5]
 
 julia> symdiff(IntervalSet(1..5), IntervalSet(3..8))
-[1 .. 3) ∪ (5 .. 8]
+2-interval IntervalSet{Interval{Int64}}:
+[1 .. 3)
+(5 .. 8]
 
 julia> union(IntervalSet([1..2, 2..5]), IntervalSet(6..7))
-[1 .. 5] ∪ [6 .. 7]
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[1 .. 5]
+[6 .. 7]
 
 julia> union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
-[1 .. 10] ∪ [12 .. 14]
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[1 .. 10]
+[12 .. 14]
 
 julia> intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
-[4 .. 5] ∪ [8 .. 9]
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[4 .. 5]
+[8 .. 9]
 
 julia> setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
-[1 .. 4) ∪ (9 .. 10]
+2-interval IntervalSet{Interval{Int64}}:
+[1 .. 4)
+(9 .. 10]
 ```
 """
 struct IntervalSet{T <: AbstractInterval}
@@ -54,11 +66,14 @@ Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = conve
 function Base.show(io::IO, ::MIME"text/plain", x::IntervalSet) 
     intervals = union(x)
     iocompact = IOContext(io, :compact => true)
+    print(io, "$(length(intervals))-interval ")
+    show(io, MIME"text/plain"(), typeof(x))
+    println(io, ":")
     for interval in intervals.items[1:(end-1)]
         show(iocompact, MIME"text/plain"(), interval)
-        print(io, " ∪ ")
+        println(io, "")
     end
-    show(iocompact, MIME"text/plain"(), intervals.items[end])
+    isempty(intervals) || show(iocompact, MIME"text/plain"(), intervals.items[end])
 end
 
 # currently (to avoid breaking changes) new methods for `Base`

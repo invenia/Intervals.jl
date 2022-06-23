@@ -268,6 +268,7 @@ In the plot, inclusive boundaries are marked with a vertical bar, whereas exclus
 ```@docs
 Interval
 AnchoredInterval
+IntervalSet
 HourEnding
 HourBeginning
 HE
@@ -291,4 +292,5 @@ Base.parse(::Type{Interval{T}}, ::AbstractString) where T
 union
 union!
 superset
+Intervals.find_intersections
 ```

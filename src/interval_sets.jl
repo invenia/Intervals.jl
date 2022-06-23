@@ -63,17 +63,32 @@ Base.eltype(::IntervalSet{T}) where T = T
 Base.:(==)(a::IntervalSet, b::IntervalSet) = issetequal(a, b)
 Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a.items, b.items)
 Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = convert(T, intervals.items)
-function Base.show(io::IO, ::MIME"text/plain", x::IntervalSet) 
+function Base.show(io::Base.AbstractPipe, ::MIME"text/plain", x::IntervalSet) 
     intervals = union(x)
     iocompact = IOContext(io, :compact => true)
     print(io, "$(length(intervals))-interval ")
     show(io, MIME"text/plain"(), typeof(x))
     println(io, ":")
-    for interval in intervals.items[1:(end-1)]
-        show(iocompact, MIME"text/plain"(), interval)
-        println(io, "")
+    nrows = displaysize(io)[1]
+    half = fld(nrows, 2) - 2
+    if nrows ≥ length(intervals.items) && half > 1
+        for interval in intervals.items[1:(end-1)]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        isempty(intervals) || show(iocompact, MIME"text/plain"(), intervals.items[end])
+    else
+        for interval in intervals.items[1:half]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        println(io, "⋮")
+        for interval in intervals.items[(end-half+1):end-1]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        show(iocompact, MIME"text/plain"(), intervals.items[end])
     end
-    isempty(intervals) || show(iocompact, MIME"text/plain"(), intervals.items[end])
 end
 
 # currently (to avoid breaking changes) new methods for `Base`

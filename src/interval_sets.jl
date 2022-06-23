@@ -22,7 +22,7 @@ julia> intersect(IntervalSet(1..5), IntervalSet(3..8))
 [3 .. 5]
 
 julia> symdiff(IntervalSet(1..5), IntervalSet(3..8))
-2-interval IntervalSet{Interval{Int64}}:
+2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
 [1 .. 3)
 (5 .. 8]
 
@@ -42,7 +42,7 @@ julia> intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
 [8 .. 9]
 
 julia> setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
-2-interval IntervalSet{Interval{Int64}}:
+2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
 [1 .. 4)
 (9 .. 10]
 ```
@@ -57,21 +57,21 @@ IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
 IntervalSet() = IntervalSet(AbstractInterval[])
 
 Base.copy(intervals::IntervalSet{T}) where {T} = IntervalSet{T}(copy(intervals.items))
-Base.length(intervals::IntervalSet) = length(intervals.items)
-Base.iterate(intervals::IntervalSet, args...) = iterate(intervals.items, args...)
 Base.eltype(::IntervalSet{T}) where T = T
+Base.isempty(intervals::IntervalSet) = isempty(intervals.items) || all(isempty, intervals.items)
 Base.:(==)(a::IntervalSet, b::IntervalSet) = issetequal(a, b)
 Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a.items, b.items)
 Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = convert(T, intervals.items)
-function Base.show(io::Base.AbstractPipe, ::MIME"text/plain", x::IntervalSet) 
+function Base.show(io::Base.AbstractPipe, ::MIME"text/plain", x::IntervalSet)
     intervals = union(x)
+    n = length(intervals.items)
     iocompact = IOContext(io, :compact => true)
-    print(io, "$(length(intervals))-interval ")
+    print(io, "$n-interval ")
     show(io, MIME"text/plain"(), typeof(x))
     println(io, ":")
     nrows = displaysize(io)[1]
     half = fld(nrows, 2) - 2
-    if nrows ≥ length(intervals.items) && half > 1
+    if nrows ≥ n && half > 1
         for interval in intervals.items[1:(end-1)]
             show(iocompact, MIME"text/plain"(), interval)
             println(io, "")
@@ -154,11 +154,18 @@ interval_type(::TrackRightOpen{T}) where T = Interval{T, Closed, Open}
 function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isless)
     return endpoint_type(tracking)[LeftEndpoint(interval), RightEndpoint(interval)]
 end
+function unbunch(intervals::IntervalSet, tracking::EndpointTracking; kwargs...)
+    return unbunch(convert(Vector, intervals), tracking; kwargs...)
+end
 unbunch_by_fn(_) = identity
-function unbunch(intervals::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals, 
-                                  Base.Iterators.Enumerate{<:Union{AbstractIntervals, 
-                                                                   AbstractVector{<:AbstractInterval}}}},
-                 tracking::EndpointTracking; lt=isless)
+function unbunch(
+    intervals::Union{
+        AbstractVector{<:AbstractInterval},
+        Base.Iterators.Enumerate{<:Union{AbstractIntervals, AbstractVector{<:AbstractInterval}}}
+    },
+    tracking::EndpointTracking;
+    lt=isless,
+)
     by = unbunch_by_fn(intervals)
     filtered = Iterators.filter(!isempty ∘ by, intervals)
     isempty(filtered) && return endpoint_type(tracking)[]
@@ -172,7 +179,7 @@ function unbunch((i, interval)::Tuple, tracking; lt=isless)
     return eltype[(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
 end
 
-function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}, 
+function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals},
                  b::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}; kwargs...)
     tracking = endpoint_tracking(a, b)
     a_ = unbunch(a, tracking; kwargs...)
@@ -427,16 +434,17 @@ Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && 
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
+Base.issubset(x::T, y::IntervalSet{<:AbstractInterval{T}}) where {T} = any(i -> x in i, y.items)
 Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
 Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
 function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
     x, y, tracking = unbunch(union(IntervalSet(x)), union(IntervalSet(y)))
-    return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
+    return x == y || isempty(bunch(x, tracking)) && isempty(bunch(y, tracking))
 end
 
 # when `x` is number-like object (Number, Date, Time, etc...):
-Base.in(x, y::IntervalSet) = any(Base.Fix1(in, x), y)
+Base.in(x, y::IntervalSet) = any(Base.Fix1(in, x), y.items)
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)

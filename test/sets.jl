@@ -81,10 +81,10 @@ end
     # a few taylored interval sets
     a = IntervalSet([Interval(i, i + 3) for i in 1:5:15])
     b = IntervalSet(a.items .+ (1:2:5))
-    @test all(first.(a) .∈ a)
+    @test all(x -> first(x) ∈ a, a.items)
     testsets(a, b)
-    testsets(IntervalSet(first(a)), b)
-    testsets(a, IntervalSet(first(b)))
+    testsets(IntervalSet(a.items[1]), b)
+    testsets(a, IntervalSet(b.items[1]))
 
     # verify that `last` need not be ordered
     intervals = IntervalSet([Interval(0, 5), Interval(0, 3)])
@@ -99,34 +99,34 @@ end
 
     a = IntervalSet(Interval.(starts, ends))
     b = IntervalSet(Interval.(starts .+ offsets, ends .+ offsets))
-    @test all(first.(a) .∈ a)
+    @test all(x -> first(x) ∈ a, a.items)
     testsets(a, b)
-    testsets(IntervalSet(first(a)), b)
-    testsets(a, IntervalSet(first(b)))
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
     a = IntervalSet(Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts, ends))
     b = IntervalSet(Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts .+ offsets, ends .+ offsets))
     testsets(a, b)
-    testsets(IntervalSet(first(a)), b)
-    testsets(a, IntervalSet(first(b)))
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
     a = IntervalSet(Interval{Closed, Open}.(starts, ends))
     b = IntervalSet(Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets))
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(IntervalSet(first(a)), b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, IntervalSet(first(b))) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(IntervalSet(first(a.items)), b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, IntervalSet(first(b.items))) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(IntervalSet(first(a)), b)
-    testsets(a, IntervalSet(first(b)))
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
     a = IntervalSet(Interval{Open, Closed}.(starts, ends))
     b = IntervalSet(Interval{Open, Closed}.(starts .+ offsets, ends .+ offsets))
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(IntervalSet(first(a)), b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, IntervalSet(first(b))) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(IntervalSet(first(a.items)), b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, IntervalSet(first(b.items))) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(IntervalSet(first(a)), b)
-    testsets(a, IntervalSet(first(b)))
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
     randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(first(x), last(x))
     leftint(x::Interval) = Interval{Closed, Open}(first(x), last(x))
@@ -134,10 +134,10 @@ end
 
     a = IntervalSet(Interval{Closed, Open}.(starts, ends))
     b = IntervalSet(Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets))
-    testsets(a, IntervalSet(randint.(b)))
-    testsets(IntervalSet(first(a)), IntervalSet(randint.(b)))
-    testsets(a, IntervalSet(leftint.(IntervalSet(first(b)))))
-    testsets(a, IntervalSet(rightint.(b)))
-    testsets(IntervalSet(first(a)), IntervalSet(rightint.(b)))
-    testsets(a, IntervalSet(rightint.(IntervalSet(first(b)))))
+    testsets(a, IntervalSet(randint.(b.items)))
+    testsets(IntervalSet(first(a.items)), IntervalSet(randint.(b.items)))
+    testsets(a, IntervalSet(leftint.(first(b.items))))
+    testsets(a, IntervalSet(rightint.(b.items)))
+    testsets(IntervalSet(first(a.items)), IntervalSet(rightint.(b.items)))
+    testsets(a, IntervalSet(rightint.(first(b.items))))
 end

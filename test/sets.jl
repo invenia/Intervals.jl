@@ -50,10 +50,6 @@ end
     @test !issubset(4, IntervalSet([1..3, 5..10]))
     @test !issubset(11, IntervalSet([1..3, 5..10]))
     @test issubset(2, IntervalSet([1.0 .. 3.0, 5.0 .. 10.0]))
-    @test issubset(2 .. 4, IntervalSet([1 .. 5, 7 .. 9]))
-    @test !issubset(2 .. 4, IntervalSet([1 ..3, 5 .. 10]))
-    @test issubset(IntervalSet([1 .. 3, 5 .. 10]), 1 .. 20)
-    @test !issubset(IntervalSet([1 .. 3, 5 .. 10]), 1 .. 9)
 
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
@@ -77,6 +73,24 @@ end
         # sets in b that do not overlap with the given set in akk
         @test all(enumerate(intersections)) do (i, x)
             isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[Not(x)])))
+        end
+
+        # Test f(interval, intervalset) and f(intervalset, interval) methods work the same
+        # as the regular f(intervalset, intervalset) methods
+        if a isa IntervalSet && b isa IntervalSet
+            for f in (intersect, union, setdiff, symdiff, isdisjoint, issubset)
+                # We'll just use the first and last entries as sample intervals for these
+                # tests rather than an exhausting search
+                x = first(a.items)
+                @test f(x, b) == f(IntervalSet([x]), b)
+                x = last(a.items)
+                @test f(x, b) == f(IntervalSet([x]), b)
+
+                y = first(b.items)
+                @test f(a, y) == f(a, IntervalSet([y]))
+                y = last(b.items)
+                @test f(a, y) == f(a, IntervalSet([y]))
+            end
         end
     end
 

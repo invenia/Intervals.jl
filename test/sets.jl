@@ -49,6 +49,11 @@ end
     @test !issubset(0, IntervalSet([1..3, 5..10]))
     @test !issubset(4, IntervalSet([1..3, 5..10]))
     @test !issubset(11, IntervalSet([1..3, 5..10]))
+    @test issubset(2, IntervalSet([1.0 .. 3.0, 5.0 .. 10.0]))
+    @test issubset(2 .. 4, IntervalSet([1 .. 5, 7 .. 9]))
+    @test !issubset(2 .. 4, IntervalSet([1 ..3, 5 .. 10]))
+    @test issubset(IntervalSet([1 .. 3, 5 .. 10]), 1 .. 20)
+    @test !issubset(IntervalSet([1 .. 3, 5 .. 10]), 1 .. 9)
 
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))

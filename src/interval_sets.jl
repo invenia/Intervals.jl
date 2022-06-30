@@ -3,7 +3,7 @@
 """
     IntervalSet{T<:AbstractInterval}
 
-An set of points represented by a sequence of intervals. Set operations over interval sets
+A set of points represented by a sequence of intervals. Set operations over interval sets
 return a new IntervalSet, with the fewest number of intervals possible. Unbounded intervals
 are not supported. The individual intervals in the set can be accessed using the iteration
 API or by passing the set to `Array`.
@@ -434,7 +434,6 @@ Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && 
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
-
 Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
 Base.issubset(x, y::IntervalSet) = x in y

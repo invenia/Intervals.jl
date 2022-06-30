@@ -26,20 +26,37 @@ This package defines:
   * [`Open`](@ref), indicating the endpoint value of the interval is not included
   * [`Unbounded`](@ref), indicating the endpoint value is effectively infinite
 
-## Example Usage
+## Sets
 
-### Intersection
+A single interval can be used to represent a contiguous set within a domain but cannot be
+used to represent a disjoint set. Due to this restriction all set-based operations that
+return an interval will always return a vector of intervals. These operations will combine
+any intervals which are overlapping or touching into a single continuous interval and never
+return an interval instance which itself is empty.
 
-```jldoctest
-julia> a = 1..10
-Interval{Int64, Closed, Closed}(1, 10)
+```julia
+julia> union([1..10], [5..15])
+1-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(1, 15)
 
-julia> b = 5..15
-Interval{Int64, Closed, Closed}(5, 15)
+julia> intersect([1..10], [5..15])
+1-element Vector{Interval{Int64, Closed, Closed}}:
+ Interval{Int64, Closed, Closed}(5, 10)
 
-julia> intersect(a, b)
-Interval{Int64, Closed, Closed}(5, 10)
+julia> setdiff([1..10], [5..15])
+1-element Vector{Interval{Int64, Closed, Open}}:
+ Interval{Int64, Closed, Open}(1, 5)
+
+julia> symdiff([1..10], [5..15])
+2-element Vector{Interval{Int64}}:
+ Interval{Int64, Closed, Open}(1, 5)
+ Interval{Int64, Open, Closed}(10, 15)
+
+julia> intersect([1..5], [10..15])
+Interval[]
 ```
+
+## Example Usage
 
 ### Bounds
 
@@ -135,31 +152,6 @@ julia> anchor(he)
 2013-02-13T01:00:00-06:00
 ```
 
-### Plotting
-`AbstractInterval` subtypes can be plotted with [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
-
-
-```julia
-julia> using Plots
-
-julia> start_dt = DateTime(2017,1,1,0,0,0);
-
-julia> end_dt = DateTime(2017,1,1,10,30,0);
-
-julia> datetimes = start_dt:Hour(1):end_dt
-DateTime("2017-01-01T00:00:00"):Hour(1):DateTime("2017-01-01T10:00:00")
-
-julia> intervals = HE.(datetimes);
-
-julia> plot(intervals, 1:11)
-```
-
-![Example Plot](assets/HE.png)
-
-In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
-
-
-
 ### Comparisons
 
 #### Equality
@@ -247,11 +239,36 @@ julia> round(AnchoredInterval{+0.5}(0.5), on=:right)
 AnchoredInterval{0.5, Float64, Closed, Open}(0.5)
 ```
 
+### Plotting
+
+`AbstractInterval` subtypes can be plotted with [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
+
+```julia
+julia> using Plots
+
+julia> start_dt = DateTime(2017,1,1,0,0,0);
+
+julia> end_dt = DateTime(2017,1,1,10,30,0);
+
+julia> datetimes = start_dt:Hour(1):end_dt
+DateTime("2017-01-01T00:00:00"):Hour(1):DateTime("2017-01-01T10:00:00")
+
+julia> intervals = HE.(datetimes);
+
+julia> plot(intervals, 1:11)
+```
+
+![Example Plot](assets/HE.png)
+
+In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
+
+
 ## API
 
 ```@docs
 Interval
 AnchoredInterval
+IntervalSet
 HourEnding
 HourBeginning
 HE
@@ -275,4 +292,5 @@ Base.parse(::Type{Interval{T}}, ::AbstractString) where T
 union
 union!
 superset
+Intervals.find_intersections
 ```

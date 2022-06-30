@@ -765,6 +765,7 @@
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
         ]
+
         @test union!(intervals) == expected
         @test intervals == expected
 

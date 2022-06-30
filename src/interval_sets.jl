@@ -1,7 +1,98 @@
 
 ###### Set-related Helpers #####
+"""
+    IntervalSet{T<:AbstractInterval}
 
-const IntervalSet = AbstractVector{<:AbstractInterval}
+A set of points represented by a sequence of intervals. Set operations over interval sets
+return a new IntervalSet, with the fewest number of intervals possible. Unbounded intervals
+are not supported. The individual intervals in the set can be accessed using the iteration
+API or by passing the set to `Array`.
+
+see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
+
+## Examples
+
+```jldoctest; setup = :(using Intervals)
+julia> union(IntervalSet(1..5), IntervalSet(3..8))
+1-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[1 .. 8]
+
+julia> intersect(IntervalSet(1..5), IntervalSet(3..8))
+1-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[3 .. 5]
+
+julia> symdiff(IntervalSet(1..5), IntervalSet(3..8))
+2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
+[1 .. 3)
+(5 .. 8]
+
+julia> union(IntervalSet([1..2, 2..5]), IntervalSet(6..7))
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[1 .. 5]
+[6 .. 7]
+
+julia> union(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[1 .. 10]
+[12 .. 14]
+
+julia> intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+2-interval IntervalSet{Interval{Int64, Closed, Closed}}:
+[4 .. 5]
+[8 .. 9]
+
+julia> setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
+2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
+[1 .. 4)
+(9 .. 10]
+```
+"""
+struct IntervalSet{T <: AbstractInterval}
+    items::Vector{T}
+end
+
+IntervalSet(interval::T) where T <: AbstractInterval = IntervalSet{T}([interval])
+IntervalSet(interval::IntervalSet) = interval
+IntervalSet(itr) = IntervalSet{eltype(itr)}(collect(itr))
+IntervalSet() = IntervalSet(AbstractInterval[])
+
+Base.copy(intervals::IntervalSet{T}) where {T} = IntervalSet{T}(copy(intervals.items))
+Base.eltype(::IntervalSet{T}) where T = T
+Base.isempty(intervals::IntervalSet) = isempty(intervals.items) || all(isempty, intervals.items)
+Base.:(==)(a::IntervalSet, b::IntervalSet) = issetequal(a, b)
+Base.isequal(a::IntervalSet, b::IntervalSet) = isequal(a.items, b.items)
+Base.convert(::Type{T}, intervals::IntervalSet) where T <: AbstractArray = convert(T, intervals.items)
+function Base.show(io::Base.AbstractPipe, ::MIME"text/plain", x::IntervalSet)
+    intervals = union(x)
+    n = length(intervals.items)
+    iocompact = IOContext(io, :compact => true)
+    print(io, "$n-interval ")
+    show(io, MIME"text/plain"(), typeof(x))
+    println(io, ":")
+    nrows = displaysize(io)[1]
+    half = fld(nrows, 2) - 2
+    if nrows ≥ n && half > 1
+        for interval in intervals.items[1:(end-1)]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        isempty(intervals) || show(iocompact, MIME"text/plain"(), intervals.items[end])
+    else
+        for interval in intervals.items[1:half]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        println(io, "⋮")
+        for interval in intervals.items[(end-half+1):end-1]
+            show(iocompact, MIME"text/plain"(), interval)
+            println(io, "")
+        end
+        show(iocompact, MIME"text/plain"(), intervals.items[end])
+    end
+end
+
+# currently (to avoid breaking changes) new methods for `Base`
+# accept `IntervalSet` objects and Interval singletons.
 const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 
 # During merge operations used to compute unions, intersections etc...,
@@ -39,8 +130,10 @@ function endpoint_tracking(
 )
     return TrackEachEndpoint()
 end
-endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b))
+
+endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b))
 endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b))
+endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b))
 
 # track: run a thunk, but only if we are tracking endpoints dynamically
 track(fn::Function, ::TrackEachEndpoint, args...) = fn(args...)
@@ -58,12 +151,21 @@ interval_type(::TrackRightOpen{T}) where T = Interval{T, Closed, Open}
 # all vectors of sets be represented by their endpoints. The functions unbunch
 # and bunch convert between an interval and an endpoint representation
 
-function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isless) 
+function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isless)
     return endpoint_type(tracking)[LeftEndpoint(interval), RightEndpoint(interval)]
 end
+function unbunch(intervals::IntervalSet, tracking::EndpointTracking; kwargs...)
+    return unbunch(convert(Vector, intervals), tracking; kwargs...)
+end
 unbunch_by_fn(_) = identity
-function unbunch(intervals::Union{AbstractIntervals, Base.Iterators.Enumerate{<:AbstractIntervals}}, 
-                 tracking::EndpointTracking; lt=isless)
+function unbunch(
+    intervals::Union{
+        AbstractVector{<:AbstractInterval},
+        Base.Iterators.Enumerate{<:Union{AbstractIntervals, AbstractVector{<:AbstractInterval}}}
+    },
+    tracking::EndpointTracking;
+    lt=isless,
+)
     by = unbunch_by_fn(intervals)
     filtered = Iterators.filter(!isempty ∘ by, intervals)
     isempty(filtered) && return endpoint_type(tracking)[]
@@ -72,12 +174,13 @@ function unbunch(intervals::Union{AbstractIntervals, Base.Iterators.Enumerate{<:
 end
 # support for `unbunch(enumerate(vcat(x)))` (transforming [(i, interval)] -> [(i, endpoint), (i,endpoint)])
 unbunch_by_fn(::Base.Iterators.Enumerate) = last
-function unbunch((i, interval)::Tuple, tracking; lt=isless) 
+function unbunch((i, interval)::Tuple, tracking; lt=isless)
     eltype = Tuple{Int, endpoint_type(tracking)}
     return eltype[(i, LeftEndpoint(interval)), (i, RightEndpoint(interval))]
 end
 
-function unbunch(a::AbstractIntervals, b::AbstractIntervals; kwargs...)
+function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals},
+                 b::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals}; kwargs...)
     tracking = endpoint_tracking(a, b)
     a_ = unbunch(a, tracking; kwargs...)
     b_ = unbunch(b, tracking; kwargs...)
@@ -87,16 +190,17 @@ end
 # represent a sequence of endpoints as a sequence of one or more intervals
 function bunch(endpoints, tracking)
     @assert iseven(length(endpoints))
-    isempty(endpoints) && return interval_type(tracking)[]
-    return map(Iterators.partition(endpoints, 2)) do pair
+    isempty(endpoints) && return IntervalSet(interval_type(tracking)[])
+    res = map(Iterators.partition(endpoints, 2)) do pair
         return Interval(pair..., tracking)
     end
+    return IntervalSet(res)
 end
 Interval(a::Endpoint, b::Endpoint, ::TrackEachEndpoint) = Interval(a, b)
 Interval(a::Endpoint, b::Endpoint, ::TrackLeftOpen{T}) where T = Interval{T,Open,Closed}(a.endpoint, b.endpoint)
 Interval(a::Endpoint, b::Endpoint, ::TrackRightOpen{T}) where T = Interval{T,Closed,Open}(a.endpoint, b.endpoint)
 
-# the sentinel endpoint reduces the number of edgecases 
+# the sentinel endpoint reduces the number of edgecases
 # we have to deal with when comparing endpoints during a merge
 # NOTE: it's tempting to replace this with an unbounded endpoint
 # but if we ever want to support unbounded endpoints in mergesets
@@ -108,7 +212,7 @@ function first_endpoint(x)
     return eltype(x) <: Tuple ? last(first(x)) : first(x)
 end
 function last_endpoint(x)
-    isempty(x) && return SentinelEndpoint() 
+    isempty(x) && return SentinelEndpoint()
     # if the endpoints are enumerated, eltype will be a tuple
     return eltype(x) <: Tuple ? last(last(x)) : last(x)
 end
@@ -139,7 +243,7 @@ isleft(::RightEndpoint) = false
 # will remain unchanged moving left to right along the real-number line until we encounter a
 # new endpoint.
 #
-# For each endpoint, we determine two things: 
+# For each endpoint, we determine two things:
 #   1. whether subsequent points should be included in the merge operation or not (based on
 #        its membership in both `x` and `y`) by using `op`
 #   2. whether the next step will define a left (start including) or right endpoint (stop
@@ -264,35 +368,37 @@ right_endpoint(t, ::TrackRightOpen{T}) where T = RightEndpoint{T,Open}(endpoint(
 
 # There is power in a union.
 """
-    union(intervals::AbstractVector{<:AbstractInterval})
+    union(intervals::IntervalSets)
 
-Flattens a vector of overlapping intervals into a new, smaller vector containing only
-non-overlapping intervals.
+Flattens any overlapping intervals within the `IntervalSet` into a new, smaller set
+containing only non-overlapping intervals.
 """
-function Base.union(intervals::AbstractVector{<:AbstractInterval})
-    return union!(convert(Vector{AbstractInterval}, intervals))
+Base.union(intervals::IntervalSet{<:Interval}) = union!(copy(intervals))
+
+# In the case where we're dealing with a non-concrete interval type like AnchoredIntervals then simply
+# allocate a AbstractInterval vector
+function Base.union(intervals::IntervalSet{<:AbstractInterval})
+    T = AbstractInterval
+    dest = Vector{T}(undef, length(intervals.items))
+    copyto!(dest, intervals.items)
+    return union!(IntervalSet{T}(dest))
 end
 
-# allow a concretely typed array for `Interval` objects (as opposed to e.g. anchored intervals
-# which may change type during the union process)
-function Base.union(intervals::AbstractVector{T}) where T <: Interval
-    return union!(copy(intervals))
-end
-
 """
-    union!(intervals::AbstractVector{<:AbstractInterval})
+    union!(intervals::IntervalSet)
 
 Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
 non-overlapping intervals.
 """
-function Base.union!(intervals::AbstractVector{<:AbstractInterval})
-    sort!(intervals)
+function Base.union!(intervals::IntervalSet)
+    items = intervals.items
+    sort!(items)
 
     i = 2
-    n = length(intervals)
+    n = length(items)
     while i <= n
-        prev = intervals[i - 1]
-        curr = intervals[i]
+        prev = items[i - 1]
+        curr = items[i]
 
         # If the current and previous intervals don't meet then move along
         if !overlaps(prev, curr) && !contiguous(prev, curr)
@@ -301,8 +407,8 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
         # If the two intervals meet then we absorb the current interval into
         # the previous one.
         else
-            intervals[i - 1] = merge(prev, curr)
-            deleteat!(intervals, i)
+            items[i - 1] = merge(prev, curr)
+            deleteat!(items, i)
             n -= 1
         end
     end
@@ -311,13 +417,13 @@ function Base.union!(intervals::AbstractVector{<:AbstractInterval})
 end
 
 """
-    superset(intervals::AbstractArray{<:AbstractInterval}) -> Interval
+    superset(intervals::IntervalSet) -> Interval
 
 Create the smallest single interval which encompasses all of the provided intervals.
 """
-function superset(intervals::AbstractArray{<:AbstractInterval})
-    left = minimum(LeftEndpoint.(intervals))
-    right = maximum(RightEndpoint.(intervals))
+function superset(intervals::IntervalSet)
+    left = minimum(LeftEndpoint.(intervals.items))
+    right = maximum(RightEndpoint.(intervals.items))
 
     return Interval(left, right)
 end
@@ -328,18 +434,31 @@ Base.intersect(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && 
 Base.union(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx || iny, x, y)
 Base.setdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx && !iny, x, y)
 Base.symdiff(x::IntervalSet, y::IntervalSet) = mergesets((inx, iny) -> inx ⊻ iny, x, y)
-Base.issubset(x::AbstractIntervals, y::AbstractIntervals) = isempty(setdiff(x, y))
 Base.isdisjoint(x::AbstractIntervals, y::AbstractIntervals) = isempty(intersect(x, y))
 
-function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
-    x, y, tracking = unbunch(union(vcat(x)), union(vcat(y)))
-    return x == y || all(isempty, bunch(x, tracking)) && all(isempty, bunch(y, tracking))
+Base.issubset(x, y::IntervalSet) = x in y
+Base.issubset(x::AbstractInterval, y::IntervalSet) = any(Base.Fix1(issubset, x), y.items)
+Base.issubset(x::IntervalSet, y::AbstractInterval) = all(Base.Fix2(issubset, y), x.items)
+Base.issubset(x::IntervalSet, y::IntervalSet) = isempty(setdiff(x, y))
+
+# Add methods where just 1 argument is an Interval
+for f in (:intersect, :union, :setdiff, :symdiff)
+    @eval Base.$f(x::AbstractInterval, y::IntervalSet) = $f(IntervalSet([x]), y)
+    @eval Base.$f(x::IntervalSet, y::AbstractInterval) = $f(x, IntervalSet([y]))
 end
+
+function Base.issetequal(x::AbstractIntervals, y::AbstractIntervals)
+    x, y, tracking = unbunch(union(IntervalSet(x)), union(IntervalSet(y)))
+    return x == y || isempty(bunch(x, tracking)) && isempty(bunch(y, tracking))
+end
+
+# when `x` is number-like object (Number, Date, Time, etc...):
+Base.in(x, y::IntervalSet) = any(Base.Fix1(in, x), y.items)
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
 intersection_isless_fn(::TrackStatically) = isless
-function intersection_isless_fn(::TrackEachEndpoint) 
+function intersection_isless_fn(::TrackEachEndpoint)
     function (x,y)
         if isequal(x, y)
             return isless(intersection_order(x), intersection_order(y))
@@ -351,22 +470,22 @@ end
 
 """
     find_intersections(
-        x::Union{AbstractInterval, AbstractVector{<:AbstractInterval}},
-        y::Union{AbstractInterval, AbstractVector{<:AbstractInterval}},
+        x::AbstractVector{<:AbstractInterval},
+        y::AbstractVector{<:AbstractInterval}
     )
 
 Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
 intervals in `y` that intersect with `x[i]`.
 """
-function find_intersections(x_::AbstractIntervals, y_::AbstractIntervals)
-    xa, ya = vcat(x_), vcat(y_)
-    tracking = endpoint_tracking(xa, ya)
+find_intersections(x, y) = find_intersections(vcat(x), vcat(y))
+function find_intersections(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval})
+    tracking = endpoint_tracking(x, y)
     lt = intersection_isless_fn(tracking)
-    x = unbunch(enumerate(xa), tracking; lt)
-    y = unbunch(enumerate(ya), tracking; lt)
-    result = [Vector{Int}() for _ in 1:length(xa)]
+    x_endpoints = unbunch(enumerate(x), tracking; lt)
+    y_endpoints = unbunch(enumerate(y), tracking; lt)
+    result = [Vector{Int}() for _ in 1:length(x)]
 
-    return find_intersections_helper!(result, x, y, lt)
+    return find_intersections_helper!(result, x_endpoints, y_endpoints, lt)
 end
 
 function find_intersections_helper!(result, x, y, lt)
@@ -402,4 +521,3 @@ function find_intersections_helper!(result, x, y, lt)
 
     return unique!.(result)
 end
-

@@ -28,11 +28,28 @@ end
     area(x::Interval) = last(x) - first(x)
     # note: `mapreduce` fails here for empty vectors
     area(x::AbstractVector{<:AbstractInterval{T}}) where T = mapreduce(area, +, x, init=zero(T))
+    area(x::IntervalSet) = area(x.items)
     area(x) = isempty(x) ? 0 : error("Undefined area for object of type $(typeof(x))")
     myunion(x::Interval) = x
     myunion(x::AbstractVector{<:Interval}) = union(x)
+    myunion(x::IntervalSet) = union(x)
 
     rand_bound_type(rng) = rand(rng, (Closed, Open))
+
+    # verify case where we interpret array as a set of elements (rather than an
+    # interval-bound point set)
+    @test intersect([1..2, 2..3, 3..4, 4..5], [2..3, 3..4]) == [2..3, 3..4]
+
+    # verify that elements are in / subsets of interval sets
+    @test 2 ∈ IntervalSet([1..3, 5..10])
+    @test 0 ∉ IntervalSet([1..3, 5..10])
+    @test 4 ∉ IntervalSet([1..3, 5..10])
+    @test 11 ∉ IntervalSet([1..3, 5..10])
+    @test issubset(2, IntervalSet([1..3, 5..10]))
+    @test !issubset(0, IntervalSet([1..3, 5..10]))
+    @test !issubset(4, IntervalSet([1..3, 5..10]))
+    @test !issubset(11, IntervalSet([1..3, 5..10]))
+    @test issubset(2, IntervalSet([1.0 .. 3.0, 5.0 .. 10.0]))
 
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
@@ -43,36 +60,53 @@ end
         @test issetequal(a, a)
         @test isdisjoint(setdiff(a, b), b)
         @test !isdisjoint(a, a)
-        
-        intersections = find_intersections(a, b)
-        a, b = vcat(a), vcat(b)  # Always make `a` / `b` vectors
+
+        intersections = find_intersections(convert(Array, a), convert(Array, b))
 
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
         @test all(enumerate(intersections)) do (i, x)
-            isempty(x) || !isempty(intersect(a[i:i], b[x]))
+            isempty(x) || !isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[x])))
         end
 
         # verify that all indices not returned in `find_intersections` correspond to
         # sets in b that do not overlap with the given set in akk
         @test all(enumerate(intersections)) do (i, x)
-            isempty(intersect(a[i:i], b[Not(x)]))
+            isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[Not(x)])))
+        end
+
+        # Test f(interval, intervalset) and f(intervalset, interval) methods work the same
+        # as the regular f(intervalset, intervalset) methods
+        if a isa IntervalSet && b isa IntervalSet
+            for f in (intersect, union, setdiff, symdiff, isdisjoint, issubset)
+                # We'll just use the first and last entries as sample intervals for these
+                # tests rather than an exhausting search
+                x = first(a.items)
+                @test f(x, b) == f(IntervalSet([x]), b)
+                x = last(a.items)
+                @test f(x, b) == f(IntervalSet([x]), b)
+
+                y = first(b.items)
+                @test f(a, y) == f(a, IntervalSet([y]))
+                y = last(b.items)
+                @test f(a, y) == f(a, IntervalSet([y]))
+            end
         end
     end
 
     # verify empty interval set
     @test isempty(union(Interval[]))
-    
+
     # a few taylored interval sets
-    a = [Interval(i, i + 3) for i in 1:5:15]
-    b = a .+ (1:2:5)
-    @test all(first.(a) .∈ a)
+    a = IntervalSet([Interval(i, i + 3) for i in 1:5:15])
+    b = IntervalSet(a.items .+ (1:2:5))
+    @test all(x -> first(x) ∈ a, a.items)
     testsets(a, b)
-    testsets(a[1:1], b)
-    testsets(a, b[1:1])
+    testsets(IntervalSet(a.items[1]), b)
+    testsets(a, IntervalSet(b.items[1]))
 
     # verify that `last` need not be ordered
-    intervals = [Interval(0, 5), Interval(0, 3)]
+    intervals = IntervalSet([Interval(0, 5), Interval(0, 3)])
     @test superset(union(intervals)) == Interval(0, 5)
 
     # try out some more involved (random) intervals
@@ -82,47 +116,47 @@ end
     ends = starts .+ rand(rng, 1:10_000, n)
     offsets = round.(Int, (ends .- starts) .* (2 .* rand(rng, n) .- 1))
 
-    a = Interval.(starts, ends)
-    b = Interval.(starts .+ offsets, ends .+ offsets)
-    @test all(first.(a) .∈ a)
+    a = IntervalSet(Interval.(starts, ends))
+    b = IntervalSet(Interval.(starts .+ offsets, ends .+ offsets))
+    @test all(x -> first(x) ∈ a, a.items)
     testsets(a, b)
-    testsets(a[1:1], b)
-    testsets(a, b[1:1])
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
-    a = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts, ends)
-    b = Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts .+ offsets, ends .+ offsets)
+    a = IntervalSet(Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts, ends))
+    b = IntervalSet(Interval{rand_bound_type(rng), rand_bound_type(rng)}.(starts .+ offsets, ends .+ offsets))
     testsets(a, b)
-    testsets(a[1:1], b)
-    testsets(a, b[1:1])
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
-    a = Interval{Closed, Open}.(starts, ends)
-    b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
+    a = IntervalSet(Interval{Closed, Open}.(starts, ends))
+    b = IntervalSet(Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets))
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a[1:1], b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, b[1:1]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(IntervalSet(first(a.items)), b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, IntervalSet(first(b.items))) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(a[1:1], b)
-    testsets(a, b[1:1])
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
-    a = Interval{Open, Closed}.(starts, ends)
-    b = Interval{Open, Closed}.(starts .+ offsets, ends .+ offsets)
+    a = IntervalSet(Interval{Open, Closed}.(starts, ends))
+    b = IntervalSet(Interval{Open, Closed}.(starts .+ offsets, ends .+ offsets))
     @test Intervals.endpoint_tracking(a, b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a[1:1], b) isa Intervals.TrackStatically
-    @test Intervals.endpoint_tracking(a, b[1:1]) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(IntervalSet(first(a.items)), b) isa Intervals.TrackStatically
+    @test Intervals.endpoint_tracking(a, IntervalSet(first(b.items))) isa Intervals.TrackStatically
     testsets(a, b)
-    testsets(a[1:1], b)
-    testsets(a, b[1:1])
+    testsets(IntervalSet(first(a.items)), b)
+    testsets(a, IntervalSet(first(b.items)))
 
     randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(first(x), last(x))
     leftint(x::Interval) = Interval{Closed, Open}(first(x), last(x))
     rightint(x::Interval) = Interval{Open, Closed}(first(x), last(x))
 
-    a = Interval{Closed, Open}.(starts, ends)
-    b = Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets)
-    testsets(a, randint.(b))
-    testsets(a[1:1], randint.(b))
-    testsets(a, leftint.(b[1:1]))
-    testsets(a, rightint.(b))
-    testsets(a[1:1], rightint.(b))
-    testsets(a, rightint.(b[1:1]))
+    a = IntervalSet(Interval{Closed, Open}.(starts, ends))
+    b = IntervalSet(Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets))
+    testsets(a, IntervalSet(randint.(b.items)))
+    testsets(IntervalSet(first(a.items)), IntervalSet(randint.(b.items)))
+    testsets(a, IntervalSet(leftint.(first(b.items))))
+    testsets(a, IntervalSet(rightint.(b.items)))
+    testsets(IntervalSet(first(a.items)), IntervalSet(rightint.(b.items)))
+    testsets(a, IntervalSet(rightint.(first(b.items))))
 end

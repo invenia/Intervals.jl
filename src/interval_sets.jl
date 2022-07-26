@@ -102,50 +102,84 @@ const AbstractIntervals = Union{AbstractInterval, IntervalSet}
 # TrackEachEndpoint tracks endpoints on a case-by-case basis
 # computing closed/open with boolean flags
 abstract type AbstractEndpointTracking{T}; end
-abstract type AbstractTrackDynamically{T} <: AbstractEndpointTracking{T}; end
-struct TrackEachEndpoint{T} <: AbstractTrackDynamically{T}; end
+struct TrackEachEndpoint{T, F} <: AbstractEndpointTracking{T}
+    factory::F
+end
+
 # TrackLeftOpen and TrackRightOpen track the endpoints statically: if the
 # intervals to be merged are all left open (or all right open), the resulting
 # output will always be all left open (or all right open).
-abstract type TrackStatically{T} <: EndpointTracking{T}; end
-struct TrackLeftOpen{T} <: TrackStatically{T}; end
-struct TrackRightOpen{T} <: TrackStatically{T}; end
+abstract type AbstractTrackStatically{T} <: AbstractEndpointTracking{T}; end
+struct TrackLeftOpen{T, F} <: AbstractTrackStatically{T}
+    factory::F
+end
+struct TrackRightOpen{T, F} <: AbstractTrackStatically{T}
+    factory::F
+end
 
 function endpoint_tracking(
     ::Type{<:AbstractInterval{T,Open,Closed}},
     ::Type{<:AbstractInterval{U,Open,Closed}},
+    factory
 ) where {T,U}
     W = promote_type(T, U)
-    return TrackLeftOpen{W}()
+    return TrackLeftOpen{W}(factory)
 end
 function endpoint_tracking(
     ::Type{<:AbstractInterval{T,Closed,Open}},
     ::Type{<:AbstractInterval{U,Closed,Open}},
+    factory
 ) where {T,U}
     W = promote_type(T, U)
-    return TrackRightOpen{W}()
+    return TrackRightOpen{W}(factory)
 end
 function endpoint_tracking(
     ::Type{<:AbstractInterval{T}},
     ::Type{<:AbstractInterval{U}},
+    factory
 )
     W = promote_type(T, U)
-    return TrackEachEndpoint{W}()
+    return TrackEachEndpoint{W}(factory)
 end
 function endpoint_tracking(
     ::Type{<:AbstractInterval},
     ::Type{<:AbstractInterval},
+    factory
 )
-    return TrackEachEndpoint{Any}()
+    return TrackEachEndpoint{Any}(factory)
 end
 
-endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b))
-endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b))
-endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b))
+endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b), interval_factory(a, b))
+endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b), interval_factory(a, b))
+endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b), interval_factory(a, b))
+
+# When we split intervals into endpoints we also need a way to construct new intervals from
+# the split endpoints. This is done using an factory. The default one just calls `Interval`
+# on the endpoints. These is some additional tracking of types that needs to be handled to
+# indicate the proper eltype for arrays of the constructed intervals. The methods are setup
+# to minimize the number of methods that need to be overloaded to define a new type of
+# factory (for a differnet concrete interval type).
+struct AbstractFacotry; end
+struct DefaultFactory{T,D} <: AbstractFacotry; end
+(tr::AbstractEndpointTracking)(a, b) = tr.factory(a, b)
+(::DefaultFactory{T})(a::AbstractEndpoint, b::AbstractEndpoint) where T = Interval{T}(a, b)
+(::DefaultFactory{T})() where T = Interval{T,Closed,Open}(zero(T), zero(T))
+(::DefaultFactory{T,:LeftOpen})() where T = Interval{T,Open,Closed}(zero(T), zero(T))
+interval_factory(a::IntervalSet, b::IntervalSet) = interval_factory(a.items, b.items)
+interval_factory(x::AbstractInterval{T}, y::AbstractInterval{U}) where {T,U} = DefaultFactory{promote_type{T, U}, :RightOpen}()
+interval_factory(x::AbstractInterval{T,Open,Closed}, y::AbstractInterval{U,Open,Closed}) where {T,U} = DefaultFactory{promote_type{T, U}, :LeftOpen}()
+interval_factory(x::AbstractInterval, y::AbstractInterval) = DefaultFactory{Any, :RightOpen}()
+interval_type(x, L, R) = interval_type(x)
+interval_type(::DefaultFactory{T}) where {T} = Interval{T}
+interval_type(::DefaultFactory{T}, L, R) where {T} = Interval{T,L,R}
+LeftEndpoint(interval::AbstractInterval, ::AbstractFactory) = LeftEndpoint(interval)
+RightEndpoint(interval::AbstractInterval, ::AbstractFactory) = RightEndpoint(interval)
+LeftEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = LeftEndpoint(interval, tr.factory)
+RightEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = RightEndpoint(interval, tr.factory)
 
 # track: run a thunk, but only if we are tracking endpoints dynamically
 track(fn::Function, ::TrackEachEndpoint, args...) = fn(args...)
-track(_, tracking::TrackStatically, args...) = tracking
+track(_, tracking::AbstractTrackStatically, args...) = tracking
 
 function endpoint_type(::AbstractInterval{T,L,R}) where {T,L,R} 
     return Union{LeftEndpoint{T,L}, RightEndpoint{T,R}}
@@ -163,21 +197,20 @@ end
 endpoint_type(::TrackEachEndpoint{T}) where T = Endpoint{T}
 endpoint_type(::TrackLeftOpen{T}) where T = Union{LeftEndpoint{T,Open}, RightEndpoint{T, Closed}}
 endpoint_type(::TrackRightOpen{T}) where T = Union{LeftEndpoint{T,Closed}, RightEndpoint{T, Open}}
-interval_type(::TrackEachEndpoint) = Interval
-interval_type(::TrackLeftOpen{T}) where T = Interval{T, Open, Closed}
-interval_type(::TrackRightOpen{T}) where T = Interval{T, Closed, Open}
+interval_type(track::TrackEachEndpoint) = interval_type(track.factory)
+interval_type(track::TrackRightOpen{T}) where {T} = interval_type(track.factory, Closed, Open)
+interval_type(track::TrackLeftOpen{T}) where {T} = interval_type(track.factory, Open, Closed)
 
 # `unbunch/bunch`: the generic operation used to implement all set operations operates on a
 # series of sorted endpoints (see `mergesets` below); this first requires that
 # all vectors of sets be represented by their endpoints. The functions unbunch
 # and bunch convert between an interval and an endpoint representation
 
-LeftEndpoint(interval::AbstractInterval, tracking::EndpointTracking) = LeftEndpoint(interval)
-RightEndpoint(interval::AbstractInterval, tracking::EndpointTracking) = RightEndpoint(interval)
-function unbunch(interval::AbstractInterval, tracking::EndpointTracking; lt=isless)
-    return endpoint_type(interval)[LeftEndpoint(interval, tracking), RightEndpoint(interval, tracking)]
+function unbunch(interval::AbstractInterval, tracking::AbstractEndpointTracking; lt=isless)
+    return endpoint_type(interval)[LeftEndpoint(interval, tracking.factory), 
+                                   RightEndpoint(interval, tracking.factory)]
 end
-function unbunch(intervals::IntervalSet, tracking::EndpointTracking; kwargs...)
+function unbunch(intervals::IntervalSet, tracking::AbstractEndpointTracking; kwargs...)
     return unbunch(convert(Vector, intervals), tracking; kwargs...)
 end
 unbunch_by_fn(_) = identity
@@ -186,7 +219,7 @@ function unbunch(
         AbstractVector{<:AbstractInterval},
         Base.Iterators.Enumerate{<:Union{AbstractIntervals, AbstractVector{<:AbstractInterval}}}
     },
-    tracking::EndpointTracking;
+    tracking::AbstractEndpointTracking;
     lt=isless,
 )
     by = unbunch_by_fn(intervals)
@@ -199,8 +232,8 @@ end
 unbunch_by_fn(::Base.Iterators.Enumerate) = last
 function unbunch((i, interval)::Tuple, tracking; lt=isless)
     eltype = Tuple{Int, endpoint_type(tracking)}
-    return eltype[(i, LeftEndpoint(interval, tracking)), 
-                  (i, RightEndpoint(interval, tracking))]
+    return eltype[(i, LeftEndpoint(interval, tracking.factory)), 
+                  (i, RightEndpoint(interval, tracking.factory))]
 end
 
 function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals},
@@ -215,16 +248,9 @@ end
 function bunch(endpoints::AbstractVector, tracking)
     @assert iseven(length(endpoints))
     isempty(endpoints) && return IntervalSet(interval_type(tracking)[])
-    res = map(Iterators.partition(endpoints, 2)) do pair
-        return tointerval(pair..., tracking)
-    end
+    res = map(x -> tracking(x...), Iterators.partition(endpoints, 2))
     return IntervalSet(res)
 end
-tointerval(a::AbstractEndpoint, b::AbstractEndpoint, ::TrackEachEndpoint{T}) = Interval{T}(a, b)
-tointerval(a::AbstractEndpoint, b::AbstractEndpoint, ::TrackLeftOpen{T}) where T = Interval{T,Open,Closed}(endpoint(a), endpoint(b))
-tointerval(a::AbstractEndpoint, b::AbstractEndpoint, ::TrackRightOpen{T}) where T = Interval{T,Closed,Open}(endpoint(a), endpoint(b))
-tointerval(::AbstractEndpointTracking{T}) = Interval{T,Closed,Open}(zero(T), zero(T))
-tointerval(::TrackLeftOpen{T}) = Interval{T,Open,Closed}(zero(T), zero(T))
 
 # the sentinel endpoint reduces the number of edgecases
 # we have to deal with when comparing endpoints during a merge
@@ -385,12 +411,12 @@ empty_interval(start, stop, ::AbstractTrackDynamically) = start > stop
 # that t might not be the same type of endpoint (e.g.
 # `LeftEndpoint(RightEndpoint(...), tracking)` is perfectly valid). `mergesets` may
 # change which side of an interval an endpoint is on.
-LeftEndpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = LeftEndpoint{T, B}(endpoint(t))
-RightEndpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = RightEndpoint{T, B}(endpoint(t))
-LeftEndpoint(t::Endpoint, ::TrackLeftOpen{T}) where T = LeftEndpoint{T,Open}(endpoint(t))
-LeftEndpoint(t::Endpoint, ::TrackRightOpen{T}) where T = LeftEndpoint{T,Closed}(endpoint(t))
-RightEndpoint(t::Endpoint, ::TrackLeftOpen{T}) where T = RightEndpoint{T,Closed}(endpoint(t))
-RightEndpoint(t::Endpoint, ::TrackRightOpen{T}) where T = RightEndpoint{T,Open}(endpoint(t))
+left_endpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = LeftEndpoint{T, B}(endpoint(t))
+right_endpoint(t::Endpoint{T}, ::Type{B}) where {T, B <: Bound} = RightEndpoint{T, B}(endpoint(t))
+left_endpoint(t::Endpoint, ::TrackLeftOpen{T}) where T = LeftEndpoint{T,Open}(endpoint(t))
+left_endpoint(t::Endpoint, ::TrackRightOpen{T}) where T = LeftEndpoint{T,Closed}(endpoint(t))
+right_endpoint(t::Endpoint, ::TrackLeftOpen{T}) where T = RightEndpoint{T,Closed}(endpoint(t))
+right_endpoint(t::Endpoint, ::TrackRightOpen{T}) where T = RightEndpoint{T,Open}(endpoint(t))
 
 ##### Multi-interval Set Operations #####
 
@@ -485,7 +511,7 @@ Base.in(x, y::IntervalSet) = any(Base.Fix1(in, x), y.items)
 
 # order edges so that closed boundaries are on the outside: e.g. [( )]
 intersection_order(x::Endpoint) = isleft(x) ? !isclosed(x) : isclosed(x)
-intersection_isless_fn(::TrackStatically) = isless
+intersection_isless_fn(::AbstractTrackStatically) = isless
 function intersection_isless_fn(::TrackEachEndpoint)
     function (x,y)
         if isequal(x, y)

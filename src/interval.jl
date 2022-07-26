@@ -392,10 +392,10 @@ end
 function Base.intersect(a::AbstractInterval, b::AbstractInterval)
     tracking = endpoint_tracking(a, b)
     !overlaps(a,b) && return tointerval(tracking)
-    left = max(LeftEndpoint(a), LeftEndpoint(b))
-    right = min(RightEndpoint(a), RightEndpoint(b))
+    left = max(LeftEndpoint(a, tracking), LeftEndpoint(b, tracking))
+    right = min(RightEndpoint(a, tracking), RightEndpoint(b, tracking))
 
-    return tointerval(left, right, tracking)
+    return tracking(left, right)
 end
 
 function Base.merge(a::AbstractInterval, b::AbstractInterval)
@@ -404,9 +404,9 @@ function Base.merge(a::AbstractInterval, b::AbstractInterval)
         throw(ArgumentError("$a and $b are neither overlapping or contiguous."))
     end
 
-    left = min(LeftEndpoint(a), LeftEndpoint(b))
-    right = max(RightEndpoint(a), RightEndpoint(b))
-    return tointerval(left, right, tracking)
+    left = min(LeftEndpoint(a, tracking), LeftEndpoint(b, tracking))
+    right = max(RightEndpoint(a, tracking), RightEndpoint(b, tracking))
+    return tracking(left, right)
 end
 
 ##### ROUNDING #####

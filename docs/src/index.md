@@ -26,6 +26,9 @@ This package defines:
   * [`Open`](@ref), indicating the endpoint value of the interval is not included
   * [`Unbounded`](@ref), indicating the endpoint value is effectively infinite
 
+You can create your own `AbstractInterval` type by following the interface specification
+provided below.
+
 ## Sets
 
 A single interval can be used to represent a contiguous set within a domain but cannot be
@@ -262,6 +265,26 @@ julia> plot(intervals, 1:11)
 
 In the plot, inclusive boundaries are marked with a vertical bar, whereas exclusive boundaries just end.
 
+## Interval Interface
+
+To create your own `AbstractInterval` type you need to define how to get the lower and upper
+bound of the interval and how to construct new intervals of your type from these bounds.
+All other functions defined in this package should work correctly if you do this.
+
+Construction of new intervals requires knowing how to intervals types interact: e.g. if you compute the intersection of two intervals, one that's of your new interval type and one that's an Interval, what should be returned? The default factory always constructs `Interval` objects regardless of the input types. To define a different behavior, you create an `Interval.AbstractFactory` subtype.
+
+```@docs
+Intervals.AbstractFactory
+Intervals.factory
+Intervals.interval_type
+```
+
+To define how to get the lower and upper bound of your type, define a method for `Intervals.LowerBound` and `Intervals.UpperBound`; these are intended to be constructors and are expected to return objects of their respective type.
+
+```@docs
+Intervals.UpperBound(::AbstractInterval, ::Intervals.AbstractFactory)
+Intervals.LowerBound(::AbstractInterval, ::Intervals.AbstractFactory)
+```
 
 ## API
 

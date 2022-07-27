@@ -105,6 +105,8 @@ abstract type AbstractEndpointTracking{T}; end
 struct TrackEachEndpoint{T, F} <: AbstractEndpointTracking{T}
     factory::F
 end
+LeftEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = LeftEndpoint(interval, tr.factory)
+RightEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = RightEndpoint(interval, tr.factory)
 
 # TrackLeftOpen and TrackRightOpen track the endpoints statically: if the
 # intervals to be merged are all left open (or all right open), the resulting
@@ -149,9 +151,9 @@ function endpoint_tracking(
     return TrackEachEndpoint{Any}(factory)
 end
 
-endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b), interval_factory(a, b))
-endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b), interval_factory(a, b))
-endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b), interval_factory(a, b))
+endpoint_tracking(a::IntervalSet, b::IntervalSet) = endpoint_tracking(eltype(a), eltype(b), factory(a, b))
+endpoint_tracking(a::AbstractInterval, b::AbstractInterval) = endpoint_tracking(typeof(a), typeof(b), factory(a, b))
+endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(eltype(a), eltype(b), factory(a, b))
 
 # When we split intervals into endpoints we also need a way to construct new intervals from
 # the split endpoints. This is done using an factory. The default one just calls `Interval`
@@ -159,23 +161,68 @@ endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(elty
 # indicate the proper eltype for arrays of the constructed intervals. The methods are setup
 # to minimize the number of methods that need to be overloaded to define a new type of
 # factory (for a differnet concrete interval type).
-struct AbstractFacotry; end
+"""
+    struct AbstractFactory <: Function; end
+
+A callable object for constructing new intervals. Concrete types that are `isa
+AbstractFactory` must define two methods: one dispatching on a `LowerBound` and `UpperBound`
+object to construct an interval from these bounds, and the other dispatching on an empty
+argument list, which should construct an empty interval (or throw an error if this is not
+possible). They should also define a method of [`interval_type`](@ref)
+"""
+struct AbstractFactory <: Function; end
 struct DefaultFactory{T,D} <: AbstractFactory; end
 (tr::AbstractEndpointTracking)(a, b) = tr.factory(a, b)
 (::DefaultFactory{T})(a::AbstractEndpoint, b::AbstractEndpoint) where T = Interval{T}(a, b)
 (::DefaultFactory{T})() where T = Interval{T,Closed,Open}(zero(T), zero(T))
 (::DefaultFactory{T,:LeftOpen})() where T = Interval{T,Open,Closed}(zero(T), zero(T))
-interval_factory(a::AbstractInterval{T}) = DefaultFactory{T, :RightOpen}()
-interval_factory(a::AbstractInterval{T,Open,Closed}) = DefaultFactory{T, :LeftOpen}()
-interval_factory(a::IntervalSet, b::IntervalSet) = interval_factory(a.items, b.items)
-interval_factory(x::AbstractInterval{T}, y::AbstractInterval{U}) where {T,U} = DefaultFactory{promote_type{T, U}, :RightOpen}()
-interval_factory(x::AbstractInterval{T,Open,Closed}, y::AbstractInterval{U,Open,Closed}) where {T,U} = DefaultFactory{promote_type{T, U}, :LeftOpen}()
-interval_factory(x::AbstractInterval, y::AbstractInterval) = DefaultFactory{Any, :RightOpen}()
+
+"""
+    factory(a::AbstractInterval)
+
+Returns an `AbstractFactory` object defining how a new interval should be constructed from
+the bounds of `a`. Defaults to the internal type `Intervals.DefaultFactory` which will
+construct new objects as the `Interval` type.
+"""
+factory(a::AbstractInterval{T}) = DefaultFactory{T, :RightOpen}()
+factory(a::AbstractInterval{T,Open,Closed}) = DefaultFactory{T, :LeftOpen}()
+
+"""
+    factory(a::AbstractInterval, b::AbstractInterval)
+
+Returns an `AbstractFactory` object defining how a new interval should be constructed when
+pulling from the bounds of `a` and `b` (e.g. the intersection of `a` and `b`). Fallback
+methods default to the internal type `Intervals.DefaultFactory` which will construct new
+objects with the `Interval` type.
+"""
+factory(x::AbstractInterval{T}, y::AbstractInterval{U}) where {T,U} = DefaultFactory{promote_type(T, U), :RightOpen}()
+factory(x::AbstractInterval{T,Open,Closed}, y::AbstractInterval{U,Open,Closed}) where {T,U} = DefaultFactory{promote_type{T, U}, :LeftOpen}()
+factory(x::AbstractInterval, y::AbstractInterval) = DefaultFactory{Any, :RightOpen}()
+
+"""
+    factory(a::AbstractVector{<:AbstractInterval}, b::Abstract{<:AbstractInterval})
+
+Returns an `AbstractFactory` object defining how a new interval should be constructed when
+pulling from the bounds of all intervals in `a` and `b` (e.g. the intersection of `a[1]` and
+`b[2]`). Fallback methods default to the internal type `Intervals.DefaultFactory` which will
+construct new objects with the `Interval` type.
+"""
+factory(x::AbstractVector{<:AbstractInterval{T}}, y::AbstractVector{<:AbstractInterval{U}}) where {T,U} = DefaultFactory{promote_type(T,U), :RightOpen}()
+factory(x::AbstractVector{<:AbstractInterval{T,Open,Closed}}, y::AbstractVector{<:AbstractInterval{U,Open,Closed}}) where {T,U} = DefaultFactory{promote_type(T,U), :LeftOpen}()
+factory(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval}) DefaultFactory{Any, :RightOpen}()
+factory(a::IntervalSet, b::IntervalSet) = factory(a.items, b.items)
+
+"""
+    interval_type(x::AbstractFactory, L::Type{<:Bound}, U::Type{<:Bound})
+
+Given a factory and the lower and upper boundings (`Closed/Open/Unbounded`) return the
+expected type of the interval. If your specific factory only constructs intervals with a
+fixed boundedness you can safely implement a single-argument method of this function,
+since there is a fall back that drops the last two arguments.
+"""
 interval_type(x, L, R) = interval_type(x)
 interval_type(::DefaultFactory{T}) where {T} = Interval{T}
 interval_type(::DefaultFactory{T}, L, R) where {T} = Interval{T,L,R}
-LeftEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = LeftEndpoint(interval, tr.factory)
-RightEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = RightEndpoint(interval, tr.factory)
 
 # track: run a thunk, but only if we are tracking endpoints dynamically
 track(fn::Function, ::TrackEachEndpoint, args...) = fn(args...)

@@ -160,11 +160,13 @@ endpoint_tracking(a::AbstractVector, b::AbstractVector) = endpoint_tracking(elty
 # to minimize the number of methods that need to be overloaded to define a new type of
 # factory (for a differnet concrete interval type).
 struct AbstractFacotry; end
-struct DefaultFactory{T,D} <: AbstractFacotry; end
+struct DefaultFactory{T,D} <: AbstractFactory; end
 (tr::AbstractEndpointTracking)(a, b) = tr.factory(a, b)
 (::DefaultFactory{T})(a::AbstractEndpoint, b::AbstractEndpoint) where T = Interval{T}(a, b)
 (::DefaultFactory{T})() where T = Interval{T,Closed,Open}(zero(T), zero(T))
 (::DefaultFactory{T,:LeftOpen})() where T = Interval{T,Open,Closed}(zero(T), zero(T))
+interval_factory(a::AbstractInterval{T}) = DefaultFactory{T, :RightOpen}()
+interval_factory(a::AbstractInterval{T,Open,Closed}) = DefaultFactory{T, :LeftOpen}()
 interval_factory(a::IntervalSet, b::IntervalSet) = interval_factory(a.items, b.items)
 interval_factory(x::AbstractInterval{T}, y::AbstractInterval{U}) where {T,U} = DefaultFactory{promote_type{T, U}, :RightOpen}()
 interval_factory(x::AbstractInterval{T,Open,Closed}, y::AbstractInterval{U,Open,Closed}) where {T,U} = DefaultFactory{promote_type{T, U}, :LeftOpen}()
@@ -172,8 +174,6 @@ interval_factory(x::AbstractInterval, y::AbstractInterval) = DefaultFactory{Any,
 interval_type(x, L, R) = interval_type(x)
 interval_type(::DefaultFactory{T}) where {T} = Interval{T}
 interval_type(::DefaultFactory{T}, L, R) where {T} = Interval{T,L,R}
-LeftEndpoint(interval::AbstractInterval, ::AbstractFactory) = LeftEndpoint(interval)
-RightEndpoint(interval::AbstractInterval, ::AbstractFactory) = RightEndpoint(interval)
 LeftEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = LeftEndpoint(interval, tr.factory)
 RightEndpoint(interval::AbstractInterval, tr::AbstractEndpointTracking) = RightEndpoint(interval, tr.factory)
 
@@ -207,8 +207,8 @@ interval_type(track::TrackLeftOpen{T}) where {T} = interval_type(track.factory, 
 # and bunch convert between an interval and an endpoint representation
 
 function unbunch(interval::AbstractInterval, tracking::AbstractEndpointTracking; lt=isless)
-    return endpoint_type(interval)[LeftEndpoint(interval, tracking.factory), 
-                                   RightEndpoint(interval, tracking.factory)]
+    return endpoint_type(interval)[LeftEndpoint(interval, tracking), 
+                                   RightEndpoint(interval, tracking)]
 end
 function unbunch(intervals::IntervalSet, tracking::AbstractEndpointTracking; kwargs...)
     return unbunch(convert(Vector, intervals), tracking; kwargs...)
@@ -232,8 +232,8 @@ end
 unbunch_by_fn(::Base.Iterators.Enumerate) = last
 function unbunch((i, interval)::Tuple, tracking; lt=isless)
     eltype = Tuple{Int, endpoint_type(tracking)}
-    return eltype[(i, LeftEndpoint(interval, tracking.factory)), 
-                  (i, RightEndpoint(interval, tracking.factory))]
+    return eltype[(i, LeftEndpoint(interval, tracking)), 
+                  (i, RightEndpoint(interval, tracking))]
 end
 
 function unbunch(a::Union{AbstractVector{<:AbstractInterval}, AbstractIntervals},

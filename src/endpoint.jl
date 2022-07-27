@@ -33,8 +33,10 @@ const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
 LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)
 RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
-LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
-RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
+LeftEndpoint(i::AbstractInterval) = LeftEndpoint(i, interval_factory(i))
+RightEndpoint(i::AbstractInterval) = RightEndpoint(i, interval_factory(i))
+LeftEndpoint(i::AbstractInterval{T,L,R}, ::DefaultFactory) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
+RightEndpoint(i::AbstractInterval{T,L,R}, ::DefaultFactory) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
 
 endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B

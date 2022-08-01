@@ -1,10 +1,10 @@
 struct Direction{T} end
 
-const Left = Direction{:Left}()
-const Right = Direction{:Right}()
+const Lower = Direction{:Lower}()
+const Upper = Direction{:Upper}()
 
-const Beginning = Left
-const Ending = Right
+const Beginning = Lower
+const Ending = Upper
 
 abstract type AbstractEndpoint end
 struct Endpoint{T, D, B <: Bound} <: AbstractEndpoint
@@ -27,14 +27,19 @@ end
 
 Endpoint{T,D,B}(ep) where {T, D, B <: Bounded} = Endpoint{T,D,B}(convert(T, ep))
 
-const LeftEndpoint{T,B} = Endpoint{T, Left, B} where {T,B <: Bound}
-const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
+const LowerEndpoint{T,B} = Endpoint{T, Lower, B} where {T,B <: Bound}
+const UpperEndpoint{T,B} = Endpoint{T, Upper, B} where {T,B <: Bound}
 
-LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)
-RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
+# the old names of lower and upper endpoint: they are not deprecated, because types cannot
+# be deprecated (though their use is not discouraged)
+const LeftEndpoint{T,B} = LowerEndpoint{T,B}
+const RightEndpoint{T,B} = UpperEndpoint{T,B}
 
-LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
-RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
+LowerEndpoint{B}(ep::T) where {T,B} = LowerEndpoint{T,B}(ep)
+UpperEndpoint{B}(ep::T) where {T,B} = UpperEndpoint{T,B}(ep)
+
+LowerEndpoint(i::AbstractInterval{T,L,U}) where {T,L,U} = LowerEndpoint{T,L}(L !== Unbounded ? lowerbound(i) : nothing)
+UpperEndpoint(i::AbstractInterval{T,L,U}) where {T,L,U} = UpperEndpoint{T,U}(U !== Unbounded ? upperbound(i) : nothing)
 
 endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B
@@ -61,21 +66,21 @@ Base.broadcastable(e::Endpoint) = Ref(e)
 """
     ==(a::Endpoint, b::Endpoint) -> Bool
 
-Determine if two endpoints are equal. When both endpoints are left or right then the points
+Determine if two endpoints are equal. When both endpoints are lower or upper then the points
 and inclusiveness must be the same.
 
-Checking the equality of left-endpoint and a right-endpoint is slightly more difficult. A
-left-endpoint and a right-endpoint are only equal when they use the same point and are
-both included. Note that left/right endpoints which are both not included are not equal
-as the left-endpoint contains values below that point while the right-endpoint only contains
+Checking the equality of lower-endpoint and a upper-endpoint is slightly more difficult. A
+lower-endpoint and a upper-endpoint are only equal when they use the same point and are
+both included. Note that lower/upper endpoints which are both not included are not equal
+as the lower-endpoint contains values below that point while the upper-endpoint only contains
 values that are above that point.
 
 Visualizing two contiguous intervals can assist in understanding this logic:
 
-    [x..y][y..z] -> RightEndpoint == LeftEndpoint
-    [x..y)[y..z] -> RightEndpoint != LeftEndpoint
-    [x..y](y..z] -> RightEndpoint != LeftEndpoint
-    [x..y)(y..z] -> RightEndpoint != LeftEndpoint
+    [x..y][y..z] -> UpperEndpoint == LowerEndpoint
+    [x..y)[y..z] -> UpperEndpoint != LowerEndpoint
+    [x..y](y..z] -> UpperEndpoint != LowerEndpoint
+    [x..y)(y..z] -> UpperEndpoint != LowerEndpoint
 """
 function Base.:(==)(a::Endpoint, b::Endpoint)
     return (
@@ -84,11 +89,11 @@ function Base.:(==)(a::Endpoint, b::Endpoint)
     )
 end
 
-function Base.:(==)(a::LeftEndpoint, b::RightEndpoint)
+function Base.:(==)(a::LowerEndpoint, b::UpperEndpoint)
     a.endpoint == b.endpoint && isclosed(a) && isclosed(b)
 end
 
-function Base.:(==)(a::RightEndpoint, b::LeftEndpoint)
+function Base.:(==)(a::UpperEndpoint, b::LowerEndpoint)
     b == a
 end
 
@@ -99,15 +104,15 @@ function Base.isequal(a::Endpoint, b::Endpoint)
     )
 end
 
-function Base.isequal(a::LeftEndpoint, b::RightEndpoint)
+function Base.isequal(a::LowerEndpoint, b::UpperEndpoint)
     isequal(a.endpoint, b.endpoint) && isclosed(a) && isclosed(b)
 end
 
-function Base.isequal(a::RightEndpoint, b::LeftEndpoint)
+function Base.isequal(a::UpperEndpoint, b::LowerEndpoint)
     isequal(b, a)
 end
 
-function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
+function Base.isless(a::LowerEndpoint, b::LowerEndpoint)
     return (
         !isunbounded(b) && (
             isunbounded(a) ||
@@ -117,7 +122,7 @@ function Base.isless(a::LeftEndpoint, b::LeftEndpoint)
     )
 end
 
-function Base.isless(a::RightEndpoint, b::RightEndpoint)
+function Base.isless(a::UpperEndpoint, b::UpperEndpoint)
     return (
         !isunbounded(a) && (
             isunbounded(b) ||
@@ -127,7 +132,7 @@ function Base.isless(a::RightEndpoint, b::RightEndpoint)
     )
 end
 
-function Base.isless(a::LeftEndpoint, b::RightEndpoint)
+function Base.isless(a::LowerEndpoint, b::UpperEndpoint)
     return (
         isunbounded(a) ||
         isunbounded(b) ||
@@ -135,7 +140,7 @@ function Base.isless(a::LeftEndpoint, b::RightEndpoint)
     )
 end
 
-function Base.isless(a::RightEndpoint, b::LeftEndpoint)
+function Base.isless(a::UpperEndpoint, b::LowerEndpoint)
     return (
         !isunbounded(a) && !isunbounded(b) &&
         (
@@ -149,7 +154,7 @@ end
 Base.:(==)(a, b::Endpoint) = a == b.endpoint && isclosed(b)
 Base.:(==)(a::Endpoint, b) = b == a
 
-function Base.isless(a, b::LeftEndpoint)
+function Base.isless(a, b::LowerEndpoint)
     return (
         !isunbounded(b) && (
             a < b.endpoint ||
@@ -158,7 +163,7 @@ function Base.isless(a, b::LeftEndpoint)
     )
 end
 
-function Base.isless(a::RightEndpoint, b)
+function Base.isless(a::UpperEndpoint, b)
     return (
         !isunbounded(a) &&
         (
@@ -168,5 +173,5 @@ function Base.isless(a::RightEndpoint, b)
     )
 end
 
-Base.isless(a, b::RightEndpoint) = isunbounded(b) || a < b.endpoint
-Base.isless(a::LeftEndpoint, b)  = isunbounded(a) || a.endpoint < b
+Base.isless(a, b::UpperEndpoint) = isunbounded(b) || a < b.endpoint
+Base.isless(a::LowerEndpoint, b)  = isunbounded(a) || a.endpoint < b

@@ -12,11 +12,11 @@ DocTestFilters = [
 
 This package defines:
 * `AbstractInterval`, along with its subtypes:
-  * [`Interval{T,L,R}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
-    with left/right bounds types respectively being `L` and `R`
-  * [`AnchoredInterval{P,T,L,R}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
-    value `anchor::T` and the value type `P` which represents the span of the range. Left/right bounds types are specifed
-    by `L` and `R` respectively
+  * [`Interval{T,L,U}`](@ref Interval), which represents a non-iterable range between two endpoints of type `T`
+    with lower/upper bounds types respectively being `L` and `U`
+  * [`AnchoredInterval{P,T,L,U}`](@ref AnchoredInterval), which represents a non-iterable range defined by a single
+    value `anchor::T` and the value type `P` which represents the span of the range. Lower/upper bounds types are specifed
+    by `L` and `U` respectively
     * [`HourEnding`](@ref), a type alias for `AnchoredInterval{Hour(-1)}`
     * [`HourBeginning`](@ref), a type alias for `AnchoredInterval{Hour(1)}`
     * [`HE`](@ref) and [`HB`](@ref), pseudoconstructors for `HourEnding` and `HourBeginning` that round the
@@ -156,7 +156,7 @@ julia> anchor(he)
 
 #### Equality
 
-Two `AbstractInterval`s are considered equal if they have identical left and right
+Two `AbstractInterval`s are considered equal if they have identical lower and upper
 endpoints (taking bounds into account):
 
 ```jldoctest
@@ -182,7 +182,7 @@ When determining whether one `AbstractInterval` is less than (or greater than) a
 sets of comparison operators are available: `<`/`>` and `≪`/`≫`.
 
 The standard `<` and `>` operators (which are not explicitly defined, but are derived from
-`isless`) simply compare the leftmost endpoint of the intervals, and are used for things
+`isless`) simply compare the lowermost endpoint of the intervals, and are used for things
 like `sort`, `min`, `max`, etc.
 
 The `≪` and `≫` operators (the Unicode symbols for "much less than" and "much greater than",
@@ -206,17 +206,17 @@ true
 Interval rounding maintains the original span of the interval, shifting it according to
 whichever endpoint is specified as the one to use for rounding. The operations `floor`,
 `ceil`, and `round` are supported, as long as the `on` keyword is supplied to specify which
-endpoint should be used for rounding. Valid options are `:left`, `:right`, or
+endpoint should be used for rounding. Valid options are `:lower`, `:upper`, or
 `:anchor` if dealing with anchored intervals.
 
 ```jldoctest
-julia> floor(Interval(0.0, 1.0), on=:left)
+julia> floor(Interval(0.0, 1.0), on=:lower)
 Interval{Float64, Closed, Closed}(0.0, 1.0)
 
-julia> floor(Interval(0.5, 1.0), on=:left)
+julia> floor(Interval(0.5, 1.0), on=:lower)
 Interval{Float64, Closed, Closed}(0.0, 0.5)
 
-julia> floor(Interval(0.5, 1.5), on=:right)
+julia> floor(Interval(0.5, 1.5), on=:upper)
 Interval{Float64, Closed, Closed}(0.0, 1.0)
 ```
 
@@ -232,10 +232,10 @@ AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 julia> round(AnchoredInterval{+0.5}(0.5), on=:anchor)
 AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 
-julia> round(AnchoredInterval{+0.5}(0.5), on=:left)
+julia> round(AnchoredInterval{+0.5}(0.5), on=:lower)
 AnchoredInterval{0.5, Float64, Closed, Open}(0.0)
 
-julia> round(AnchoredInterval{+0.5}(0.5), on=:right)
+julia> round(AnchoredInterval{+0.5}(0.5), on=:upper)
 AnchoredInterval{0.5, Float64, Closed, Open}(0.5)
 ```
 
@@ -278,8 +278,8 @@ Intervals.Bounded
 Closed
 Open
 Unbounded
-first
-last
+lowerbound
+upperbound
 span
 isclosed
 isopen

@@ -1,4 +1,4 @@
-using Intervals: Beginning, Ending, LeftEndpoint, RightEndpoint, contiguous, overlaps,
+using Intervals: Beginning, Ending, LowerEndpoint, UpperEndpoint, contiguous, overlaps,
     isbounded, isunbounded
 
 function unique_paired_permutation(v::Vector{T}) where T
@@ -15,11 +15,11 @@ const INTERVAL_TYPES = [Interval, AnchoredInterval{Ending}, AnchoredInterval{Beg
 viable_convert(::Type{Interval}, interval::AbstractInterval) = true
 
 function viable_convert(::Type{AnchoredInterval{Beginning}}, interval::AbstractInterval)
-    return isbounded(interval) && isfinite(first(interval))
+    return isbounded(interval) && isfinite(lowerbound(interval))
 end
 
 function viable_convert(::Type{AnchoredInterval{Ending}}, interval::AbstractInterval)
-    return isbounded(interval) && isfinite(last(interval))
+    return isbounded(interval) && isfinite(upperbound(interval))
 end
 
 @testset "comparisons: $A vs. $B" for (A, B) in unique_paired_permutation(INTERVAL_TYPES)
@@ -51,7 +51,7 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
             expected_xor = [earlier, later]
 
@@ -78,7 +78,7 @@ end
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
             @test_throws ArgumentError merge(earlier, later)
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -88,7 +88,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet([earlier, later])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -138,7 +138,7 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
             expected_xor = [earlier, later]
 
@@ -175,7 +175,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet([earlier, later])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -225,7 +225,7 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
             expected_xor = [earlier, later]
 
@@ -262,7 +262,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet([expected_superset])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -280,7 +280,7 @@ end
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
                 # TODO: Sometimes expected_xor would get mutated in this call
-                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor != union(IntervalSet(expected_xor))
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -314,7 +314,7 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
             expected_overlap = Interval{promote_type(eltype(a), eltype(b))}()
             expected_xor = [earlier, later]
 
@@ -351,7 +351,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -368,7 +368,7 @@ end
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor != union(IntervalSet(expected_xor))
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -401,13 +401,13 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
-            expected_overlap = Interval{Closed, Closed}(last(a), first(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
+            expected_overlap = Interval{Closed, Closed}(upperbound(a), lowerbound(b))
 
-            L, R = first(bounds_types(a)), last(bounds_types(b))
+            L, U = first(bounds_types(a)), last(bounds_types(b))
             expected_xor = [
-                Interval{L, Open}(first(a), first(b)),
-                Interval{Open, R}(last(a), last(b)),
+                Interval{L, Open}(lowerbound(a), lowerbound(b)),
+                Interval{Open, U}(upperbound(a), upperbound(b)),
             ]
 
             @test earlier != later
@@ -443,7 +443,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -494,13 +494,13 @@ end
 
             earlier = convert(A, a)
             later = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(b))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(a))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(b))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(a))
 
-            L, R = first(bounds_types(a)), last(bounds_types(b))
+            L, U = first(bounds_types(a)), last(bounds_types(b))
             expected_xor = [
-                Interval{L, Open}(first(a), first(b)),
-                Interval{Open, R}(last(a), last(b)),
+                Interval{L, Open}(lowerbound(a), lowerbound(b)),
+                Interval{Open, U}(upperbound(a), upperbound(b)),
             ]
 
             @test earlier != later
@@ -536,7 +536,7 @@ end
             @test_throws MethodError symdiff(earlier, later)
 
             # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
+            @test_throws ArgumentError union([earlier, later])
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -575,8 +575,8 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
 
             @test a == b
             @test isequal(a, b)
@@ -611,7 +611,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -649,9 +649,9 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Closed}(first(a), first(a))]
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_xor = [Interval{Closed, Closed}(lowerbound(a), lowerbound(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -686,7 +686,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -727,9 +727,9 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Closed}(last(a), last(a))]
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_xor = [Interval{Closed, Closed}(upperbound(a), upperbound(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -764,7 +764,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -806,11 +806,11 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
             expected_xor = [
-                Interval{Closed, Closed}(first(a), first(a)),
-                Interval{Closed, Closed}(last(a), last(a)),
+                Interval{Closed, Closed}(lowerbound(a), lowerbound(a)),
+                Interval{Closed, Closed}(upperbound(a), upperbound(a)),
             ]
 
             @test a != b
@@ -846,7 +846,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -887,10 +887,10 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_superset = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_overlap = Interval(LowerEndpoint(a), UpperEndpoint(a))
             expected_xor = [
-                Interval{Closed, Closed}(last(b), last(b)),
+                Interval{Closed, Closed}(upperbound(b), upperbound(b)),
             ]
 
             @test a != b
@@ -926,7 +926,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -965,10 +965,10 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_superset = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_overlap = Interval(LowerEndpoint(a), UpperEndpoint(a))
             expected_xor = [
-                Interval{Closed, Closed}(first(b), first(b)),
+                Interval{Closed, Closed}(lowerbound(b), lowerbound(b)),
             ]
 
             @test a != b
@@ -1004,7 +1004,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
             @test intersect([a], [b]) != [expected_overlap]
             @test_broken intersect(IntervalSet([a, b])) == IntervalSet(expected_overlap) # Internal type issue
@@ -1045,8 +1045,8 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_superset = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_overlap = Interval(LowerEndpoint(a), UpperEndpoint(a))
 
             @test a == b
             @test isequal(a, b)
@@ -1081,7 +1081,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1119,9 +1119,9 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Closed, Open}(first(a), first(a))]
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_xor = [Interval{Closed, Open}(lowerbound(a), lowerbound(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -1156,7 +1156,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1194,9 +1194,9 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(a), RightEndpoint(a))
-            expected_overlap = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_xor = [Interval{Open, Closed}(last(a), last(a))]
+            expected_superset = Interval(LowerEndpoint(a), UpperEndpoint(a))
+            expected_overlap = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_xor = [Interval{Open, Closed}(upperbound(a), upperbound(a))]
 
             @test a != b
             @test !isequal(a, b)
@@ -1231,7 +1231,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1268,8 +1268,8 @@ end
 
             a = convert(A, a)
             b = convert(B, b)
-            expected_superset = Interval(LeftEndpoint(b), RightEndpoint(b))
-            expected_overlap = Interval(LeftEndpoint(a), RightEndpoint(a))
+            expected_superset = Interval(LowerEndpoint(b), UpperEndpoint(b))
+            expected_overlap = Interval(LowerEndpoint(a), UpperEndpoint(a))
 
             @test a == b
             @test isequal(a, b)
@@ -1304,7 +1304,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1369,7 +1369,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union([a], [b]) == [a, b] != [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
@@ -1387,7 +1387,7 @@ end
         end
     end
 
-    # Compare two intervals where the first interval is contained by the second
+    # Compare two intervals where the lowerbound interval is contained by the second
     # Visualization of the finite case:
     #
     #  [234]
@@ -1424,10 +1424,10 @@ end
             expected_superset = Interval(larger)
             expected_overlap = Interval(smaller)
 
-            L, R = bounds_types(larger)
+            L, U = bounds_types(larger)
             expected_xor = [
-                Interval{L, Open}(first(larger), first(smaller)),
-                Interval{Open, R}(last(smaller), last(larger)),
+                Interval{L, Open}(lowerbound(larger), lowerbound(smaller)),
+                Interval{Open, U}(upperbound(smaller), upperbound(larger)),
             ]
 
             @test smaller != larger
@@ -1463,7 +1463,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals

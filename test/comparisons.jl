@@ -686,7 +686,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -764,7 +764,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -846,7 +846,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -926,7 +926,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1004,10 +1004,10 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
             @test intersect([a], [b]) != [expected_overlap]
-            @test_broken intersect(IntervalSet([a, b])) == IntervalSet(expected_overlap) # Internal type issue
+            @test intersect(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_overlap)
 
             # TODO: These functions should be compatible with unbounded intervals
             if isbounded(a) && isbounded(b)
@@ -1081,7 +1081,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1156,7 +1156,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1231,7 +1231,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1304,7 +1304,7 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test_throws ArgumentError union([a, b]) == [expected_superset]
+            @test_throws ArgumentError union([a, b])
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals

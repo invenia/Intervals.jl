@@ -258,7 +258,6 @@ In the plot, inclusive boundaries are marked with a vertical bar, whereas exclus
 ```@docs
 Interval
 AnchoredInterval
-IntervalSet
 HourEnding
 HourBeginning
 HE

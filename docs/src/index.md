@@ -29,7 +29,7 @@ This package defines:
 ## Sets
 
 A single interval can be used to represent a contiguous set within a domain but cannot be
-used to represent a disjoint set. For general purpose set operations you need to use the `InteravlSet` type.
+used to represent a disjoint set. For general purpose set operations you need to use the `IntervalSet` type.
 
 ```@docs
 IntervalSet

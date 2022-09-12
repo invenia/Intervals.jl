@@ -5,8 +5,8 @@
 
 A set of points represented by a sequence of intervals. Set operations over interval sets
 return a new IntervalSet, with the fewest number of intervals possible. Unbounded intervals
-are not supported. The individual intervals in the set can be accessed using the iteration
-API or by passing the set to `Array`.
+are not supported. The individual intervals in the set can be accessed by calling
+`convert(Array, interval_set)`.
 
 see also: https://en.wikipedia.org/wiki/Interval_arithmetic#Interval_operators
 

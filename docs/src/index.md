@@ -35,7 +35,7 @@ used to represent a disjoint set. For general purpose set operations you need to
 IntervalSet
 ```
 
-If you wish to instead treat each interval as an *element* of a set, you can operate over vectors or Sets of intervals.
+If you wish to instead treat each interval as an *element* of a set, you can operate over vectors or `Set`s of intervals.
 
 For example:
 

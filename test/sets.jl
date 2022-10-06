@@ -52,7 +52,7 @@ end
     @test issubset(2, IntervalSet([1.0 .. 3.0, 5.0 .. 10.0]))
 
     @test isempty(find_intersections([], []))
-    @test_throws ArgumnetError find_intersections([1], [2])
+    @test_throws ArgumentError find_intersections([1], [2])
     @test isempty(find_intersections(Interval[], Interval[]))
     @test isempty(find_intersections([1..3], Interval[]))
     @test isempty(find_intersections(Interval[], [1..3]))

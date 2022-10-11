@@ -469,22 +469,13 @@ function intersection_isless_fn(::TrackEachEndpoint)
 end
 
 """
-    find_intersections(
-        x::AbstractVector{<:AbstractInterval},
-        y::AbstractVector{<:AbstractInterval}
-    )
+    find_intersections(x, y)
 
 Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
-intervals in `y` that intersect with `x[i]`.
+intervals in `y` that intersect with `x[i]`. Calls collect on the arguments if they
+aren't already arrays.
 """
-find_intersections(x, y) = find_intersections_(vcat(x), vcat(y))
-function find_intersections_(x, y)
-    if isempty(x) && isempty(y)
-        return Vector{Int}[]
-    else
-        throw(ArgumentError("Expected arrays of `AbstractInterval` objects"))
-    end
-end
+find_intersections(x, y) = find_intersections_(collect(x), collect(y))
 function find_intersections_(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval})
     (isempty(x) || isempty(y)) && return Vector{Int}[]
     tracking = endpoint_tracking(x, y)

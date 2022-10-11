@@ -476,7 +476,7 @@ intervals in `y` that intersect with `x[i]`. Calls collect on the arguments if t
 aren't already arrays.
 """
 find_intersections(x, y) = find_intersections_(collect(x), collect(y))
-function find_intersections_(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval})
+function find_intersections_(x::AbstractVector, y::AbstractVector)
     (isempty(x) || isempty(y)) && return Vector{Int}[]
     tracking = endpoint_tracking(x, y)
     lt = intersection_isless_fn(tracking)

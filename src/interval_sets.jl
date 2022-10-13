@@ -522,7 +522,10 @@ function find_intersections_helper!(result, x, y, lt)
     return unique!.(result)
 end
 
-function find_intersections(x::AbstractVector{<:AbstractInterval{T1, Closed, Closed}}, y::AbstractVector{<:AbstractInterval{T2, Closed, Closed}}) where {T1, T2}
+function find_intersections(
+    x::AbstractVector{<:AbstractInterval{T1,Closed,Closed}},
+    y::AbstractVector{<:AbstractInterval{T2,Closed,Closed}},
+) where {T1,T2}
     # Strategy:
     # two binary searches per interval `I` in `x`
     # * identify the set of intervals in `y` that start during-or-after `I`

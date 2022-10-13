@@ -66,13 +66,13 @@ end
         # verify that all indices returned in `find_intersections` correspond to sets
         # in b that overlap with the given set in a
         @test all(enumerate(intersections)) do (i, x)
-            isempty(x) || !isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[x]))) || @show(i)
+            isempty(x) || !isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[x])))
         end
 
         # verify that all indices not returned in `find_intersections` correspond to
         # sets in b that do not overlap with the given set in akk
         @test all(enumerate(intersections)) do (i, x)
-            isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[Not(x)]))) || @show(i, intersect(IntervalSet(a.items[i]), IntervalSet(b.items[Not(x)])))
+            isempty(intersect(IntervalSet(a.items[i]), IntervalSet(b.items[Not(x)])))
         end
 
         # Test f(interval, intervalset) and f(intervalset, interval) methods work the same

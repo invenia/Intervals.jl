@@ -488,6 +488,40 @@ function find_intersections(x::AbstractVector{<:AbstractInterval}, y::AbstractVe
     return find_intersections_helper!(result, x_endpoints, y_endpoints, lt)
 end
 
+function find_intersections(x::AbstractVector{<:AbstractInterval{T, Closed, Closed}}, y::AbstractVector{<:AbstractInterval{T, Closed, Closed}}) where {T}
+    yperm_first = sortperm(y; by=first)
+    yperm_last = sortperm(y; by=last)
+    y_sorted_first = y[yperm_first]
+    y_sorted_last = y[yperm_last]
+
+    starts = first.(y_sorted_first)
+    stops = last.(y_sorted_last)
+
+    results = map(x) do I
+
+        # starts before or during the interval. That means find all points whos START
+        # is less than the END of the interval
+        idx_first = searchsortedlast(starts, last(I))
+        if idx_first < 1
+            starts_before_or_during = 1:0
+        else
+            starts_before_or_during = yperm_first[1:idx_first]
+        end
+
+        idx_last = searchsortedfirst(stops, first(I))
+
+        if idx_last > length(stops)
+            stops_during_or_after = 1:0
+        else
+            stops_during_or_after = yperm_last[idx_last:end]
+        end
+
+        return intersect(starts_before_or_during, stops_during_or_after)
+    end
+    return results
+end
+
+
 function find_intersections_helper!(result, x, y, lt)
     active_xs = Set{Int}()
     active_ys = Set{Int}()

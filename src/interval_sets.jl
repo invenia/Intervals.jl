@@ -488,40 +488,6 @@ function find_intersections(x::AbstractVector{<:AbstractInterval}, y::AbstractVe
     return find_intersections_helper!(result, x_endpoints, y_endpoints, lt)
 end
 
-function find_intersections(x::AbstractVector{<:AbstractInterval{T, Closed, Closed}}, y::AbstractVector{<:AbstractInterval{T, Closed, Closed}}) where {T}
-    yperm_first = sortperm(y; by=first)
-    yperm_last = sortperm(y; by=last)
-    y_sorted_first = y[yperm_first]
-    y_sorted_last = y[yperm_last]
-
-    starts = first.(y_sorted_first)
-    stops = last.(y_sorted_last)
-
-    results = map(x) do I
-
-        # starts before or during the interval. That means find all points whos START
-        # is less than the END of the interval
-        idx_first = searchsortedlast(starts, last(I))
-        if idx_first < 1
-            starts_before_or_during = 1:0
-        else
-            starts_before_or_during = yperm_first[1:idx_first]
-        end
-
-        idx_last = searchsortedfirst(stops, first(I))
-
-        if idx_last > length(stops)
-            stops_during_or_after = 1:0
-        else
-            stops_during_or_after = yperm_last[idx_last:end]
-        end
-
-        return intersect(starts_before_or_during, stops_during_or_after)
-    end
-    return results
-end
-
-
 function find_intersections_helper!(result, x, y, lt)
     active_xs = Set{Int}()
     active_ys = Set{Int}()
@@ -554,4 +520,47 @@ function find_intersections_helper!(result, x, y, lt)
     end
 
     return unique!.(result)
+end
+
+function find_intersections(x::AbstractVector{<:AbstractInterval{T1, Closed, Closed}}, y::AbstractVector{<:AbstractInterval{T2, Closed, Closed}}) where {T1, T2}
+    # Strategy:
+    # two binary searches per interval `I` in `x`
+    # * identify the set of intervals in `y` that start during-or-after `I`
+    # * identify the set of intervals in `y` that stop before-or-during `I`
+    # * intersect them
+    @time begin
+        starts = first.(y)
+        starts_perm = sortperm(starts)
+        starts_sorted = starts[starts_perm]
+
+        stops = last.(y)
+        stops_perm = sortperm(stops)
+        stops_sorted = stops[stops_perm]
+    end
+
+    results = Vector{Vector{Int}}(undef, length(x))
+    for (i, I) in enumerate(x)
+        # find all the starts which occur before the end of `I`
+        idx_first = searchsortedlast(starts_sorted, last(I))
+        if idx_first < 1
+            results[i] = Int[]
+            continue
+            # return Int[]
+        end
+        starts_before_or_during = @view starts_perm[1:idx_first]
+
+        # find all the stops which occur after the start of `I`
+        idx_last = searchsortedfirst(stops_sorted, first(I))
+
+        if idx_last > length(stops_sorted)
+            results[i] = Int[]
+        continue
+            # return Int[]
+        end
+        stops_during_or_after = @view stops_perm[idx_last:end]
+
+        # Intersect them
+        results[i] = intersect(starts_before_or_during, stops_during_or_after)
+    end
+    return results
 end

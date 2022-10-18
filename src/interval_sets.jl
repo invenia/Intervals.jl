@@ -537,9 +537,9 @@ function find_intersections(
 
     # Sneaky performance optimization (makes a huge difference!)
     # Rather than sorting `stops` relative to `y`, we sort it relative to `starts`.
-    # This allows us to work in the "starts" frame of reference until the very end.
+    # This allows us to work in the `starts` frame of reference until the very end.
     # In particular, when we intersect the sets of intervals obtained from starts and from stops,
-    # the "starts" set can be kept as a `UnitRange`, making the intersection *much* faster.
+    # the `starts` set can be kept as a `UnitRange`, making the intersection *much* faster.
     stops = last.(y[starts_perm])
     stops_perm = sortperm(stops)
     stops_sorted = stops[stops_perm]

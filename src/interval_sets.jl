@@ -564,7 +564,7 @@ function find_intersections(
 
         # Working in "starts" frame of reference
         starts_before_or_during = 1:idx_first
-        stops_during_or_after = stops_perm[idx_last:end]
+        stops_during_or_after = @views stops_perm[idx_last:end]
 
         # Intersect them
         r = intersect(starts_before_or_during, stops_during_or_after)

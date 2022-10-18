@@ -543,6 +543,7 @@ function find_intersections(
     stops = last.(y[starts_perm])
     stops_perm = sortperm(stops)
     stops_sorted = stops[stops_perm]
+    len = length(stops_sorted)
 
     results = Vector{Vector{Int}}(undef, length(x))
     for (i, I) in enumerate(x)
@@ -556,7 +557,7 @@ function find_intersections(
         # find all the stops which occur after the start of `I`
         idx_last = searchsortedfirst(stops_sorted, first(I))
 
-        if idx_last > length(stops_sorted)
+        if idx_last > len
             results[i] = Int[]
             continue
         end

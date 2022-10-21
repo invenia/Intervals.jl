@@ -581,8 +581,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @testset "StepRangeLen" begin
             r = StepRangeLen(AnchoredInterval{-1}(1), 1, 5)
 
-            # https://github.com/JuliaLang/julia/issues/33882
-            @test r isa (VERSION < v"1.8" ? StepRangeLen : StepRange)
+            @test r isa StepRangeLen
             @test first(r) == AnchoredInterval{-1}(1)
             @test step(r) == 1
             @test last(r) == AnchoredInterval{-1}(5)

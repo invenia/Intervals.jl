@@ -476,7 +476,7 @@ each element `z[i]` is a vector of all indices in `y` that intersect with `x[i]`
 `x` and `y` should be iterables of intervals. 
 """
 find_intersections(x, y) = find_intersections_(collect(x), collect(y))
-find_intersections(x::AbstractVector, y::Abstractvector) = find_intersections_(x, y)
+find_intersections(x::AbstractVector, y::AbstractVector) = find_intersections_(x, y)
 function find_intersections_(x::AbstractVector, y::AbstractVector)
     (isempty(x) || isempty(y)) && return Vector{Int}[]
     tracking = endpoint_tracking(x, y)

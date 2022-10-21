@@ -54,8 +54,8 @@ end
     @test isempty(find_intersections([], []))
     @test_throws MethodError find_intersections([1], [2])
     @test isempty(find_intersections(Interval[], Interval[]))
-    @test isempty(find_intersections([1..3], Interval[]))
-    @test isempty(find_intersections(Interval[], [1..3]))
+    @test isempty(find_intersections([1..3], []))
+    @test isempty(find_intersections([], [1..3]))
 
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))

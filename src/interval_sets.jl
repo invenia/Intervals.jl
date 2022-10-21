@@ -471,11 +471,12 @@ end
 """
     find_intersections(x, y)
 
-Returns a `Vector{Vector{Int}}` where the value at index `i` gives the indices to all
-intervals in `y` that intersect with `x[i]`. Calls collect on the arguments if they
-aren't already arrays.
+Find the intervals in `y` that intersect with intervals in `x`. Returns a vector, `z`, where
+each element `z[i]` is a vector of all indices in `y` that intersect with `x[i]`. The values
+`x` and `y` should be iterables of intervals. 
 """
 find_intersections(x, y) = find_intersections_(collect(x), collect(y))
+find_intersections(x::AbstractVector, y::Abstractvector) = find_intersections_(x, y)
 function find_intersections_(x::AbstractVector, y::AbstractVector)
     (isempty(x) || isempty(y)) && return Vector{Int}[]
     tracking = endpoint_tracking(x, y)

@@ -471,9 +471,9 @@ end
 """
     find_intersections(x, y)
 
-Find the intervals in `y` that intersect with intervals in `x`. Returns a vector, `z`, where
-each element `z[i]` is a vector of all indices in `y` that intersect with `x[i]`. The values
-`x` and `y` should be iterables of intervals. 
+For each interval in `x` find all intervals in `y` that it intersects with. Returns a
+vector, `z`, where each element `z[i]` is a vector of all indices in `y` that intersect with
+`x[i]`. The values `x` and `y` should be iterables of intervals. 
 """
 find_intersections(x, y) = find_intersections_(collect(x), collect(y))
 find_intersections(x::AbstractVector, y::AbstractVector) = find_intersections_(x, y)

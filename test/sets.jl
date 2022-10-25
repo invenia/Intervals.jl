@@ -3,19 +3,19 @@ using InvertedIndices
 using Random
 using StableRNGs
 
-using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_tracking,
+using Intervals: TrackEachEndpoint, TrackLowerOpen, TrackUpperOpen, endpoint_tracking,
     find_intersections
 
 @testset "Endpoint Tracking" begin
     @test endpoint_tracking(
         Interval{Int, Open, Closed},
         Interval{Float64, Open, Closed},
-    ) == TrackLeftOpen{Float64}()
+    ) == TrackLowerOpen{Float64}()
 
     @test endpoint_tracking(
         Interval{Int, Closed, Open},
         Interval{Float64, Closed, Open},
-    ) == TrackRightOpen{Float64}()
+    ) == TrackUpperOpen{Float64}()
 
     # Fallback tracking for all other bound combinations
     @test endpoint_tracking(
@@ -25,7 +25,7 @@ using Intervals: TrackEachEndpoint, TrackLeftOpen, TrackRightOpen, endpoint_trac
 end
 
 @testset "Set operations" begin
-    area(x::Interval) = last(x) - first(x)
+    area(x::Interval) = upperbound(x) - lowerbound(x)
     # note: `mapreduce` fails here for empty vectors
     area(x::AbstractVector{<:AbstractInterval{T}}) where T = mapreduce(area, +, x, init=zero(T))
     area(x::IntervalSet) = area(x.items)
@@ -80,7 +80,7 @@ end
         if a isa IntervalSet && b isa IntervalSet
             for f in (intersect, union, setdiff, symdiff, isdisjoint, issubset)
                 # We'll just use the first and last entries as sample intervals for these
-                # tests rather than an exhausting search
+                # tests rather than an exhaustive search
                 x = first(a.items)
                 @test f(x, b) == f(IntervalSet([x]), b)
                 x = last(a.items)
@@ -95,17 +95,17 @@ end
     end
 
     # verify empty interval set
-    @test isempty(union(Interval[]))
+    @test isempty(union(IntervalSet(Interval[])))
 
     # a few taylored interval sets
     a = IntervalSet([Interval(i, i + 3) for i in 1:5:15])
     b = IntervalSet(a.items .+ (1:2:5))
-    @test all(x -> first(x) ∈ a, a.items)
+    @test all(x -> lowerbound(x) ∈ a, a.items)
     testsets(a, b)
     testsets(IntervalSet(a.items[1]), b)
     testsets(a, IntervalSet(b.items[1]))
 
-    # verify that `last` need not be ordered
+    # verify that `upperbound` need not be ordered
     intervals = IntervalSet([Interval(0, 5), Interval(0, 3)])
     @test superset(union(intervals)) == Interval(0, 5)
 
@@ -118,7 +118,7 @@ end
 
     a = IntervalSet(Interval.(starts, ends))
     b = IntervalSet(Interval.(starts .+ offsets, ends .+ offsets))
-    @test all(x -> first(x) ∈ a, a.items)
+    @test all(x -> lowerbound(x) ∈ a, a.items)
     testsets(a, b)
     testsets(IntervalSet(first(a.items)), b)
     testsets(a, IntervalSet(first(b.items)))
@@ -147,16 +147,16 @@ end
     testsets(IntervalSet(first(a.items)), b)
     testsets(a, IntervalSet(first(b.items)))
 
-    randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(first(x), last(x))
-    leftint(x::Interval) = Interval{Closed, Open}(first(x), last(x))
-    rightint(x::Interval) = Interval{Open, Closed}(first(x), last(x))
+    randint(x::Interval) = Interval{rand_bound_type(rng), rand_bound_type(rng)}(lowerbound(x), upperbound(x))
+    lowerint(x::Interval) = Interval{Closed, Open}(lowerbound(x), upperbound(x))
+    upperint(x::Interval) = Interval{Open, Closed}(lowerbound(x), upperbound(x))
 
     a = IntervalSet(Interval{Closed, Open}.(starts, ends))
     b = IntervalSet(Interval{Closed, Open}.(starts .+ offsets, ends .+ offsets))
     testsets(a, IntervalSet(randint.(b.items)))
     testsets(IntervalSet(first(a.items)), IntervalSet(randint.(b.items)))
-    testsets(a, IntervalSet(leftint.(first(b.items))))
-    testsets(a, IntervalSet(rightint.(b.items)))
-    testsets(IntervalSet(first(a.items)), IntervalSet(rightint.(b.items)))
-    testsets(a, IntervalSet(rightint.(first(b.items))))
+    testsets(a, IntervalSet(lowerint.(first(b.items))))
+    testsets(a, IntervalSet(upperint.(b.items)))
+    testsets(IntervalSet(first(a.items)), IntervalSet(upperint.(b.items)))
+    testsets(a, IntervalSet(upperint.(first(b.items))))
 end

@@ -3,9 +3,9 @@ using Plots
 using VisualRegressionTests
 
 @testset "plotting" begin
-    @testset "Interval{Float64,$L,$R}" for (L, R) in BOUND_PERMUTATIONS
-        intervals = [Interval{L,R}(float(x), float(x + 0.5)) for x in 1:11]
-        plot_file = "interval_$(lowercase("$(L)_$(R)")).png"
+    @testset "Interval{Float64,$L,$U}" for (L, U) in BOUND_PERMUTATIONS
+        intervals = [Interval{L,U}(float(x), float(x + 0.5)) for x in 1:11]
+        plot_file = "interval_$(lowercase("$(L)_$(U)")).png"
         @plottest plot(intervals, 1:11) "references/$plot_file" false 0.01
 
         @testset "scatter" begin

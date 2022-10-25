@@ -42,78 +42,90 @@ effectively infinite).
 :Unbounded
 
 """
-    LeftEndpoint <: Endpoint
+    LowerEndpoint <: Endpoint
 
 Represents the lower endpoint of an `AbstractInterval`. Useful for comparing two endpoints
 to each other.
 
+!!! note
+
+    An older name for `LowerEndpoint` is `LeftEndpoint`. It remains defined 
+    as an alias to `LowerEndpoint` (to avoid breaking old code) but its use is discouraged.
+    It is not deprecated (since types can't be deprecated).
+
 ### Examples
 
-```jldoctest; setup = :(using Intervals; using Intervals: LeftEndpoint)
-julia> LeftEndpoint(Interval(0.0, 1.0))
-Intervals.Endpoint{Float64, Intervals.Direction{:Left}(), Closed}(0.0)
+```jldoctest; setup = :(using Intervals; using Intervals: LowerEndpoint)
+julia> LowerEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64, Intervals.Direction{:Lower}(), Closed}(0.0)
 
-julia> LeftEndpoint{Closed}(1.0)
-Intervals.Endpoint{Float64, Intervals.Direction{:Left}(), Closed}(1.0)
+julia> LowerEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Lower}(), Closed}(1.0)
 
-julia> LeftEndpoint{Closed}(1) < LeftEndpoint{Closed}(2)
+julia> LowerEndpoint{Closed}(1) < LowerEndpoint{Closed}(2)
 true
 
-julia> LeftEndpoint{Closed}(0) < LeftEndpoint{Open}(0)
+julia> LowerEndpoint{Closed}(0) < LowerEndpoint{Open}(0)
 true
 
-julia> LeftEndpoint{Open}(0) <= LeftEndpoint{Closed}(0)
+julia> LowerEndpoint{Open}(0) <= LowerEndpoint{Closed}(0)
 false
 ```
 
-See also: [`RightEndpoint`](@ref)
+See also: [`UpperEndpoint`](@ref)
 """
-:LeftEndpoint
+:LowerEndpoint
 
 """
-    RightEndpoint <: Endpoint
+    UpperEndpoint <: Endpoint
 
 Represents the upper endpoint of an `AbstractInterval`. Useful for comparing two endpoints
 to each other.
 
+!!! note
+
+    An older name for `UpperEndpoint` is `RightEndpoint`. It remains defined 
+    as an alias to `UpperEndpoint` (to avoid breaking old code) but its use is discouraged.
+    It is not deprecated (since types can't be deprecated).
+
 ### Examples
 
-```jldoctest; setup = :(using Intervals; using Intervals: RightEndpoint)
-julia> RightEndpoint(Interval(0.0, 1.0))
-Intervals.Endpoint{Float64, Intervals.Direction{:Right}(), Closed}(1.0)
+```jldoctest; setup = :(using Intervals; using Intervals: UpperEndpoint)
+julia> UpperEndpoint(Interval(0.0, 1.0))
+Intervals.Endpoint{Float64, Intervals.Direction{:Upper}(), Closed}(1.0)
 
-julia> RightEndpoint{Closed}(1.0)
-Intervals.Endpoint{Float64, Intervals.Direction{:Right}(), Closed}(1.0)
+julia> UpperEndpoint{Closed}(1.0)
+Intervals.Endpoint{Float64, Intervals.Direction{:Upper}(), Closed}(1.0)
 
-julia> RightEndpoint{Closed}(1) < RightEndpoint{Closed}(2)
+julia> UpperEndpoint{Closed}(1) < UpperEndpoint{Closed}(2)
 true
 
-julia> RightEndpoint{Open}(0) < RightEndpoint{Closed}(0)
+julia> UpperEndpoint{Open}(0) < UpperEndpoint{Closed}(0)
 true
 
-julia> RightEndpoint{Closed}(0) <= RightEndpoint{Open}(0)
+julia> UpperEndpoint{Closed}(0) <= UpperEndpoint{Open}(0)
 false
 ```
 
-See also: [`LeftEndpoint`](@ref)
+See also: [`LowerEndpoint`](@ref)
 """
-:RightEndpoint
+:UpperEndpoint
 
 """
-    first(interval::AbstractInterval{T}) -> Union{T,Nothing}
+    lowerbound(interval::AbstractInterval{T}) -> Union{T,Nothing}
 
 The value of the lower endpoint. When the lower endpoint is unbounded `nothing` will be
 returned.
 """
-Base.first(::AbstractInterval)
+Base.lowerbound(::AbstractInterval)
 
 """
-    last(interval::AbstractInterval{T}) -> Union{T,Nothing}
+    upperbound(interval::AbstractInterval{T}) -> Union{T,Nothing}
 
 The value of the upper endpoint. When the upper endpoint is unbounded `nothing` will be
 returned.
 """
-Base.last(::AbstractInterval)
+Base.upperbound(::AbstractInterval)
 
 """
     span(interval::AbstractInterval) -> Any
@@ -155,8 +167,8 @@ isunbounded(::AbstractInterval)
 """
     isbounded(interval) -> Bool
 
-Is a bounded-interval: either open, closed, left-closed/right-open, or
-left-open/right-closed.
+Is a bounded-interval: either open, closed, lower-closed/upper-open, or
+lower-open/upper-closed.
 
 Note using `!isbounded` is commonly used to determine if any end of the interval is
 unbounded.
@@ -168,9 +180,9 @@ isbounded(::AbstractInterval)
 
 The minimum value contained within the `interval`.
 
-If left-closed, returns `first(interval)`.
-If left-open, returns `first(interval) + eps(first(interval))`
-If left-unbounded, returns minimum value possible for type `T`.
+If lower-closed, returns `lowerbound(interval)`.
+If lower-open, returns `lowerbound(interval) + eps(lowerbound(interval))`
+If lower-unbounded, returns minimum value possible for type `T`.
 
 A `BoundsError` is thrown for empty intervals or when the increment results in a minimum value
 not-contained by the interval.
@@ -182,9 +194,9 @@ minimum(::AbstractInterval; increment)
 
 The maximum value contained within the `interval`.
 
-If right-closed, returns `last(interval)`.
-If right-open, returns `first(interval) + eps(first(interval))`
-If right-unbounded, returns maximum value possible for type `T`.
+If upper-closed, returns `upperbound(interval)`.
+If upper-open, returns `lowerbound(interval) + eps(lowerbound(interval))`
+If upper-unbounded, returns maximum value possible for type `T`.
 
 A `BoundsError` is thrown for empty intervals or when the increment results in a maximum value
 not-contained by the interval.

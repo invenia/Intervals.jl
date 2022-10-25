@@ -1,5 +1,5 @@
 """
-    AnchoredInterval{P,T,L,R}
+    AnchoredInterval{P,T,L,U}
 
 `AnchoredInterval` is a subtype of `AbstractInterval` that represents a non-iterable range
 or span of values defined not by two endpoints but instead by a single `anchor` point and
@@ -9,7 +9,7 @@ the `anchor` represents the greater endpoint (the end of the range).
 
 The interval represented by an `AnchoredInterval` value may be closed (both endpoints are
 included in the interval), open (neither endpoint is included), or half-open. This openness
-is defined by the bounds types `L` and `R`, which defaults to half-open (with the lesser
+is defined by the bounds types `L` and `U`, which defaults to half-open (with the lesser
 endpoint included for positive values of `P` and the greater endpoint included for negative
 values).
 
@@ -58,83 +58,83 @@ AnchoredInterval{Minute(5), DateTime, Closed, Closed}(DateTime("2016-08-11T12:30
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,L,R}
+struct AnchoredInterval{P, T, L <: Bounded, U <: Bounded} <: AbstractInterval{T,L,U}
     anchor::T
 
-    function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bounded, R <: Bounded}
+    function AnchoredInterval{P,T,L,U}(anchor::T) where {P, T, L <: Bounded, U <: Bounded}
         # A valid interval requires that neither endpoints or the span are nan. Typically,
-        # we use `left <= right` to ensure a valid interval but for `AnchoredInterval`s
+        # we use `lower <= upper` to ensure a valid interval but for `AnchoredInterval`s
         # computing the other endpoint requires `anchor + P` which may fail with certain
         # types (e.g. ambiguous or non-existent ZonedDateTimes).
         #
         # We can skip computing the other endpoint if both the anchor and span are finite as
         # this ensures the computed endpoint is also finite.
         if !isfinite(anchor) || !isfinite(P)
-            left, right = sign(P) < 0 ? (anchor + P, anchor) : (anchor, anchor + P)
+            lower, upper = sign(P) < 0 ? (anchor + P, anchor) : (anchor, anchor + P)
 
-            if !(left <= right)
+            if !(lower <= upper)
                 msg = if sign(P) < 0
-                    "Unable to represent a right-anchored interval where the " *
-                    "left ($anchor + $P) > right ($anchor)"
+                    "Unable to represent a upper-anchored interval where the " *
+                    "lower ($anchor + $P) > upper ($anchor)"
                 else
-                    "Unable to represent a left-anchored interval where the " *
-                    "left ($anchor) > right ($anchor + $P)"
+                    "Unable to represent a lower-anchored interval where the " *
+                    "lower ($anchor) > upper ($anchor + $P)"
                 end
                 throw(ArgumentError(msg))
             end
         end
 
-        return new{P,T,L,R}(anchor)
+        return new{P,T,L,U}(anchor)
     end
 end
 
-function AnchoredInterval{P,T,L,R}(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    AnchoredInterval{P,T,L,R}(interval.anchor)
+function AnchoredInterval{P,T,L,U}(interval::AnchoredInterval{P,T,L,U}) where {P,T,L,U}
+    AnchoredInterval{P,T,L,U}(interval.anchor)
 end
 
-function AnchoredInterval{P,T,L,R}(anchor) where {P,T,L,R}
-    AnchoredInterval{P,T,L,R}(convert(T, anchor))
+function AnchoredInterval{P,T,L,U}(anchor) where {P,T,L,U}
+    AnchoredInterval{P,T,L,U}(convert(T, anchor))
 end
 
-AnchoredInterval{P,L,R}(anchor::T) where {P,T,L,R} = AnchoredInterval{P,T,L,R}(anchor)
+AnchoredInterval{P,L,U}(anchor::T) where {P,T,L,U} = AnchoredInterval{P,T,L,U}(anchor)
 
 # When an interval is anchored to the lesser endpoint, default to Inclusivity(false, true)
 # When an interval is anchored to the greater endpoint, default to Inclusivity(true, false)
 function AnchoredInterval{P,T}(anchor) where {P,T}
     s = sign(P)
     L = bound_type(s ≥ 0)
-    R = bound_type(s ≤ 0)
-    return AnchoredInterval{P,T,L,R}(anchor)
+    U = bound_type(s ≤ 0)
+    return AnchoredInterval{P,T,L,U}(anchor)
 end
 
 AnchoredInterval{P}(anchor::T) where {P,T} = AnchoredInterval{P,T}(anchor)
 
 # Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
-# the `HourEnding{L,R}` constructor.
+# the `HourEnding{L,U}` constructor.
 """
-    HourEnding{T<:TimeType, L, R} <: AbstractInterval{T}
+    HourEnding{T<:TimeType, L, U} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(-1), T}` which is used to denote a 1-hour period of
 time which ends at a time instant (of type `T`).
 
-When constructing an instance of `HourEnding{T}` the resulting interval will right-closed
+When constructing an instance of `HourEnding{T}` the resulting interval will upper-closed
 (of type `HourEnding{T,Open,Closed}`).
 """
-const HourEnding{T,L,R} = AnchoredInterval{Hour(-1), T, L, R} where {T, L <: Bounded, R <: Bounded}
+const HourEnding{T,L,U} = AnchoredInterval{Hour(-1), T, L, U} where {T, L <: Bounded, U <: Bounded}
 HourEnding(anchor::T) where T = HourEnding{T}(anchor)
 
 # Note: Ideally we would define the restriction `T <: TimeType` but doing so interferes with
-# the `HourBeginning{L,R}` constructor.
+# the `HourBeginning{L,U}` constructor.
 """
-    HourBeginning{T<:TimeType, L, R} <: AbstractInterval{T}
+    HourBeginning{T<:TimeType, L, U} <: AbstractInterval{T}
 
 A type alias for `AnchoredInterval{Hour(1), T}` which is used to denote a 1-hour period of
 time which begins at a time instant (of type `T`).
 
-When constructing an instance of `HourBeginning{T}` the resulting interval will left-closed
+When constructing an instance of `HourBeginning{T}` the resulting interval will lower-closed
 (of type `HourBeginning{T,Closed,Open}`).
 """
-const HourBeginning{T,L,R} = AnchoredInterval{Hour(1), T, L, R} where {T, L <: Bounded, R <: Bounded}
+const HourBeginning{T,L,U} = AnchoredInterval{Hour(1), T, L, U} where {T, L <: Bounded, U <: Bounded}
 HourBeginning(anchor::T) where T = HourBeginning{T}(anchor)
 
 """
@@ -153,21 +153,21 @@ nearest hour.
 """
 HB(anchor) = floor(HourBeginning(anchor), Hour)
 
-function Base.copy(x::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return AnchoredInterval{P,T,L,R}(anchor(x))
+function Base.copy(x::AnchoredInterval{P,T,L,U}) where {P,T,L,U}
+    return AnchoredInterval{P,T,L,U}(anchor(x))
 end
 
 ##### ACCESSORS #####
 
-# We would typically compute `first` and `last` using `min` and `max` respectively, but we
+# We would typically compute `lowerbound` and `upperbound` using `min` and `max` respectively, but we
 # can get unexpected behaviour if adding the span to the anchor endpoint produces a value
 # that is no longer comparable (e.g., `NaN`).
 
-function Base.first(interval::AnchoredInterval{P}) where P
+function lowerbound(interval::AnchoredInterval{P}) where P
     sign(P) < 0 ? (interval.anchor + P) : (interval.anchor)
 end
 
-function Base.last(interval::AnchoredInterval{P}) where P
+function upperbound(interval::AnchoredInterval{P}) where P
     sign(P) < 0 ? (interval.anchor) : (interval.anchor + P)
 end
 
@@ -179,8 +179,8 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 # Allows an interval to be converted to a scalar when the set contained by the interval only
 # contains a single element.
 function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
-    if isclosed(interval) && (sign(P) == 0 || first(interval) == last(interval))
-        return first(interval)
+    if isclosed(interval) && (sign(P) == 0 || lowerbound(interval) == upperbound(interval))
+        return lowerbound(interval)
     else
         # Remove deprecation in version 2.0.0
         depwarn(
@@ -196,12 +196,12 @@ function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
     end
 end
 
-function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,U}) where {P,T,L,U}
+    return Interval{T,L,U}(lowerbound(interval), upperbound(interval))
 end
 
-function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,U}) where {P,T,L,U}
+    return Interval{T,L,U}(lowerbound(interval), upperbound(interval))
 end
 
 # Conversion methods which currently aren't needed but could prove useful. Commented out
@@ -210,29 +210,29 @@ end
 #=
 function Base.convert(::Type{AnchoredInterval{P,T}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
-    anchor = sign(P) < 0 ? last(interval) : first(interval)
-    AnchoredInterval{P,T}(last(interval), inclusivity(interval))
+    anchor = sign(P) < 0 ? upperbound(interval) : lowerbound(interval)
+    AnchoredInterval{P,T}(upperbound(interval), inclusivity(interval))
 end
 
 function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where {P,T}
     @assert abs(P) == span(interval)
-    anchor = sign(P) < 0 ? last(interval) : first(interval)
+    anchor = sign(P) < 0 ? upperbound(interval) : lowerbound(interval)
     AnchoredInterval{P,T}(anchor, inclusivity(interval))
 end
 =#
 
-function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,U}) where {T,L,U}
     if !isbounded(interval)
         throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    AnchoredInterval{-span(interval), T, L, R}(last(interval))
+    AnchoredInterval{-span(interval), T, L, U}(upperbound(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,U}) where {T,L,U}
     if !isbounded(interval)
         throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    AnchoredInterval{span(interval), T, L, R}(first(interval))
+    AnchoredInterval{span(interval), T, L, U}(lowerbound(interval))
 end
 
 ##### DISPLAY #####
@@ -268,8 +268,8 @@ Base.:-(a::AnchoredInterval, b::AnchoredInterval) = anchor(a) - anchor(b)
 
 Base.:-(a::T, b::AnchoredInterval{P,T}) where {P, T <: Number} = a + -b
 
-function Base.:-(a::AnchoredInterval{P,T,L,R}) where {P, T <: Number, L, R}
-    return AnchoredInterval{-P, T, R, L}(-anchor(a))
+function Base.:-(a::AnchoredInterval{P,T,L,U}) where {P, T <: Number, L, U}
+    return AnchoredInterval{-P, T, U, L}(-anchor(a))
 end
 
 ##### EQUALITY #####
@@ -321,15 +321,15 @@ function Base.intersect(a::AnchoredInterval{P,T}, b::AnchoredInterval{Q,T}) wher
 
     sp = isa(P, Period) ? canonicalize(typeof(P), span(interval)) : span(interval)
     if sign(P) ≤ 0
-        anchor = last(interval)
+        anchor = upperbound(interval)
         new_P = -sp
     else
-        anchor = first(interval)
+        anchor = lowerbound(interval)
         new_P = sp
     end
 
-    L, R = bounds_types(interval)
-    return AnchoredInterval{new_P,T,L,R}(anchor)
+    L, U = bounds_types(interval)
+    return AnchoredInterval{new_P,T,L,U}(anchor)
 end
 
 ##### ROUNDING #####
@@ -341,33 +341,43 @@ for f in (:floor, :ceil, :round)
 
         Round the anchored interval by applying `$($f)` to a single endpoint, then shifting
         the interval so that the span remains the same. The `on` keyword determines which
-        endpoint the rounding will be applied to. Valid options are `:anchor`, `:left`, or
-        `:right`. Rounding defaults to using the anchor point.
+        endpoint the rounding will be applied to. Valid options are `:anchor`, `:lower`, or
+        `:upper`. Rounding defaults to using the anchor point.
         """
         function Base.$f(
-            interval::AnchoredInterval{P,T,L,R},
+            interval::AnchoredInterval{P,T,L,U},
             args...;
             on::Symbol=:anchor,
-        ) where {P,T,L,R}
+        ) where {P,T,L,U}
             anc = if on === :anchor
                 $f(anchor(interval), args...)
-            elseif on === :left
-                if P ≤ zero(P)
-                    $f(first(interval), args...) - P
-                else
-                    $f(first(interval), args...)
+            elseif on === :lower || on === :left
+                if on === :left 
+                    depwarn("The `:left` symbol as the value of `on` is "*
+                            "deprecated in favor of `:lower`", $(QuoteNode(f)))
                 end
-            elseif on === :right
+                
                 if P ≤ zero(P)
-                    $f(last(interval), args...)
+                    $f(lowerbound(interval), args...) - P
                 else
-                    $f(last(interval), args...) - P
+                    $f(lowerbound(interval), args...)
+                end
+            elseif on === :upper || on === :right
+                if on === :right 
+                    depwarn("The `:right` symbol as the value of `on` is "*
+                            "deprecated in favor of `:upper`", $(QuoteNode(f)))
+                end
+
+                if P ≤ zero(P)
+                    $f(upperbound(interval), args...)
+                else
+                    $f(upperbound(interval), args...) - P
                 end
             else
                 throw(ArgumentError("Unhandled `on` type: $on"))
             end
 
-            return AnchoredInterval{P,T,L,R}(anc)
+            return AnchoredInterval{P,T,L,U}(anc)
         end
     end
 end
@@ -386,8 +396,8 @@ canonicalize(target_type::Type{P}, p::P) where P <: Period = p
 
 ##### TIME ZONES #####
 
-function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime, L, R}, tz::TimeZone) where {P,L,R}
-    return AnchoredInterval{P, ZonedDateTime, L, R}(astimezone(anchor(i), tz))
+function TimeZones.astimezone(i::AnchoredInterval{P, ZonedDateTime, L, U}, tz::TimeZone) where {P,L,U}
+    return AnchoredInterval{P, ZonedDateTime, L, U}(astimezone(anchor(i), tz))
 end
 
 TimeZones.timezone(i::AnchoredInterval{P, ZonedDateTime}) where P = timezone(anchor(i))

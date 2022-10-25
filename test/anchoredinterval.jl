@@ -32,14 +32,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
-
-        # Deprecated
-        @test_deprecated AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(true, true))
-
-        @test_deprecated AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(true, true))
-        @test_throws MethodError AnchoredInterval{-1,Float64,Open,Closed}(nothing, Inclusivity(false, true))
     end
 
     @testset "zero-span" begin
@@ -164,10 +156,12 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         P = Minute(-15)
         interval = AnchoredInterval{P, Closed, Closed}(dt)
 
-        @test first(interval) == DateTime(2016, 8, 11, 1, 45)
-        @test last(interval) == dt
-        @test minimum(interval) == first(interval)
-        @test maximum(interval) == last(interval)
+        @test_deprecated first(interval)
+        @test_deprecated last(interval)
+        @test lowerbound(interval) == DateTime(2016, 8, 11, 1, 45)
+        @test upperbound(interval) == dt
+        @test minimum(interval) == lowerbound(interval)
+        @test maximum(interval) == upperbound(interval)
         @test bounds_types(interval) == (Closed, Closed)
         @test span(interval) == -P
 
@@ -175,8 +169,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         P = Day(1)
         interval = AnchoredInterval{P, Open, Open}(Date(dt))
 
-        @test first(interval) == Date(2016, 8, 11)
-        @test last(interval) == Date(2016, 8, 12)
+        @test lowerbound(interval) == Date(2016, 8, 11)
+        @test upperbound(interval) == Date(2016, 8, 12)
         @test_throws BoundsError minimum(interval, increment=Day(1))
         @test_throws BoundsError maximum(interval, increment=Day(1))
         @test bounds_types(interval) == (Open, Open)
@@ -189,10 +183,10 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         startpoint = ZonedDateTime(2018, 3, 11, tz"America/Winnipeg")
         interval = AnchoredInterval{Day(1)}(startpoint)
-        @test first(interval) == startpoint
-        @test last(interval) == ZonedDateTime(2018, 3, 12, tz"America/Winnipeg")
+        @test lowerbound(interval) == startpoint
+        @test upperbound(interval) == ZonedDateTime(2018, 3, 12, tz"America/Winnipeg")
         @test minimum(interval) == startpoint
-        @test maximum(interval, increment=Hour(1)) == last(interval) - Hour(1)
+        @test maximum(interval, increment=Hour(1)) == upperbound(interval) - Hour(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2018, 11, 4, 2, tz"America/Winnipeg")
@@ -201,32 +195,32 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         startpoint = ZonedDateTime(2018, 11, 4, tz"America/Winnipeg")
         interval = AnchoredInterval{Day(1)}(startpoint)
-        @test first(interval) == startpoint
-        @test last(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
+        @test lowerbound(interval) == startpoint
+        @test upperbound(interval) == ZonedDateTime(2018, 11, 5, tz"America/Winnipeg")
         @test minimum(interval) == startpoint
-        @test maximum(interval, increment=Millisecond(1)) == last(interval) - Millisecond(1)
+        @test maximum(interval, increment=Millisecond(1)) == upperbound(interval) - Millisecond(1)
         @test span(interval) == Day(1)
 
         endpoint = ZonedDateTime(2020, 3, 9, 2, tz"America/Winnipeg")
         interval = AnchoredInterval{Day(-1)}(endpoint)
-        @test_throws NonExistentTimeError first(interval)
-        @test last(interval) == endpoint
+        @test_throws NonExistentTimeError lowerbound(interval)
+        @test upperbound(interval) == endpoint
         @test_throws NonExistentTimeError minimum(interval, increment=Hour(1))
         @test maximum(interval) == endpoint
         @test span(interval) == Day(1)
 
         # Non-period AnchoredIntervals
         interval = AnchoredInterval{-10}(10)
-        @test first(interval) == 0
-        @test last(interval) == 10
+        @test lowerbound(interval) == 0
+        @test upperbound(interval) == 10
         @test minimum(interval) == 1
         @test maximum(interval) == 10
         @test bounds_types(interval) == (Open, Closed)
         @test span(interval) == 10
 
         interval = AnchoredInterval{25}('a')
-        @test first(interval) == 'a'
-        @test last(interval) == 'z'
+        @test lowerbound(interval) == 'a'
+        @test upperbound(interval) == 'z'
         @test minimum(interval) == 'a'
         @test maximum(interval, increment=1) == 'y'
         @test bounds_types(interval) == (Closed, Open)
@@ -234,8 +228,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "display" begin
-        where_lr = "where {L<:$Bounded, R<:$Bounded}"
-        where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
+        where_lr = "where {L<:$Bounded, U<:$Bounded}"
+        where_tlr = "where {T, L<:$Bounded, U<:$Bounded}"
 
         if VERSION >= v"1.7.0"
             @test sprint(show, AnchoredInterval{Hour(-1)}) ==
@@ -252,17 +246,17 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 "AnchoredInterval{Day(1), DateTime}"
         else
             @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-                "HourEnding{T, L, R} $where_tlr"
+                "HourEnding{T, L, U} $where_tlr"
             @test sprint(show, AnchoredInterval{Hour(1)}) ==
-                "HourBeginning{T, L, R} $where_tlr"
+                "HourBeginning{T, L, U} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{Day(-1), T, L, R} $where_tlr"
+                "AnchoredInterval{Day(-1), T, L, U} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{Day(1), T, L, R} $where_tlr"
+                "AnchoredInterval{Day(1), T, L, U} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{Day(-1), DateTime, L, R} $where_lr"
+                "AnchoredInterval{Day(-1), DateTime, L, U} $where_lr"
             @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{Day(1), DateTime, L, R} $where_lr"
+                "AnchoredInterval{Day(1), DateTime, L, U} $where_lr"
         end
 
         # Tuples contain fields: interval, printed, shown
@@ -749,10 +743,10 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             # Note: We cannot test different bound types here as HE cannot specify them
             @test isequal(astimezone(HE(zdt), tz), HE(astimezone(zdt, tz)))
 
-            for (L, R) in BOUND_PERMUTATIONS
+            for (L, U) in BOUND_PERMUTATIONS
                 @test isequal(
-                    astimezone(AnchoredInterval{Day(1), L, R}(zdt), tz),
-                    AnchoredInterval{Day(1), L, R}(astimezone(zdt, tz)),
+                    astimezone(AnchoredInterval{Day(1), L, U}(zdt), tz),
+                    AnchoredInterval{Day(1), L, U}(astimezone(zdt, tz)),
                 )
             end
         end
@@ -764,23 +758,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test timezone(ai) == tz"America/Winnipeg"
     end
 
-    @testset "legacy deserialization" begin
-        # Serialized string generated on Intervals@1.2 with:
-        # `julia --project -E 'using Serialization, Intervals; sprint(serialize, AnchoredInterval{-1,Int}(2, true, false))'`.
-        buffer = IOBuffer(
-            SERIALIZED_HEADER *
-            "\x004\x10\x01\x10AnchoredInterval\x1f\v՞\x84\xec\xf7-`\x87\xbb" *
-            "S\xe1Á\x88A\xd8\x01\tIntervalsD\x02\0\0\x001\xff\xff\xff\xff\0\b\xe14\x10" *
-            "\x01\vInclusivity\x1f\v՞\x84\xec\xf7-`\x87\xbbS\xe1Á\x88A\xd8,\x02\0DML"
-        )
-
-        interval = deserialize(buffer)
-        @test interval isa AnchoredInterval
-        @test interval == AnchoredInterval{-1,Int,Closed,Open}(2)
-    end
-
     @testset "floor" begin
-        # only :anchor, :left, and :right are supported
+        # only :anchor, :lower, and :upper are supported
         @test_throws ArgumentError floor(AnchoredInterval{-0.5}(1.0); on=:nothing)
 
         @test floor(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
@@ -788,15 +767,15 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test floor(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(0.0)
         @test floor(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(0.0)
 
-        @test floor(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(0.5)
-        @test floor(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
-        @test floor(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
-        @test floor(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(0.0)
+        @test floor(AnchoredInterval{-0.5}(1.0); on=:lower) == AnchoredInterval{-0.5}(0.5)
+        @test floor(AnchoredInterval{+0.5}(1.0); on=:lower) == AnchoredInterval{+0.5}(1.0)
+        @test floor(AnchoredInterval{-0.5}(0.5); on=:lower) == AnchoredInterval{-0.5}(0.5)
+        @test floor(AnchoredInterval{+0.5}(0.5); on=:lower) == AnchoredInterval{+0.5}(0.0)
 
-        @test floor(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
-        @test floor(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(0.5)
-        @test floor(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(0.0)
-        @test floor(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+        @test floor(AnchoredInterval{-0.5}(1.0); on=:upper) == AnchoredInterval{-0.5}(1.0)
+        @test floor(AnchoredInterval{+0.5}(1.0); on=:upper) == AnchoredInterval{+0.5}(0.5)
+        @test floor(AnchoredInterval{-0.5}(0.5); on=:upper) == AnchoredInterval{-0.5}(0.0)
+        @test floor(AnchoredInterval{+0.5}(0.5); on=:upper) == AnchoredInterval{+0.5}(0.5)
 
         @test floor(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
         @test floor(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)
@@ -816,7 +795,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "ceil" begin
-        # only :anchor, :left, and :right are supported
+        # only :anchor, :lower, and :upper are supported
         @test_throws ArgumentError ceil(AnchoredInterval{-0.5}(1.0); on=:nothing)
 
         @test ceil(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
@@ -824,15 +803,15 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test ceil(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(1.0)
         @test ceil(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(1.0)
 
-        @test ceil(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(1.5)
-        @test ceil(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
-        @test ceil(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
-        @test ceil(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(1.0); on=:lower) == AnchoredInterval{-0.5}(1.5)
+        @test ceil(AnchoredInterval{+0.5}(1.0); on=:lower) == AnchoredInterval{+0.5}(1.0)
+        @test ceil(AnchoredInterval{-0.5}(0.5); on=:lower) == AnchoredInterval{-0.5}(0.5)
+        @test ceil(AnchoredInterval{+0.5}(0.5); on=:lower) == AnchoredInterval{+0.5}(1.0)
 
-        @test ceil(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
-        @test ceil(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(1.5)
-        @test ceil(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(1.0)
-        @test ceil(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+        @test ceil(AnchoredInterval{-0.5}(1.0); on=:upper) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(1.0); on=:upper) == AnchoredInterval{+0.5}(1.5)
+        @test ceil(AnchoredInterval{-0.5}(0.5); on=:upper) == AnchoredInterval{-0.5}(1.0)
+        @test ceil(AnchoredInterval{+0.5}(0.5); on=:upper) == AnchoredInterval{+0.5}(0.5)
 
         @test ceil(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
         @test ceil(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)
@@ -852,7 +831,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "round" begin
-        # only :anchor, :left, and :right are supported
+        # only :anchor, :lower, and :upper are supported
         @test_throws ArgumentError round(AnchoredInterval{-0.5}(1.0); on=:nothing)
 
         @test round(AnchoredInterval{-0.5}(1.0)) == AnchoredInterval{-0.5}(1.0)
@@ -860,15 +839,15 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test round(AnchoredInterval{-0.5}(0.5)) == AnchoredInterval{-0.5}(0.0)
         @test round(AnchoredInterval{+0.5}(0.5)) == AnchoredInterval{+0.5}(0.0)
 
-        @test round(AnchoredInterval{-0.5}(1.0); on=:left) == AnchoredInterval{-0.5}(0.5)
-        @test round(AnchoredInterval{+0.5}(1.0); on=:left) == AnchoredInterval{+0.5}(1.0)
-        @test round(AnchoredInterval{-0.5}(0.5); on=:left) == AnchoredInterval{-0.5}(0.5)
-        @test round(AnchoredInterval{+0.5}(0.5); on=:left) == AnchoredInterval{+0.5}(0.0)
+        @test round(AnchoredInterval{-0.5}(1.0); on=:lower) == AnchoredInterval{-0.5}(0.5)
+        @test round(AnchoredInterval{+0.5}(1.0); on=:lower) == AnchoredInterval{+0.5}(1.0)
+        @test round(AnchoredInterval{-0.5}(0.5); on=:lower) == AnchoredInterval{-0.5}(0.5)
+        @test round(AnchoredInterval{+0.5}(0.5); on=:lower) == AnchoredInterval{+0.5}(0.0)
 
-        @test round(AnchoredInterval{-0.5}(1.0); on=:right) == AnchoredInterval{-0.5}(1.0)
-        @test round(AnchoredInterval{+0.5}(1.0); on=:right) == AnchoredInterval{+0.5}(1.5)
-        @test round(AnchoredInterval{-0.5}(0.5); on=:right) == AnchoredInterval{-0.5}(0.0)
-        @test round(AnchoredInterval{+0.5}(0.5); on=:right) == AnchoredInterval{+0.5}(0.5)
+        @test round(AnchoredInterval{-0.5}(1.0); on=:upper) == AnchoredInterval{-0.5}(1.0)
+        @test round(AnchoredInterval{+0.5}(1.0); on=:upper) == AnchoredInterval{+0.5}(1.5)
+        @test round(AnchoredInterval{-0.5}(0.5); on=:upper) == AnchoredInterval{-0.5}(0.0)
+        @test round(AnchoredInterval{+0.5}(0.5); on=:upper) == AnchoredInterval{+0.5}(0.5)
 
         @test round(AnchoredInterval{-0.5}(1.0); on=:anchor) == AnchoredInterval{-0.5}(1.0)
         @test round(AnchoredInterval{+0.5}(1.0); on=:anchor) == AnchoredInterval{+0.5}(1.0)

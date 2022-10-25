@@ -18,11 +18,11 @@ struct Unbounded <: Bound end
 
 bound_type(x::Bool) = x ? Closed : Open
 
-abstract type AbstractInterval{T, L <: Bound, R <: Bound} end
+abstract type AbstractInterval{T, L <: Bound, U <: Bound} end
 
 Base.eltype(::AbstractInterval{T}) where {T} = T
 Base.broadcastable(x::AbstractInterval) = Ref(x)
-bounds_types(x::AbstractInterval{T,L,R}) where {T,L,R} = (L, R)
+bounds_types(x::AbstractInterval{T,L,U}) where {T,L,U} = (L, U)
 
 include("isfinite.jl")
 include("endpoint.jl")
@@ -34,7 +34,6 @@ include("description.jl")
 include("plotting.jl")
 include("docstrings.jl")
 include("deprecated.jl")
-include("compat.jl")
 
 export Bound,
        Closed,
@@ -48,8 +47,8 @@ export Bound,
        HourBeginning,
        HE,
        HB,
-       first,
-       last,
+       lowerbound,
+       upperbound,
        span,
        bounds_types,
        isclosed,

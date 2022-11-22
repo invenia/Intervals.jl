@@ -1,7 +1,7 @@
 """
     Interval{T, L <: Bound, R <: Bound}
 
-An `Interval` represents a non-iterable range or span of values (non-interable because,
+An `Interval` represents a non-iterable range or span of values (non-iterable because,
 unlike a `StepRange`, no step is defined).
 
 An `Interval` can be closed (both `first` and `last` are included in the interval), open

@@ -2,7 +2,7 @@ name = "Intervals"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
 license = "MIT"
 authors = ["Invenia Technical Computing"]
-version = "1.8.0"
+version = "1.8.1"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -12,6 +12,6 @@ Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 
 [compat]
-RecipesBase = "0.7, 0.8, 1"
+RecipesBase = "1"
 TimeZones = "1.7"
 julia = "1.6"

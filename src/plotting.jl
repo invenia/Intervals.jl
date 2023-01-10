@@ -18,6 +18,13 @@ interval_marker(x::Type{Open}) = :none
         push!(markers, :none)
     end
 
+    pop!(markers) # Remove the last :none. 
+    
+    # These two are not necessary but keep things consistent
+    # This is because the segment builder will just look until no more nan
+    # https://github.com/JuliaPlots/Plots.jl/blob/8265d6ee8f612581b286a51e476e8acfe45adea7/src/utils.jl#L163
+    pop!(new_ys); pop!(new_xs)
+
     # Work around GR bug that shows :none as a marker
     # TODO: remove once https://github.com/jheinen/GR.jl/issues/295  is fixed
     markeralpha := [x == :none ? 0 : 1 for x in markers]

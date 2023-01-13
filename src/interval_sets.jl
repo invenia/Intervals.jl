@@ -481,95 +481,51 @@ find_intersections(x, y) = find_intersections(vcat(x), vcat(y))
 function find_intersections(x::AbstractVector{<:AbstractInterval}, y::AbstractVector{<:AbstractInterval})
     tracking = endpoint_tracking(x, y)
     lt = intersection_isless_fn(tracking)
-    x_endpoints = unbunch(enumerate(x), tracking; lt)
-    y_endpoints = unbunch(enumerate(y), tracking; lt)
-    result = [Vector{Int}() for _ in 1:length(x)]
+    results = Vector{Vector{Int}}(undef, length(x))
 
-    return find_intersections_helper!(result, x_endpoints, y_endpoints, lt)
-end
-
-function find_intersections_helper!(result, x, y, lt)
-    active_xs = Set{Int}()
-    active_ys = Set{Int}()
-    while !isempty(x)
-        xᵢ, yᵢ = first_endpoint(x), first_endpoint(y)
-        x_less = lt(xᵢ, yᵢ)
-        y_less = lt(yᵢ, xᵢ)
-
-        if !y_less
-            if isleft(xᵢ)
-                push!(active_xs, first(first(x)))
-            else
-                delete!(active_xs, first(first(x)))
-            end
-            x = @view x[2:end]
-        end
-
-        if !x_less
-            if isleft(yᵢ)
-                push!(active_ys, first(first(y)))
-            else
-                delete!(active_ys, first(first(y)))
-            end
-            y = @view y[2:end]
-        end
-
-        for i in active_xs
-            append!(result[i], active_ys)
-        end
-    end
-
-    return unique!.(result)
-end
-
-function find_intersections(
-    x::AbstractVector{<:AbstractInterval{T1,Closed,Closed}},
-    y::AbstractVector{<:AbstractInterval{T2,Closed,Closed}},
-) where {T1,T2}
     # Strategy:
     # two binary searches per interval `I` in `x`
     # * identify the set of intervals in `y` that start during-or-after `I`
     # * identify the set of intervals in `y` that stop before-or-during `I`
     # * intersect them
-    starts = first.(y)
-    starts_perm = sortperm(starts)
-    starts_sorted = starts[starts_perm]
+    lefts = LeftEndpoint.(y)
+    lefts_perm = sortperm(lefts; lt)
+    lefts_sorted = lefts[lefts_perm]
 
     # Sneaky performance optimization (makes a huge difference!)
-    # Rather than sorting `stops` relative to `y`, we sort it relative to `starts`.
-    # This allows us to work in the `starts` frame of reference until the very end.
-    # In particular, when we intersect the sets of intervals obtained from starts and from stops,
-    # the `starts` set can be kept as a `UnitRange`, making the intersection *much* faster.
-    stops = last.(y[starts_perm])
-    stops_perm = sortperm(stops)
-    stops_sorted = stops[stops_perm]
-    len = length(stops_sorted)
+    # Rather than sorting `rights` relative to `y`, we sort it relative to `lefts`.
+    # This allows us to work in the `lefts` frame of reference until the very end.
+    # In particular, when we intersect the sets of intervals obtained from lefts and from stops,
+    # the `lefts` set can be kept as a `UnitRange`, making the intersection *much* faster.
+    rights = RightEndpoint.(y[lefts_perm])
+    rights_perm = sortperm(rights; lt)
+    rights_sorted = rights[rights_perm]
+    y_len = length(rights_sorted)
 
-    results = Vector{Vector{Int}}(undef, length(x))
     for (i, I) in enumerate(x)
-        # find all the starts which occur before or at the end of `I`
-        idx_first = searchsortedlast(starts_sorted, last(I); lt=(<))
+        # find all the starts which occur before or on the right endpoint of `I`
+        idx_first = searchsortedlast(lefts_sorted, RightEndpoint(I); lt)
         if idx_first < 1
             results[i] = Int[]
             continue
         end
 
-        # find all the stops which occur at or after the start of `I`
-        idx_last = searchsortedfirst(stops_sorted, first(I); lt=(<))
-        if idx_last > len
+        # find all the stops which occur on or after the left endpoint of `I`
+        idx_last = searchsortedfirst(stops_sorted, LeftEndpoint(I); lt)
+        if idx_last > y_len
             results[i] = Int[]
             continue
         end
 
-        # Working in "starts" frame of reference
-        starts_before_or_during = 1:idx_first
-        stops_during_or_after = @view stops_perm[idx_last:end]
+        # Working in "lefts" frame of reference
+        lefts_before_or_during = 1:idx_first
+        rights_during_or_after = @views rights_perm[idx_last:end]
 
         # Intersect them
-        r = intersect(starts_before_or_during, stops_during_or_after)
+        r = intersect(lefts_before_or_during, rights_during_or_after)
 
         # *Now* go back to y's sorting order, post-intersection.
-        results[i] = starts_perm[r]
+        results[i] = lefts_perm[r]
     end
     return results
 end

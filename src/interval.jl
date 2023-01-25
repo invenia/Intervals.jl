@@ -480,11 +480,11 @@ end
 
 ##### TIME ZONES #####
 
-function TimeZones.astimezone(i::Interval{ZonedDateTime, L, R}, tz::TimeZone) where {L,R}
+function TimeZones.astimezone(i::Interval{T, L, R}, tz::TimeZone) where {T, L,R}
     return Interval{ZonedDateTime, L, R}(astimezone(first(i), tz), astimezone(last(i), tz))
 end
 
-function TimeZones.timezone(i::Interval{ZonedDateTime})
+function TimeZones.timezone(i::Interval)
     if timezone(first(i)) != timezone(last(i))
         throw(ArgumentError("Interval $i contains mixed timezones."))
     end

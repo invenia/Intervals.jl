@@ -744,15 +744,21 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
     @testset "astimezone" begin
         zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+        utcdt = UTCDateTime(zdt)
 
         for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
             # Note: We cannot test different bound types here as HE cannot specify them
             @test isequal(astimezone(HE(zdt), tz), HE(astimezone(zdt, tz)))
+            @test isequal(astimezone(HE(utcdt), tz), HE(astimezone(utcdt, tz)))
 
             for (L, R) in BOUND_PERMUTATIONS
                 @test isequal(
                     astimezone(AnchoredInterval{Day(1), L, R}(zdt), tz),
                     AnchoredInterval{Day(1), L, R}(astimezone(zdt, tz)),
+                )
+                @test isequal(
+                    astimezone(AnchoredInterval{Day(1), L, R}(utcdt), tz),
+                    AnchoredInterval{Day(1), L, R}(astimezone(utcdt, tz)),
                 )
             end
         end
@@ -760,8 +766,12 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
     @testset "timezone" begin
         zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
-        ai = AnchoredInterval{Day(1)}(zdt)
-        @test timezone(ai) == tz"America/Winnipeg"
+        utcdt = UTCDateTime(zdt)
+        aiz = AnchoredInterval{Day(1)}(zdt)
+        aiutc = AnchoredInterval{Day(1)}(utcdt)
+
+        @test timezone(aiz) == tz"America/Winnipeg"
+        @test timezone(aiutc) == tz"UTC"
     end
 
     @testset "legacy deserialization" begin

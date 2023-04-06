@@ -32,14 +32,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
-
-        # Deprecated
-        @test_deprecated AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(true, true))
-
-        @test_deprecated AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(true, true))
-        @test_throws MethodError AnchoredInterval{-1,Float64,Open,Closed}(nothing, Inclusivity(false, true))
     end
 
     @testset "zero-span" begin

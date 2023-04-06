@@ -6,12 +6,6 @@ import Dates: Date, DateTime
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-@deprecate Date(interval::Interval{Date}) convert(Date, interval)
-@deprecate DateTime(interval::Interval{DateTime}) convert(DateTime, interval)
-@deprecate Date(interval::AnchoredInterval{P, Date} where P) convert(Date, interval)
-@deprecate DateTime(interval::AnchoredInterval{P, DateTime} where P) convert(DateTime, interval)
-
-
 function Endpoint{T,D}(ep::T, included::Bool) where {T,D}
     B = bound_type(included)
     depwarn("`Endpoint{T,D}(ep, $included)` is deprecated, use `Endpoint{T,D,$(repr(B))}(ep)` instead.", :Endpoint)

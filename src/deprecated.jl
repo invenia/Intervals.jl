@@ -6,24 +6,6 @@ import Dates: Date, DateTime
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-function Endpoint{T,D}(ep::T, included::Bool) where {T,D}
-    B = bound_type(included)
-    depwarn("`Endpoint{T,D}(ep, $included)` is deprecated, use `Endpoint{T,D,$(repr(B))}(ep)` instead.", :Endpoint)
-    return Endpoint{T,D,B}(ep)
-end
-
-function LeftEndpoint(ep, included::Bool)
-    B = bound_type(included)
-    depwarn("`LeftEndpoint(ep, $included)` is deprecated, use `LeftEndpoint{$(repr(B))}(ep)` instead.", :LeftEndpoint)
-    return LeftEndpoint{B}(ep)
-end
-
-function RightEndpoint(ep, included::Bool)
-    B = bound_type(included)
-    depwarn("`RightEndpoint(ep, $included)` is deprecated, use `RightEndpoint{$(repr(B))}(ep)` instead.", :RightEndpoint)
-    return RightEndpoint{B}(ep)
-end
-
 function inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R}
     depwarn("`inclusivity(interval)` is deprecated and has no direct replacement. See `bounds_types(interval)` for similar functionality.", :inclusivity)
     return Inclusivity(L === Closed, R === Closed; ignore_depwarn=true)

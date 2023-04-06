@@ -24,50 +24,6 @@ function RightEndpoint(ep, included::Bool)
     return RightEndpoint{B}(ep)
 end
 
-# intervals.jl
-function Interval{T,L,R}(f::T, l::T, inc::Inclusivity) where {T,L,R}
-    left_inc = bound_type(first(inc))
-    right_inc = bound_type(last(inc))
-    if L !== left_inc || R !== right_inc
-        throw(ArgumentError("Specified inclusivity ($(repr(left_inc)), $(repr(right_inc))) doesn't match bound types ($(repr(L)), $(repr(R)))"))
-    end
-    depwarn("`Interval{T,$(repr(L)),$(repr(R))}(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
-    return Interval{T,L,R}(f, l)
-end
-
-function Interval{T,L,R}(f, l, inc::Inclusivity) where {T,L,R}
-    # Using depwarn from next call
-    return Interval{T,L,R}(convert(T, f), convert(T, l), inc)
-end
-
-function Interval{T}(f, l, inc::Inclusivity) where T
-    L = bound_type(first(inc))
-    R = bound_type(last(inc))
-    depwarn("`Interval{T}(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
-    return Interval{T,L,R}(f, l)
-end
-
-function Interval{T}(f, l, x::Bool, y::Bool) where T
-    L = bound_type(x)
-    R = bound_type(y)
-    depwarn("`Interval{T}(f, l, $x, $y)` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
-    return Interval{T,L,R}(f, l)
-end
-
-function Interval(f, l, inc::Inclusivity)
-    L = bound_type(first(inc))
-    R = bound_type(last(inc))
-    depwarn("`Interval(f, l, $(repr(inc)))` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
-    return Interval{L,R}(f, l)
-end
-
-function Interval(f, l, x::Bool, y::Bool)
-    L = bound_type(x)
-    R = bound_type(y)
-    depwarn("`Interval(f, l, $x, $y)` is deprecated, use `Interval{T,$(repr(L)),$(repr(R))}(f, l)` instead.", :Interval)
-    return Interval{L,R}(f, l)
-end
-
 function inclusivity(interval::AbstractInterval{T,L,R}) where {T,L,R}
     depwarn("`inclusivity(interval)` is deprecated and has no direct replacement. See `bounds_types(interval)` for similar functionality.", :inclusivity)
     return Inclusivity(L === Closed, R === Closed; ignore_depwarn=true)

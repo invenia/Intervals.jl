@@ -67,16 +67,6 @@
         @test_throws MethodError Interval{Int, Unbounded, Closed}(1, 2)
         @test_throws MethodError Interval{Int, Closed, Unbounded}(1, 2)
         @test_throws MethodError Interval{Int, Unbounded, Unbounded}(1, 2)
-
-        # Deprecated
-        @test_deprecated Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(false, true))
-        @test_throws ArgumentError Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(true, true))
-
-        @test_deprecated Interval{Float64,Open,Closed}(0, 0, Inclusivity(false, true))
-        @test_throws ArgumentError Interval{Float64,Open,Closed}(0, 0, Inclusivity(true, true))
-        @test_throws MethodError Interval{Float64,Unbounded,Closed}(nothing, 0, Inclusivity(true, true))
-        @test_throws MethodError Interval{Float64,Open,Unbounded}(0, nothing, Inclusivity(false, true))
-        @test_throws ArgumentError Interval{Nothing,Unbounded,Unbounded}(nothing, nothing, Inclusivity(false, false))
     end
 
     @testset "non-ordered" begin

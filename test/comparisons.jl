@@ -78,7 +78,7 @@ end
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
             @test_throws ArgumentError merge(earlier, later)
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -87,8 +87,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
             @test union(IntervalSet([earlier, later])) == IntervalSet([earlier, later])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -165,7 +163,7 @@ end
             @test !overlaps(earlier, later)
             @test !contiguous(earlier, later)
             @test_throws ArgumentError merge(earlier, later)
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -174,8 +172,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [earlier, later]
             @test union(IntervalSet([earlier, later])) == IntervalSet([earlier, later])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -252,7 +248,7 @@ end
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
             @test merge(earlier, later) == expected_superset
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -261,8 +257,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
             @test union(IntervalSet([earlier, later])) == IntervalSet([expected_superset])
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -280,7 +274,7 @@ end
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
                 # TODO: Sometimes expected_xor would get mutated in this call
-                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor == union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -341,7 +335,7 @@ end
             @test !overlaps(earlier, later)
             @test contiguous(earlier, later)
             @test merge(earlier, later) == expected_superset
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -350,8 +344,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -368,7 +360,7 @@ end
                 @test setdiff([later], [earlier]) == expected_xor[2:2]
                 @test setdiff(IntervalSet(later), IntervalSet(earlier)) == IntervalSet(expected_xor[2:2])
 
-                @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
+                @test symdiff([earlier], [later]) == expected_xor == union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
             end
         end
@@ -433,7 +425,7 @@ end
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
             @test merge(earlier, later) == expected_superset
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -442,8 +434,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -526,7 +516,7 @@ end
             @test overlaps(earlier, later)
             @test !contiguous(earlier, later)
             @test merge(earlier, later) == expected_superset
-            @test superset([earlier, later]) == expected_superset
+            @test superset(IntervalSet([earlier, later])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(earlier, later)
@@ -535,8 +525,6 @@ end
             @test_throws MethodError setdiff(later, earlier)
             @test_throws MethodError symdiff(earlier, later)
 
-            # Using a vector of intervals as sets
-            @test union([earlier, later]) == [expected_superset]
             @test union(IntervalSet([earlier, later])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -601,7 +589,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -610,8 +598,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -676,7 +662,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -685,8 +671,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -754,7 +738,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -763,8 +747,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -836,7 +818,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -845,8 +827,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -916,7 +896,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -925,8 +905,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -994,7 +972,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1004,7 +982,6 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_superset)
             @test intersect([a], [b]) != [expected_overlap]
             @test_broken intersect(IntervalSet([a, b])) == IntervalSet(expected_overlap) # Internal type issue
@@ -1071,7 +1048,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1080,8 +1057,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1146,7 +1121,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1155,8 +1130,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1221,7 +1194,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1230,8 +1203,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1294,7 +1265,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1303,8 +1274,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals
@@ -1359,7 +1328,7 @@ end
             @test overlaps(a, b)
             @test !contiguous(a, b)
             @test merge(a, b) == expected_superset
-            @test superset([a, b]) == expected_superset
+            @test superset(IntervalSet([a, b])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1368,8 +1337,6 @@ end
             @test_throws MethodError setdiff(b, a)
             @test_throws MethodError symdiff(a, b)
 
-            # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union([a], [b]) == [a, b] != [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
@@ -1453,7 +1420,7 @@ end
             @test overlaps(smaller, larger)
             @test !contiguous(smaller, larger)
             @test merge(a, b) == expected_superset
-            @test superset([smaller, larger]) == expected_superset
+            @test superset(IntervalSet([smaller, larger])) == expected_superset
 
             # Intervals acting as sets. Functions should return a single interval
             @test_throws MethodError union(a, b)
@@ -1463,7 +1430,6 @@ end
             @test_throws MethodError symdiff(a, b)
 
             # Using a vector of intervals as sets
-            @test union([a, b]) == [expected_superset]
             @test union(IntervalSet([a, b])) == IntervalSet(expected_superset)
 
             # TODO: These functions should be compatible with unbounded intervals

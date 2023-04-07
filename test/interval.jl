@@ -741,42 +741,42 @@
     end
 
     @testset "union" begin
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(13, 20),
-        ]
-        expected = [
+        ])
+        expected = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 20),
-        ]
+        ])
         @test union(intervals) == expected
 
         # Ordering
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
-        ]
+        ])
         @test union(intervals) == expected
-        @test intervals == [
+        @test intervals == IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
-        ]
+        ])
 
         @test union!(intervals) == expected
         @test intervals == expected
 
         # Mixing bounds
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Closed, Closed}(-10, -1)
-        ]
-        @test union(intervals) == [Interval{Open, Closed}(-100, -1)]
+        ])
+        @test union(intervals) == IntervalSet(Interval{Open, Closed}(-100, -1))
     end
 
     @testset "parse" begin

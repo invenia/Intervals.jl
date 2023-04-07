@@ -67,16 +67,6 @@
         @test_throws MethodError Interval{Int, Unbounded, Closed}(1, 2)
         @test_throws MethodError Interval{Int, Closed, Unbounded}(1, 2)
         @test_throws MethodError Interval{Int, Unbounded, Unbounded}(1, 2)
-
-        # Deprecated
-        @test_deprecated Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(false, true))
-        @test_throws ArgumentError Interval{DateTime,Open,Closed}(DateTime(0), DateTime(0), Inclusivity(true, true))
-
-        @test_deprecated Interval{Float64,Open,Closed}(0, 0, Inclusivity(false, true))
-        @test_throws ArgumentError Interval{Float64,Open,Closed}(0, 0, Inclusivity(true, true))
-        @test_throws MethodError Interval{Float64,Unbounded,Closed}(nothing, 0, Inclusivity(true, true))
-        @test_throws MethodError Interval{Float64,Open,Unbounded}(0, nothing, Inclusivity(false, true))
-        @test_throws ArgumentError Interval{Nothing,Unbounded,Unbounded}(nothing, nothing, Inclusivity(false, false))
     end
 
     @testset "non-ordered" begin
@@ -751,57 +741,42 @@
     end
 
     @testset "union" begin
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(13, 20),
-        ]
-        expected = [
+        ])
+        expected = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 20),
-        ]
+        ])
         @test union(intervals) == expected
 
         # Ordering
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
-        ]
+        ])
         @test union(intervals) == expected
-        @test intervals == [
+        @test intervals == IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Open, Open}(10, 15),
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
-        ]
+        ])
 
         @test union!(intervals) == expected
         @test intervals == expected
 
         # Mixing bounds
-        intervals = [
+        intervals = IntervalSet([
             Interval{Open, Open}(-100, -1),
             Interval{Closed, Closed}(-10, -1)
-        ]
-        @test union(intervals) == [Interval{Open, Closed}(-100, -1)]
-    end
-
-    @testset "legacy deserialization" begin
-        # Serialized string generated on Intervals@1.2 with:
-        # `julia --project -E 'using Serialization, Intervals; sprint(serialize, Interval(1, 2, true, false))'`.
-        buffer = IOBuffer(
-            SERIALIZED_HEADER *
-            "\x004\x10\x01\bInterval\x1f\v՞\x84\xec\xf7-`\x87\xbbS\xe1Á\x88A\xd8\x01\t" *
-            "IntervalsD\x01\0\0\0\0\b\xe0\xe14\x10\x01\vInclusivity\x1f\v՞\x84\xec\xf7" *
-            "-`\x87\xbbS\xe1Á\x88A\xd8,\x02\0DML"
-        )
-
-        interval = deserialize(buffer)
-        @test interval isa Interval
-        @test interval == Interval{Closed,Open}(1, 2)
+        ])
+        @test union(intervals) == IntervalSet(Interval{Open, Closed}(-100, -1))
     end
 
     @testset "parse" begin

@@ -32,14 +32,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         # Non-period AnchoredIntervals
         @test AnchoredInterval{-10}(10) isa AnchoredInterval
         @test AnchoredInterval{25}('a') isa AnchoredInterval
-
-        # Deprecated
-        @test_deprecated AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(true, true))
-
-        @test_deprecated AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(false, true))
-        @test_throws ArgumentError AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(true, true))
-        @test_throws MethodError AnchoredInterval{-1,Float64,Open,Closed}(nothing, Inclusivity(false, true))
     end
 
     @testset "zero-span" begin
@@ -772,21 +764,6 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         @test timezone(aiz) == tz"America/Winnipeg"
         @test timezone(aiutc) == tz"UTC"
-    end
-
-    @testset "legacy deserialization" begin
-        # Serialized string generated on Intervals@1.2 with:
-        # `julia --project -E 'using Serialization, Intervals; sprint(serialize, AnchoredInterval{-1,Int}(2, true, false))'`.
-        buffer = IOBuffer(
-            SERIALIZED_HEADER *
-            "\x004\x10\x01\x10AnchoredInterval\x1f\v՞\x84\xec\xf7-`\x87\xbb" *
-            "S\xe1Á\x88A\xd8\x01\tIntervalsD\x02\0\0\x001\xff\xff\xff\xff\0\b\xe14\x10" *
-            "\x01\vInclusivity\x1f\v՞\x84\xec\xf7-`\x87\xbbS\xe1Á\x88A\xd8,\x02\0DML"
-        )
-
-        interval = deserialize(buffer)
-        @test interval isa AnchoredInterval
-        @test interval == AnchoredInterval{-1,Int,Closed,Open}(2)
     end
 
     @testset "floor" begin

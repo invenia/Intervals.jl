@@ -1,5 +1,5 @@
 """
-    Interval{T, L <: Bound, R <: Bound}
+    Interval{T}
 
 An `Interval` represents a non-iterable range or span of values (non-iterable because,
 unlike a `StepRange`, no step is defined).
@@ -11,8 +11,8 @@ bounds information which is stored as the type parameters `L` and `R`.
 ### Example
 
 ```julia
-julia> interval = Interval{Closed,Open}(0, 100)
-Interval{Int64,Closed,Open}}(0, 100)
+julia> interval = Interval(0, 100, (Closed, Open))
+Interval{Int64}(0, 100, 0x01)
 
 julia> 0 in interval
 true
@@ -23,8 +23,8 @@ true
 julia> 100 in interval
 false
 
-julia> intersect(Interval{Open,Open}(0, 25), Interval{Closed,Closed}(20, 50)
-Interval{Int64,Closed,Open}(20, 25)
+julia> intersect(Interval(0, 25, (Open,Open)), Interval(20, 50, (Closed,Closed))
+Interval{Int64}(20, 25, (Closed, Closed))
 ```
 
 ### Infix Constructor: `..`
@@ -33,85 +33,64 @@ A closed `Interval` can be constructed with the `..` infix constructor:
 
 ```julia
 julia> Dates.today() - Dates.Week(1) .. Dates.today()
-Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
+Interval{Date}(2018-01-24, 2018-01-31, (Closed, Closed))
 ```
 
 See also: [`AnchoredInterval`](@ref)
 """
-struct Interval{T, L <: Bound, R <: Bound} <: AbstractInterval{T,L,R}
+struct Interval{T} <: AbstractInterval{T}
+    bounds::UInt8  # bounds comes first to allow incomplete construction for unbounded intervals
     first::T
     last::T
 
-    function Interval{T,L,R}(f::T, l::T) where {T, L <: Bounded, R <: Bounded}
-        # Ensure that `first` preceeds `last`.
-        if f ≤ l
-            return new{T,L,R}(f, l)
-        elseif l ≤ f
-            # Note: Most calls to this inner constructor will be from other constructors
-            # which may make it hard to identify the source of this deprecation. Use
-            # `--depwarn=error` to see a full stack trace.
-            Base.depwarn(
-                "Constructing an `Interval{T,X,Y}(x, y)` " *
-                "where `x > y` is deprecated, use `Interval{T,Y,X}(y, x)` instead.",
-                :Interval,
-            )
-            return new{T,R,L}(l, f)
-        else
-            throw(ArgumentError("Unable to determine an ordering between: $f and $l"))
-        end
+    # Internal constructors handle bounds conversions and argument ordering.
+    function Interval{T}(f::T, l::T, bounds::Union{Tuple, UInt8}=(Closed, Closed)) where {T}
+        f ≤ l || throw(ArgumentError("$f must be less than or equal to $l"))
+        b = bounds isa Tuple ? bounds_int(bounds...) : bounds
+        return new{T}(b, f, l)
     end
 
-    function Interval{T,L,R}(f::Nothing, l::T) where {T, L <: Unbounded, R <: Bounded}
-        # Note: Using `<` enforces that the type `T` defines `isless`
+    # Handle nothings
+    function Interval{T}(f::Nothing, l::T, bounds::Union{Tuple, UInt8}=(Unbounded, Closed)) where {T}
         if !(l ≤ l)
             throw(ArgumentError(
                 "Unable to determine an ordering between $l and other values of type $T"
             ))
         end
-        return new{T,L,R}(l, l)
+        b = bounds isa Tuple ? bounds_int(bounds...) : bounds
+        0x06 ≤ b ≤  0x07 || throw(ArgumentError("Left endpoint must be unbounded and the right must be bounded: $bounds"))
+        return new{T}(b, l, l)
     end
 
-    function Interval{T,L,R}(f::T, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
-        # Note: Using `<` enforces that the type `T` defines `isless`
+    function Interval{T}(f::T, l::Nothing, bounds::Union{Tuple, UInt8}=(Closed, Unbounded)) where {T}
         if !(f ≤ f)
             throw(ArgumentError(
                 "Unable to determine an ordering between $f and other values of type $T"
             ))
         end
-        return new{T,L,R}(f, f)
+        b = bounds isa Tuple ? bounds_int(bounds...) : bounds
+        0x04 ≤ b ≤  0x05 || throw(ArgumentError("Left endpoint must be bounded and the right must be unbounded: $bounds"))
+        return new{T}(b, f, f)
     end
 
-    function Interval{T,L,R}(f::Nothing, l::Nothing) where {T, L <: Unbounded, R <: Unbounded}
-        return new{T,L,R}()
+    # Uses partial constructions
+    function Interval{T}(f::Nothing, l::Nothing, bounds::Union{Tuple, UInt8}=(Unbounded, Unbounded)) where {T}
+        b = bounds isa Tuple ? bounds_int(bounds...) : bounds
+        b == 0x08 || throw(ArgumentError("Both endpoints must be unbounded: $bounds"))
+        return new{T}(b)
     end
 end
 
-function Interval{T,L,R}(f, l) where {T, L <: Bounded, R <: Bounded}
-    return Interval{T,L,R}(convert(T, f), convert(T, l))
-end
-function Interval{T,L,R}(f, l::Nothing) where {T, L <: Bounded, R <: Unbounded}
-    return Interval{T,L,R}(convert(T, f), l)
-end
-function Interval{T,L,R}(f::Nothing, l) where {T, L <: Unbounded, R <: Bounded}
-    return Interval{T,L,R}(f, convert(T, l))
-end
+# Constructor to promote and converts to type T
+Interval{T}(f, l, args...) where T = Interval{T}(convert(T, f), convert(T, l), args...)
+Interval{T}(f, l::Nothing, args...) where T = Interval{T}(convert(T, f), l, args...)
+Interval{T}(f::Nothing, l, args...) where T = Interval{T}(f, convert(T, l), args...)
 
-Interval{L,R}(f::T, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
-Interval{L,R}(f, l) where {L,R} = Interval{promote_type(typeof(f), typeof(l)), L, R}(f, l)
-Interval{L,R}(f::Nothing, l::T) where {T,L,R} = Interval{T,L,R}(f, l)
-Interval{L,R}(f::T, l::Nothing) where {T,L,R} = Interval{T,L,R}(f, l)
-Interval{L,R}(f::Nothing, l::Nothing) where {L,R} = Interval{Nothing,L,R}(f, l)
-
-Interval{T}(f, l) where T = Interval{T, Closed, Closed}(f, l)
-Interval{T}(f::Nothing, l) where T = Interval{T, Unbounded, Closed}(f, l)
-Interval{T}(f, l::Nothing) where T = Interval{T, Closed, Unbounded}(f, l)
-Interval{T}(f::Nothing, l::Nothing) where T = Interval{T, Unbounded, Unbounded}(f, l)
-
-Interval(f::T, l::T) where T = Interval{T}(f, l)
-Interval(f, l) = Interval(promote(f, l)...)
-Interval(f::Nothing, l::T) where T = Interval{T}(f, l)
-Interval(f::T, l::Nothing) where T = Interval{T}(f, l)
-Interval(f::Nothing, l::Nothing) = Interval{Nothing}(f, l)
+Interval(f::T, l::T, args...) where T = Interval{T}(f, l, args...)
+Interval(f, l, args...) = Interval(promote(f, l)..., args...)
+Interval(f::Nothing, l::T, args...) where T = Interval{T}(f, l, args...)
+Interval(f::T, l::Nothing, args...) where T = Interval{T}(f, l, args...)
+Interval(f::Nothing, l::Nothing, args...) = Interval{Nothing}(f, l, args...)
 
 (..)(first, last) = Interval(first, last)
 
@@ -120,28 +99,33 @@ Interval(interval::AbstractInterval) = convert(Interval, interval)
 Interval{T}(interval::AbstractInterval) where T = convert(Interval{T}, interval)
 
 # Endpoint constructors
-function Interval{T}(left::LeftEndpoint{T,L}, right::RightEndpoint{T,R}) where {T,L,R}
-    Interval{T,L,R}(endpoint(left), endpoint(right))
+function Interval{T}(left::LeftEndpoint{T, L}, right::RightEndpoint{T, R}) where {T, L, R}
+    return Interval{T}(endpoint(left), endpoint(right), bounds_int(L, R))
 end
 
 function Interval{T}(left::LeftEndpoint, right::RightEndpoint) where T
-    Interval{T, bound_type(left), bound_type(right)}(endpoint(left), endpoint(right))
+    return Interval{T}(
+        endpoint(left),
+        endpoint(right),
+        (bound_type(left), bound_type(right)),
+    )
 end
 
 function Interval(left::LeftEndpoint{S}, right::RightEndpoint{T}) where {S,T}
-    Interval{promote_type(S, T)}(left, right)
+    return Interval{promote_type(S, T)}(left, right)
 end
 
 # Empty Intervals
-Interval{T}() where T = Interval{T, Open, Open}(zero(T), zero(T))
-Interval{T}() where T <: TimeType = Interval{T, Open, Open}(T(0), T(0))
+Interval{T}() where T = Interval{T}(zero(T), zero(T), (Open, Open))
+Interval{T}() where T <: TimeType = Interval{T}(T(0), T(0), (Open, Open))
 
 function Interval{T}() where T <: ZonedDateTime
-    return Interval{T, Open, Open}(T(0, tz"UTC"), T(0, tz"UTC"))
+    return Interval{T}(T(0, tz"UTC"), T(0, tz"UTC"), (Open, Open))
 end
 
-Base.copy(x::T) where T <: Interval = T(x.first, x.last)
+Base.copy(x::T) where T <: Interval = T(x.first, x.last, x.bounds)
 
+# TODO: Move this to Intervals.jl since it isn't specific to
 function Base.hash(interval::AbstractInterval, h::UInt)
     h = hash(LeftEndpoint(interval), h)
     h = hash(RightEndpoint(interval), h)
@@ -150,11 +134,14 @@ end
 
 ##### ACCESSORS #####
 
-function Base.first(interval::Interval{T,L,R}) where {T,L,R}
+# TODO: Drop these in favour of leftendpoint and rigthendpoint from IntervalSets.jl
+function Base.first(interval::Interval)
+    L, _ = bounds_types(interval)
     return L !== Unbounded ? interval.first : nothing
 end
 
-function Base.last(interval::Interval{T,L,R}) where {T,L,R}
+function Base.last(interval::Interval)
+    _, R = bounds_types(interval)
     return R !== Unbounded ? interval.last : nothing
 end
 
@@ -163,23 +150,31 @@ function span(interval::Interval)
         interval.last - interval.first
     else
         throw(DomainError(
-            "unbounded endpoint(s)",
-            "Unable to determine the span of an non-bounded interval",
+            "unbounded enpoint(s)",
+            "Unable to determine the span of the non-bounded interval",
         ))
     end
 end
 
-isclosed(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Closed && R === Closed
-Base.isopen(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Open && R === Open
-isunbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L === Unbounded && R === Unbounded
-isbounded(interval::AbstractInterval{T,L,R}) where {T,L,R} = L !== Unbounded && R !== Unbounded
+bounds_int(interval::Interval) = interval.bounds
+bounds_types(interval::Interval) = bounds_types(interval.bounds)
 
-function Base.minimum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
-    return L === Unbounded ? typemin(T) : first(interval)
+
+isclosed(interval::AbstractInterval) = bounds_types(interval) === (Closed, Closed)
+Base.isopen(interval::AbstractInterval) = bounds_types(interval) === (Open, Open)
+isbounded(interval::AbstractInterval) = bounds_int(interval) ≤ 0x03
+isunbounded(interval::AbstractInterval) = !isbounded(interval)
+
+function Base.minimum(interval::AbstractInterval{T}; kwargs...) where {T}
+    L, _ = bounds_types(interval)
+    L === Unbounded && return typemin(T)
+    L === Closed && return first(interval)
+
+    isempty(interval) && throw(BoundsError(interval, 0))
+    return _minimum(interval; kwargs...)
 end
 
-function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) where {T,R}
-    isempty(interval) && throw(BoundsError(interval, 0))
+function _minimum(interval::AbstractInterval{T}; increment=eps(T)) where {T}
     min_val = first(interval) + increment
     # Since intervals can't have NaN, we can just use !isfinite to check if infinite
     !isfinite(min_val) && return typemin(T)
@@ -187,12 +182,11 @@ function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=eps(T)) wh
     throw(BoundsError(interval, min_val))
 end
 
-function Base.minimum(interval::AbstractInterval{T,Open,R}) where {T<:Integer,R}
-    return minimum(interval, increment=one(T))
+function _minimum(interval::AbstractInterval{T}) where {T<:Integer}
+    return _minimum(interval, increment=one(T))
 end
 
-function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=nothing) where {T<:AbstractFloat,R}
-    isempty(interval) && throw(BoundsError(interval, 0))
+function _minimum(interval::AbstractInterval{T}; increment=nothing) where {T<:AbstractFloat}
     min_val = first(interval)
     # Since intervals can't have NaN, we can just use !isfinite to check if infinite
     next_val = if !isfinite(min_val) || increment === nothing
@@ -204,12 +198,16 @@ function Base.minimum(interval::AbstractInterval{T,Open,R}; increment=nothing) w
     throw(BoundsError(interval, next_val))
 end
 
-function Base.maximum(interval::AbstractInterval{T,L,R}; increment=nothing) where {T,L,R}
-    return R === Unbounded ? typemax(T) : last(interval)
+function Base.maximum(interval::AbstractInterval{T}; kwargs...) where {T}
+    _, R = bounds_types(interval)
+    R === Unbounded && return typemax(T)
+    R === Closed && return last(interval)
+
+    isempty(interval) && throw(BoundsError(interval, 0))
+    return _maximum(interval; kwargs...)
 end
 
-function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) where {T,L}
-    isempty(interval) && throw(BoundsError(interval, 0))
+function _maximum(interval::AbstractInterval{T}; increment=eps(T)) where {T}
     max_val = last(interval) - increment
     # Since intervals can't have NaN, we can just use !isfinite to check if infinite
     !isfinite(max_val) && return typemax(T)
@@ -217,12 +215,11 @@ function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=eps(T)) wh
     throw(BoundsError(interval, max_val))
 end
 
-function Base.maximum(interval::AbstractInterval{T,L,Open}) where {T<:Integer,L}
-    return maximum(interval, increment=one(T))
+function _maximum(interval::AbstractInterval{T}) where {T<:Integer}
+    return _maximum(interval, increment=one(T))
 end
 
-function Base.maximum(interval::AbstractInterval{T,L,Open}; increment=nothing) where {T<:AbstractFloat,L}
-    isempty(interval) && throw(BoundsError(interval, 0))
+function _maximum(interval::AbstractInterval{T}; increment=nothing) where {T<:AbstractFloat}
     max_val = last(interval)
     next_val = if !isfinite(max_val) || increment === nothing
         prevfloat(max_val)
@@ -248,23 +245,28 @@ end
 ##### DISPLAY #####
 
 
-function Base.show(io::IO, interval::Interval{T,L,R}) where {T,L,R}
+function Base.show(io::IO, interval::Interval)
     if get(io, :compact, false)
         print(io, interval)
     else
+        L, R = bounds_types(interval)
         print(io, "$(typeof(interval))(")
         L === Unbounded ? print(io, "nothing") : show(io, interval.first)
         print(io, ", ")
         R === Unbounded ? print(io, "nothing") : show(io, interval.last)
+        print(io, ", ")
+        show(io, bounds_types(interval))
         print(io, ")")
     end
 end
 
-function Base.print(io::IO, interval::AbstractInterval{T,L,R}) where {T,L,R}
+function Base.print(io::IO, interval::AbstractInterval)
     # Print to io in order to keep properties like :limit and :compact
     if get(io, :compact, false)
         io = IOContext(io, :limit=>true)
     end
+
+    L, R = bounds_types(interval)
 
     print(
         io,
@@ -278,12 +280,12 @@ end
 
 ##### ARITHMETIC #####
 
-Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b)
+Base.:+(a::T, b) where {T <: Interval} = T(first(a) + b, last(a) + b, bounds_int(a))
 
 Base.:+(a, b::Interval) = b + a
 Base.:-(a::Interval, b) = a + -b
 Base.:-(a, b::Interval) = a + -b
-Base.:-(a::Interval{T,L,R}) where {T,L,R} = Interval{T,R,L}(-last(a), -first(a))
+Base.:-(a::Interval{T}) where {T} = Interval{T}(-last(a), -first(a), bounds_int(a))
 
 ##### EQUALITY #####
 
@@ -305,7 +307,7 @@ Base.isless(a, b::AbstractInterval) = a < LeftEndpoint(b)
 less_than_disjoint(a::AbstractInterval, b) = RightEndpoint(a) < b
 less_than_disjoint(a, b::AbstractInterval) = a < LeftEndpoint(b)
 
-function Base.:isless(a::AbstractInterval, b::AbstractInterval)
+function Base.isless(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) < LeftEndpoint(b)
 end
 
@@ -354,6 +356,7 @@ true
 ##### SET OPERATIONS #####
 
 Base.isempty(i::AbstractInterval) = LeftEndpoint(i) > RightEndpoint(i)
+
 Base.in(a, b::AbstractInterval) = !(a ≫ b || a ≪ b)
 
 function Base.in(a::AbstractInterval, b::AbstractInterval)
@@ -438,50 +441,31 @@ function _round(f::RoundingFunctionTypes, interval::Interval, on::Val{:anchor}, 
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
-) where {T, L <: Bounded, R <: Bounded}
+    f::RoundingFunctionTypes, interval::Interval{T}, on::Val{:left}, args...
+) where {T}
+    L, R = bounds_types(interval)
+    L === Unbounded && return interval
+
     left_val = f(first(interval), args...)
-    return Interval{T,L,R}(left_val, left_val + span(interval))
+    right_val = R <: Bounded ? left_val + span(interval) : nothing
+    return Interval{T}(left_val, right_val, interval.bounds)
 end
 
 function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
-) where {T, L <: Bounded, R <: Unbounded}
-    left_val = f(first(interval), args...)
-    return Interval{T,L,R}(left_val, nothing)
-end
+    f::RoundingFunctionTypes, interval::Interval{T}, on::Val{:right}, args...
+) where {T}
+    L, R = bounds_types(interval)
+    R === Unbounded && return interval
 
-function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:left}, args...
-) where {T, L <: Unbounded, R <: Bound}
-    return interval
-end
-
-function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
-) where {T, L <: Bounded, R <: Bounded}
     right_val = f(last(interval), args...)
-    return Interval{T,L,R}(right_val - span(interval), right_val)
+    left_val = L <: Bounded ? right_val - span(interval) : nothing
+    return Interval{T}(left_val, right_val, interval.bounds)
 end
-
-function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
-) where {T, L <: Unbounded, R <: Bounded}
-    right_val = f(last(interval), args...)
-    return Interval{T,L,R}(nothing, right_val)
-end
-
-function _round(
-    f::RoundingFunctionTypes, interval::Interval{T,L,R}, on::Val{:right}, args...
-) where {T, L <: Bound, R <: Unbounded}
-    return interval
-end
-
 
 ##### TIME ZONES #####
 
-function TimeZones.astimezone(i::Interval{T, L, R}, tz::TimeZone) where {T, L,R}
-    return Interval{ZonedDateTime, L, R}(astimezone(first(i), tz), astimezone(last(i), tz))
+function TimeZones.astimezone(i::Interval{T}, tz::TimeZone) where {T}
+    return Interval{ZonedDateTime}(astimezone(first(i), tz), astimezone(last(i), tz), i.bounds)
 end
 
 function TimeZones.timezone(i::Interval)

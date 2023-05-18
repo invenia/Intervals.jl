@@ -65,5 +65,5 @@ function Base.parse(::Type{Interval{T}}, str::AbstractString; element_parser=par
         right = element_parser(T, m[3])
     end
 
-    return Interval{T,L,R}(left, right)
+    return Interval{T}(left, right, (L, R))
 end

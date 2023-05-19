@@ -58,9 +58,9 @@ include("isfinite.jl")
 include("endpoint.jl")
 include("interval.jl")
 # include("interval_sets.jl")
-# include("anchoredinterval.jl")
+include("anchoredinterval.jl")
 include("parse.jl")
-# include("description.jl")
+include("description.jl")
 #include("plotting.jl")
 #include("docstrings.jl")
 #include("deprecated.jl")
@@ -73,17 +73,17 @@ export Bound,
        AbstractInterval,
        Interval,
        IntervalSet,
-       # AnchoredInterval,
-       # HourEnding,
-       # HourBeginning,
-       # HE,
-       # HB,
+       AnchoredInterval,
+       HourEnding,
+       HourBeginning,
+       HE,
+       HB,
        first,
        last,
        span,
        bounds_types,
        isclosed,
-       # anchor,
+       anchor,
        merge,
        union,
        union!,

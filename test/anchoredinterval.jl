@@ -34,12 +34,14 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test AnchoredInterval{25}('a') isa AnchoredInterval
 
         # Deprecated
+        #= Dropped for PR 214
         @test_deprecated AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(false, true))
         @test_throws ArgumentError AnchoredInterval{Hour(-1),DateTime,Open,Closed}(dt, Inclusivity(true, true))
 
         @test_deprecated AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(false, true))
         @test_throws ArgumentError AnchoredInterval{-1,Float64,Open,Closed}(0, Inclusivity(true, true))
         @test_throws MethodError AnchoredInterval{-1,Float64,Open,Closed}(nothing, Inclusivity(false, true))
+        =#
     end
 
     @testset "zero-span" begin
@@ -121,17 +123,19 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
         # Note: When the deprecation is dropped remove the deprecated tests and uncomment
         # the DomainError tests
+        #= Pending PR 214
         @test (@test_deprecated convert(DateTime, he)) == anchor(he)
         @test (@test_deprecated convert(DateTime, hb)) == anchor(hb)
-        # @test_throws DomainError convert(DateTime, he)
-        # @test_throws DomainError convert(DateTime, hb)
+        @test_throws DomainError convert(DateTime, he)
+        @test_throws DomainError convert(DateTime, hb)
+        =#
 
-        @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)
-        @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
-        @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)
-        @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
-        @test convert(Interval{DateTime}, he) == Interval{Open, Closed}(dt - Hour(1), dt)
-        @test convert(Interval{DateTime}, hb) == Interval{Closed, Open}(dt, dt + Hour(1))
+        @test convert(Interval, he) == Interval(dt - Hour(1), dt, (Open, Closed))
+        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), (Closed, Open))
+        @test convert(Interval, he) == Interval(dt - Hour(1), dt, (Open, Closed))
+        @test convert(Interval, hb) == Interval(dt, dt + Hour(1), (Closed, Open))
+        @test convert(Interval{DateTime}, he) == Interval(dt - Hour(1), dt, (Open, Closed))
+        @test convert(Interval{DateTime}, hb) == Interval(dt, dt + Hour(1), (Closed, Open))
 
         @test convert(AnchoredInterval{Ending}, Interval(-Inf, 0)) == AnchoredInterval{-Inf,Float64,Closed,Closed}(0)
         @test_throws ArgumentError convert(AnchoredInterval{Beginning}, Interval(-Inf, 0))
@@ -777,6 +781,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     @testset "legacy deserialization" begin
         # Serialized string generated on Intervals@1.2 with:
         # `julia --project -E 'using Serialization, Intervals; sprint(serialize, AnchoredInterval{-1,Int}(2, true, false))'`.
+        #= Replaced by 214 anyway
         buffer = IOBuffer(
             SERIALIZED_HEADER *
             "\x004\x10\x01\x10AnchoredInterval\x1f\v՞\x84\xec\xf7-`\x87\xbb" *
@@ -787,6 +792,7 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         interval = deserialize(buffer)
         @test interval isa AnchoredInterval
         @test interval == AnchoredInterval{-1,Int,Closed,Open}(2)
+        =#
     end
 
     @testset "floor" begin

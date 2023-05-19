@@ -33,8 +33,19 @@ const RightEndpoint{T,B} = Endpoint{T, Right, B} where {T,B <: Bound}
 LeftEndpoint{B}(ep::T) where {T,B} = LeftEndpoint{T,B}(ep)
 RightEndpoint{B}(ep::T) where {T,B} = RightEndpoint{T,B}(ep)
 
-LeftEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = LeftEndpoint{T,L}(L !== Unbounded ? first(i) : nothing)
-RightEndpoint(i::AbstractInterval{T,L,R}) where {T,L,R} = RightEndpoint{T,R}(R !== Unbounded ? last(i) : nothing)
+# Slightly awkward conversion from intervals to endpoints which can still support 'Unbounded'
+# NOTE: We're slowly dropping the Unbounded type in favour of using `Infinity`
+function LeftEndpoint(i::AbstractInterval{T}) where {T}
+    L, _ = bounds_types(i)
+    val = L !== Unbounded ? first(i) : nothing
+    LeftEndpoint{T, L}(val)
+end
+
+function RightEndpoint(i::AbstractInterval{T}) where {T}
+    _, R = bounds_types(i)
+    val = R !== Unbounded ? last(i) : nothing
+    return RightEndpoint{T, R}(val)
+end
 
 endpoint(x::Endpoint) = isbounded(x) ? x.endpoint : nothing
 bound_type(x::Endpoint{T,D,B}) where {T,D,B} = B

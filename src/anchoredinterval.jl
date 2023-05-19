@@ -58,7 +58,7 @@ AnchoredInterval{Minute(5), DateTime, Closed, Closed}(DateTime("2016-08-11T12:30
 
 See also: [`Interval`](@ref), [`HE`](@ref), [`HB`](@ref)
 """
-struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T,L,R}
+struct AnchoredInterval{P, T, L <: Bounded, R <: Bounded} <: AbstractInterval{T}
     anchor::T
 
     function AnchoredInterval{P,T,L,R}(anchor::T) where {P, T, L <: Bounded, R <: Bounded}
@@ -174,6 +174,9 @@ end
 anchor(interval::AnchoredInterval) = interval.anchor
 span(interval::AnchoredInterval{P}) where P = abs(P)
 
+bounds_int(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R} = bounds_int(L, R)
+bounds_types(interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R} = (L, R)
+
 ##### CONVERSION #####
 
 # Allows an interval to be converted to a scalar when the set contained by the interval only
@@ -197,11 +200,11 @@ function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
 end
 
 function Base.convert(::Type{Interval}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+    return Interval{T}(first(interval), last(interval), (L, R))
 end
 
 function Base.convert(::Type{Interval{T}}, interval::AnchoredInterval{P,T,L,R}) where {P,T,L,R}
-    return Interval{T,L,R}(first(interval), last(interval))
+    return Interval{T}(first(interval), last(interval), (L, R))
 end
 
 # Conversion methods which currently aren't needed but could prove useful. Commented out
@@ -221,18 +224,18 @@ function Base.convert(::Type{AnchoredInterval{P}}, interval::Interval{T}) where 
 end
 =#
 
-function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T,L,R}) where {T,L,R}
+function Base.convert(::Type{AnchoredInterval{Ending}}, interval::Interval{T}) where {T,L,R}
     if !isbounded(interval)
         throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    AnchoredInterval{-span(interval), T, L, R}(last(interval))
+    AnchoredInterval{-span(interval), T, bounds_types(interval)...}(last(interval))
 end
 
-function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T,L,R}) where {T,L,R}
+function Base.convert(::Type{AnchoredInterval{Beginning}}, interval::Interval{T}) where {T,L,R}
     if !isbounded(interval)
         throw(ArgumentError("Unable to represent a non-bounded interval using a `AnchoredInterval`"))
     end
-    AnchoredInterval{span(interval), T, L, R}(first(interval))
+    AnchoredInterval{span(interval), T, bounds_types(interval)...}(first(interval))
 end
 
 ##### DISPLAY #####

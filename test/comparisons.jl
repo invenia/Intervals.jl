@@ -1,5 +1,5 @@
 using Intervals: Beginning, Ending, LeftEndpoint, RightEndpoint, contiguous, overlaps,
-    isbounded, isunbounded
+    isbounded, isunbounded, find_intersections
 
 function unique_paired_permutation(v::Vector{T}) where T
     results = Tuple{T, T}[]
@@ -107,6 +107,9 @@ end
 
                 @test symdiff([earlier], [later]) == expected_xor
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
+
+                @test find_intersections([earlier], [later]) == [Int[]]
+                @test find_intersections([later], [earlier]) == [Int[]]
             end
         end
     end
@@ -194,6 +197,9 @@ end
 
                 @test symdiff([earlier], [later]) == expected_xor
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
+
+                @test find_intersections([earlier], [later]) == [Int[]]
+                @test find_intersections([later], [earlier]) == [Int[]]
             end
         end
     end
@@ -282,6 +288,9 @@ end
                 # TODO: Sometimes expected_xor would get mutated in this call
                 @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
+
+                @test find_intersections([earlier], [later]) == [Int[]]
+                @test find_intersections([later], [earlier]) == [Int[]]
             end
         end
     end
@@ -370,6 +379,9 @@ end
 
                 @test symdiff([earlier], [later]) == expected_xor != union(expected_xor)
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == union(IntervalSet(expected_xor))
+
+                @test find_intersections([earlier], [later]) == [Int[]]
+                @test find_intersections([later], [earlier]) == [Int[]]
             end
         end
     end
@@ -463,6 +475,9 @@ end
 
                 @test symdiff([earlier], [later]) == [earlier, later]
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
+
+                @test find_intersections([earlier], [later]) == [[1]]
+                @test find_intersections([later], [earlier]) == [[1]]
             end
         end
     end
@@ -556,6 +571,9 @@ end
 
                 @test symdiff([earlier], [later]) == [earlier, later] != expected_xor
                 @test symdiff(IntervalSet(earlier), IntervalSet(later)) == IntervalSet(expected_xor)
+
+                @test find_intersections([earlier], [later]) == [[1]]
+                @test find_intersections([later], [earlier]) == [[1]]
             end
         end
     end
@@ -630,6 +648,9 @@ end
 
                 @test symdiff([a], [b]) == []
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -708,6 +729,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -786,6 +810,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -868,6 +895,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -946,6 +976,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1026,6 +1059,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1100,6 +1136,9 @@ end
 
                 @test symdiff([a], [b]) == []
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1175,6 +1214,9 @@ end
 
                 @test symdiff([a], [b]) == []
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1250,6 +1292,9 @@ end
 
                 @test symdiff([a], [b]) == []
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1323,6 +1368,9 @@ end
 
                 @test symdiff([a], [b]) == []
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end
@@ -1384,6 +1432,9 @@ end
 
             @test symdiff([a], [b]) == [a, b] != []
             @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet()
+
+            @test find_intersections([a], [b]) == [[1]]
+            @test find_intersections([b], [a]) == [[1]]
         end
     end
 
@@ -1483,6 +1534,9 @@ end
 
                 @test symdiff([a], [b]) == [a, b] != expected_xor
                 @test symdiff(IntervalSet(a), IntervalSet(b)) == IntervalSet(expected_xor)
+
+                @test find_intersections([a], [b]) == [[1]]
+                @test find_intersections([b], [a]) == [[1]]
             end
         end
     end

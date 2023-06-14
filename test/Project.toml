@@ -17,4 +17,5 @@ VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 [compat]
 Documenter = "0.23, 0.24, 0.25, 0.26, 0.27"
 Infinity = "0.2.3"
+Plots = "1.10.0"
 UTCDateTimes = "1.1"

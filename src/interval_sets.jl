@@ -548,15 +548,14 @@ function find_intersections(
     results = Vector{Vector{Int}}(undef, length(x))
     for (i, I) in enumerate(x)
         # find all the starts which occur before the end of `I`
-        idx_first = searchsortedlast(starts_sorted, last(I))
+        idx_first = searchsortedlast(starts_sorted, last(I); lt=(<))
         if idx_first < 1
             results[i] = Int[]
             continue
         end
 
         # find all the stops which occur after the start of `I`
-        idx_last = searchsortedfirst(stops_sorted, first(I))
-
+        idx_last = searchsortedfirst(stops_sorted, first(I); lt=(<))
         if idx_last > len
             results[i] = Int[]
             continue

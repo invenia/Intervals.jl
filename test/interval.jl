@@ -694,12 +694,18 @@
     @testset "astimezone" begin
         zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
         zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
+        utcdt1 = UTCDateTime(zdt1)
+        utcdt2 = UTCDateTime(zdt2)
 
         for (L, R) in BOUND_PERMUTATIONS
             for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
                 @test isequal(
                     astimezone(Interval{L, R}(zdt1, zdt2), tz),
                     Interval{L, R}(astimezone(zdt1, tz), astimezone(zdt2, tz)),
+                )
+                @test isequal(
+                    astimezone(Interval{L, R}(utcdt1, utcdt2), tz),
+                    Interval{L, R}(astimezone(utcdt1, tz), astimezone(utcdt2, tz)),
                 )
             end
         end
@@ -716,6 +722,12 @@
             zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
             zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"Europe/London")
             @test_throws ArgumentError timezone(Interval(zdt1, zdt2))
+        end
+
+        @testset "utc" begin
+            utcdt1 = UTCDateTime(2013, 2, 13, 0, 30)
+            utcdt2 = UTCDateTime(2016, 8, 11, 21)
+            @test timezone(Interval(utcdt1, utcdt2)) == tz"UTC"
         end
     end
 

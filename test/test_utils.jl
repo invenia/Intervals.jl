@@ -11,3 +11,14 @@ isnan(x::Real) = Base.isnan(x)
 
 isinf(x) = !isnan(x) && !isfinite(x)
 isinf(x::Real) = Base.isinf(x)
+
+# Suppress deprecation warnings for tests validating the deprecated behaviour
+
+union(x::AbstractVector{<:AbstractInterval}) = @test_deprecated Base.union(x)
+union(args...) = Base.union(args...)
+
+union!(x::AbstractVector{<:AbstractInterval}) = @test_deprecated Base.union!(x)
+union!(args...) = Base.union!(args...)
+
+superset(x::AbstractVector{<:AbstractInterval}) = @test_deprecated Intervals.superset(x)
+superset(args...) = Intervals.superset(args...)

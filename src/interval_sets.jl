@@ -504,8 +504,8 @@ function find_intersections_helper!(results, x, y, lt)
     rights = RightEndpoint.(y)[lefts_order]
     rights_order = sortperm(rights; lt)
     rights_sorted = rights[rights_order]
-    y_len = length(rights_sorted)
 
+    y_len = length(y)
     for (i, I) in enumerate(x)
         # find all the starts which occur before or on the right endpoint of `I`
         idx_first = searchsortedlast(lefts_sorted, RightEndpoint(I); lt)

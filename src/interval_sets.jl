@@ -501,8 +501,8 @@ function find_intersections_helper!(results, x, y, lt)
     # This allows us to work in the `lefts` frame of reference until the very end.
     # In particular, when we intersect the sets of intervals obtained from lefts and from rights,
     # the `lefts` set can be kept as a `UnitRange`, making the intersection *much* faster.
-    rights = RightEndpoint.(y)
-    rights_order = sortperm(rights[lefts_order]; lt)
+    rights = RightEndpoint.(y)[lefts_order]
+    rights_order = sortperm(rights; lt)
     rights_sorted = rights[rights_order]
     y_len = length(rights_sorted)
 

@@ -547,14 +547,14 @@ function find_intersections(
 
     results = Vector{Vector{Int}}(undef, length(x))
     for (i, I) in enumerate(x)
-        # find all the starts which occur before the end of `I`
+        # find all the starts which occur before or at the end of `I`
         idx_first = searchsortedlast(starts_sorted, last(I); lt=(<))
         if idx_first < 1
             results[i] = Int[]
             continue
         end
 
-        # find all the stops which occur after the start of `I`
+        # find all the stops which occur at or after the start of `I`
         idx_last = searchsortedfirst(stops_sorted, first(I); lt=(<))
         if idx_last > len
             results[i] = Int[]
@@ -563,7 +563,7 @@ function find_intersections(
 
         # Working in "starts" frame of reference
         starts_before_or_during = 1:idx_first
-        stops_during_or_after = @views stops_perm[idx_last:end]
+        stops_during_or_after = @view stops_perm[idx_last:end]
 
         # Intersect them
         r = intersect(starts_before_or_during, stops_during_or_after)

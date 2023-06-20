@@ -51,6 +51,15 @@ end
     @test !issubset(11, IntervalSet([1..3, 5..10]))
     @test issubset(2, IntervalSet([1.0 .. 3.0, 5.0 .. 10.0]))
 
+    # verify the various input types `find_intersections` can handle
+    @test isempty(find_intersections([], []))
+    @test_throws MethodError find_intersections([1], [2])
+    @test isempty(find_intersections(Interval[], Interval[]))
+    @test isempty(find_intersections([1..3], []))
+    @test isempty(find_intersections([], [1..3]))
+    @test !isempty(find_intersections([1..2, 3..4], 
+                                      AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)))
+
     function testsets(a, b)
         @test area(a ∪ b) ≤ area(myunion(a)) + area(myunion(b))
         @test area(setdiff(a, b)) ≤ area(myunion(a))

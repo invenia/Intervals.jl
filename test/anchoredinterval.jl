@@ -112,19 +112,23 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test hash(a) == hash(b)
     end
 
-    @testset "conversion" begin
+    @testset "only" begin
         interval = AnchoredInterval{Hour(0)}(dt)
-        @test convert(DateTime, interval) == dt
 
+        @test only(interval) == dt
+
+        @test_throws DomainError only(HourEnding(dt))
+        @test_throws DomainError only(HourBeginning(dt))
+
+        @test (@test_deprecated convert(DateTime, interval)) == only(interval)
+    end
+
+    @testset "conversion" begin
         he = HourEnding(dt)
         hb = HourBeginning(dt)
 
-        # Note: When the deprecation is dropped remove the deprecated tests and uncomment
-        # the DomainError tests
         @test (@test_deprecated convert(DateTime, he)) == anchor(he)
         @test (@test_deprecated convert(DateTime, hb)) == anchor(hb)
-        # @test_throws DomainError convert(DateTime, he)
-        # @test_throws DomainError convert(DateTime, hb)
 
         @test convert(Interval, he) == Interval{Open, Closed}(dt - Hour(1), dt)
         @test convert(Interval, hb) == Interval{Closed, Open}(dt, dt + Hour(1))

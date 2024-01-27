@@ -97,20 +97,23 @@
         @test hash(a) == hash(b)
     end
 
-    @testset "conversion" begin
-        @test_throws DomainError convert(Int, Interval{Open, Open}(10, 10))
-        @test_throws DomainError convert(Int, Interval{Open, Closed}(10, 10))
-        @test_throws DomainError convert(Int, Interval{Closed, Open}(10, 10))
-        @test convert(Int, Interval{Closed, Closed}(10, 10)) == 10
-        @test_throws DomainError convert(Int, Interval{Closed, Closed}(10, 11))
+    @testset "only" begin
+        @test_throws DomainError only(Interval{Open, Open}(10, 10))
+        @test_throws DomainError only(Interval{Open, Closed}(10, 10))
+        @test_throws DomainError only(Interval{Closed, Open}(10, 10))
+        @test only(Interval{Closed, Closed}(10, 10)) == 10
+        @test_throws DomainError only(Interval{Closed, Closed}(10, 11))
+
+        @test (@test_deprecated convert(Int, Interval{Closed, Closed}(10, 10))) == 10
+        @test_deprecated (@test_throws DomainError convert(Int, Interval{Closed, Closed}(10, 11)))
 
         for T in (Date, DateTime)
             dt = T(2013, 2, 13)
-            @test_throws DomainError convert(T, Interval{Open, Open}(dt, dt))
-            @test_throws DomainError convert(T, Interval{Open, Closed}(dt, dt))
-            @test_throws DomainError convert(T, Interval{Closed, Open}(dt, dt))
-            @test convert(T, Interval{Closed, Closed}(dt, dt)) == dt
-            @test_throws DomainError convert(T, Interval{Closed, Closed}(dt, dt + Day(1)))
+            @test_throws DomainError only(Interval{Open, Open}(dt, dt))
+            @test_throws DomainError only(Interval{Open, Closed}(dt, dt))
+            @test_throws DomainError only(Interval{Closed, Open}(dt, dt))
+            @test only(Interval{Closed, Closed}(dt, dt)) == dt
+            @test_throws DomainError only(Interval{Closed, Closed}(dt, dt + Day(1)))
         end
     end
 

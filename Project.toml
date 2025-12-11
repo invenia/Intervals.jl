@@ -2,7 +2,7 @@ name = "Intervals"
 uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
 license = "MIT"
 authors = ["Invenia Technical Computing"]
-version = "1.10.0"
+version = "1.11.0"
 
 [deps]
 ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"

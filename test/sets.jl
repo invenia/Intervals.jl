@@ -40,6 +40,24 @@ end
     # interval-bound point set)
     @test intersect([1..2, 2..3, 3..4, 4..5], [2..3, 3..4]) == [2..3, 3..4]
 
+    # verify that the internal representation of type stable interval sets
+    # makes use of union splitting
+    @test ==(eltype(Intervals.unbunch([Interval{Open,Open}(1, 2), 
+                    Interval{Open,Open}(3,4)])),
+             Union{Intervals.LeftEndpoint{Int, Open}, Intervals.RightEndpoint{Int, Open}})
+    @test ==(eltype(Intervals.unbunch([Interval{Closed,Closed}(1, 2), 
+                    Interval{Closed,Closed}(3,4)])),
+             Union{Intervals.LeftEndpoint{Int, Closed}, Intervals.RightEndpoint{Int, Closed}})
+    @test ==(eltype(Intervals.unbunch([Interval{Open,Closed}(1, 2), 
+                    Interval{Open,Closed}(3,4)])),
+             Union{Intervals.LeftEndpoint{Int, Open}, Intervals.RightEndpoint{Int, Closed}})
+    @test ==(eltype(Intervals.unbunch([Interval{Closed,Open}(1, 2), 
+                    Interval{Closed,Open}(3,4)])),
+             Union{Intervals.LeftEndpoint{Int, Closed}, Intervals.RightEndpoint{Int, Open}})
+    @test ==(eltype(Intervals.unbunch([Interval{Closed,Open}(1, 2), 
+                    Interval{Open,Closed}(3,4)])), 
+             Intervals.Endpoint{Int})
+
     # verify that elements are in / subsets of interval sets
     @test 2 ∈ IntervalSet([1..3, 5..10])
     @test 0 ∉ IntervalSet([1..3, 5..10])

@@ -237,33 +237,18 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         where_lr = "where {L<:$Bounded, R<:$Bounded}"
         where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
 
-        if VERSION >= v"1.7.0"
-            @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-                "HourEnding"
-            @test sprint(show, AnchoredInterval{Hour(1)}) ==
-                "HourBeginning"
-            @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{Day(-1)}"
-            @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{Day(1)}"
-            @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{Day(-1), DateTime}"
-            @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{Day(1), DateTime}"
-        else
-            @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-                "HourEnding{T, L, R} $where_tlr"
-            @test sprint(show, AnchoredInterval{Hour(1)}) ==
-                "HourBeginning{T, L, R} $where_tlr"
-            @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{Day(-1), T, L, R} $where_tlr"
-            @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{Day(1), T, L, R} $where_tlr"
-            @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{Day(-1), DateTime, L, R} $where_lr"
-            @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{Day(1), DateTime, L, R} $where_lr"
-        end
+        @test sprint(show, AnchoredInterval{Hour(-1)}) ==
+            "HourEnding"
+        @test sprint(show, AnchoredInterval{Hour(1)}) ==
+            "HourBeginning"
+        @test sprint(show, AnchoredInterval{Day(-1)}) ==
+            "AnchoredInterval{Day(-1)}"
+        @test sprint(show, AnchoredInterval{Day(1)}) ==
+            "AnchoredInterval{Day(1)}"
+        @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
+            "AnchoredInterval{Day(-1), DateTime}"
+        @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
+            "AnchoredInterval{Day(1), DateTime}"
 
         # Tuples contain fields: interval, printed, shown
         tests = [

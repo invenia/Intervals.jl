@@ -1,5 +1,4 @@
-VERSION >= v"1.3" && using Arrow
-
+using Arrow
 using Base.Iterators: product
 using Dates
 using Documenter: doctest
@@ -22,20 +21,8 @@ include("test_utils.jl")
     include("anchoredinterval.jl")
     include("comparisons.jl")
     include("sets.jl")
+    include("arrow.jl")
     include("plotting.jl")
 
-    if VERSION >= v"1.3"
-        include("arrow.jl")
-    else
-        @warn "Skipping Arrow.jl support tests"
-    end
-
-    # Note: The output of the doctests currently requires a newer version of Julia
-    # https://github.com/JuliaLang/julia/pull/34387
-    # The doctests fail on x86, so only run them on 64-bit hardware
-    if v"1.6" <= VERSION < v"1.7" && Sys.WORD_SIZE == 64
-        doctest(Intervals)
-    else
-        @warn "Skipping doctests"
-    end
+    doctest(Intervals)
 end

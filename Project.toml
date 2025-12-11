@@ -13,7 +13,7 @@ Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 TimeZones = "f269a46b-ccf7-5d73-abea-4c690281aa53"
 
 [compat]
-ArrowTypes = "1.2"
+ArrowTypes = "2.3"
 RecipesBase = "0.7, 0.8, 1"
 TimeZones = "1.7"
 julia = "1.6.7"

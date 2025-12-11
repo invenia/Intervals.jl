@@ -24,5 +24,10 @@ include("test_utils.jl")
     include("arrow.jl")
     include("plotting.jl")
 
-    doctest(Intervals)
+    # only run doctests on one version (LTS)
+    if v"1.10" <= VERSION < v"1.11"
+        doctest(Intervals)
+    else
+        @warn "Skipping doctests"
+    end
 end

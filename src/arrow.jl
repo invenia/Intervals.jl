@@ -52,28 +52,6 @@ let name = Symbol("JuliaLang.Intervals.Interval{T}")
     end
 end
 
-# Note: The type returnedy by the `ArrowType` function is not passed into the `JuliaType`
-# function. Instead the result of `typeof(toarrow(...))` is passed into `JuliaType`.
-# To reproduce this use an isbits object as a type parameter in `ArrowType`.
-
-# An inefficient Arrow serialization format which supports non-concrete element types
-let name = Symbol("JuliaLang.Intervals.AnchoredInterval{P,T}")
-    ArrowTypes.arrowname(::Type{<:AnchoredInterval{P,T}}) where {P,T} = name
-    function ArrowTypes.ArrowType(::Type{<:AnchoredInterval{P,T}}) where {P,T}
-        return NamedTuple{(:anchor,), Tuple{Tuple{typeof(P), T, String, String}}}
-    end
-    function ArrowTypes.toarrow(x::AnchoredInterval{P,T}) where {P,T}
-        L, R = bounds_types(x)
-        return (; anchor=(P, x.anchor, string(arrowname(L)), string(arrowname(R))))
-    end
-    function ArrowTypes.JuliaType(::Val{name})
-        return AnchoredInterval
-    end
-    function ArrowTypes.fromarrow(::Type{AnchoredInterval}, anchor)
-        P = anchor[1]
-        T = typeof(anchor[2])  # Note: Arrow can't access the original `T` anyway
-        L = ArrowTypes.JuliaType(Val(Symbol(anchor[3])))
-        R = ArrowTypes.JuliaType(Val(Symbol(anchor[4])))
-        return AnchoredInterval{P,T,L,R}(anchor[2])
-    end
-end
+# AnchoredInterval support was initially implemented in https://github.com/invenia/Intervals.jl/pull/167
+# but was not roundtrippable since all Periods were coerced to Second.
+# A new implementation that stores the period type will be needed.

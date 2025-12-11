@@ -234,49 +234,35 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
     end
 
     @testset "display" begin
-        # Notes on compatibility changes and when they can be updated:
-        #
-        # When the minimum version of TimeZones requires that `repr` is fixed
-        # - `repr(ZonedDateTime(...))` and `$ZonedDateTime` can be changed to be hardcoded
-        #
-        # When dropping VERSION < v"1.2.0-DEV.29" (https://github.com/JuliaLang/julia/pull/30200)
-        # - `repr(Date(...))` and `repr(DateTime(...))` can be converted to hardcode strings
-        #
-        # When dropping VERSION < v"1.2.0-DEV.223" (https://github.com/JuliaLang/julia/pull/30817)
-        # - `repr(Period(...))`can be converted to hardcode strings
+        where_lr = "where {L<:$Bounded, R<:$Bounded}"
+        where_tlr = "where {T, L<:$Bounded, R<:$Bounded}"
 
-        where_lr = "where R<:$Bounded where L<:$Bounded"
-        where_tlr = "$where_lr where T"
-
-        where_lr2 = "where {L<:$Bounded, R<:$Bounded}"
-        where_tlr2 = "where {T, L<:$Bounded, R<:$Bounded}"
-
-        if VERSION >= v"1.6.0"
+        if VERSION >= v"1.7.0"
             @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-                "HourEnding{T, L, R} $where_tlr2"
+                "HourEnding"
             @test sprint(show, AnchoredInterval{Hour(1)}) ==
-                "HourBeginning{T, L, R} $where_tlr2"
+                "HourBeginning"
             @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{$(repr(Day(-1))), T, L, R} $where_tlr2"
+                "AnchoredInterval{Day(-1)}"
             @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{$(repr(Day(1))), T, L, R} $where_tlr2"
+                "AnchoredInterval{Day(1)}"
             @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(-1))), DateTime, L, R} $where_lr2"
+                "AnchoredInterval{Day(-1), DateTime}"
             @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(1))), DateTime, L, R} $where_lr2"
+                "AnchoredInterval{Day(1), DateTime}"
         else
             @test sprint(show, AnchoredInterval{Hour(-1)}) ==
-                "AnchoredInterval{$(repr(Hour(-1))),T,L,R} $where_tlr"
+                "HourEnding{T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Hour(1)}) ==
-                "AnchoredInterval{$(repr(Hour(1))),T,L,R} $where_tlr"
+                "HourBeginning{T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1)}) ==
-                "AnchoredInterval{$(repr(Day(-1))),T,L,R} $where_tlr"
+                "AnchoredInterval{Day(-1), T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(1)}) ==
-                "AnchoredInterval{$(repr(Day(1))),T,L,R} $where_tlr"
+                "AnchoredInterval{Day(1), T, L, R} $where_tlr"
             @test sprint(show, AnchoredInterval{Day(-1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(-1))),DateTime,L,R} $where_lr"
+                "AnchoredInterval{Day(-1), DateTime, L, R} $where_lr"
             @test sprint(show, AnchoredInterval{Day(1), DateTime}) ==
-                "AnchoredInterval{$(repr(Day(1))),DateTime,L,R} $where_lr"
+                "AnchoredInterval{Day(1), DateTime, L, R} $where_lr"
         end
 
         # Tuples contain fields: interval, printed, shown
@@ -284,169 +270,86 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
             (
                 HourEnding(dt),
                 "(2016-08-11 HE02]",
-                string(
-                    if VERSION >= v"1.6.0-DEV.347"
-                        "HourEnding{DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:00:00\"))",
             ),
             (
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13)),
                 "[2013-02-12 HE24)",
-                string(
-                    if VERSION >= v"1.6.0-DEV.347"
-                        "HourEnding{DateTime, Closed, Open}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}"
-                    end,
-                    "($(repr(DateTime(2013, 2, 13))))",
-                ),
+                "HourEnding{DateTime, Closed, Open}(DateTime(\"2013-02-13T00:00:00\"))",
             ),
             (
                 HourEnding(dt + Minute(15) + Second(30)),
                 "(2016-08-11 HE02:15:30]",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "HourEnding{DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2, 15, 30))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:15:30\"))",
             ),
             (
                 HourEnding(dt + Millisecond(2)),
                 "(2016-08-11 HE02:00:00.002]",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "HourEnding{DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0, 2))))",
-                ),
+                "HourEnding{DateTime, Open, Closed}(DateTime(\"2016-08-11T02:00:00.002\"))",
             ),
             (
                 HourEnding{Closed, Open}(DateTime(2013, 2, 13, 0, 1)),
                 "[2013-02-13 HE00:01:00)",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "HourEnding{DateTime, Closed, Open}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),DateTime,Closed,Open}"
-                    end,
-                    "($(repr(DateTime(2013, 2, 13, 0, 1))))",
-                ),
+                "HourEnding{DateTime, Closed, Open}(DateTime(\"2013-02-13T00:01:00\"))",
             ),
             (
                 HourBeginning(dt),
                 "[2016-08-11 HB02)",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "HourBeginning{DateTime, Closed, Open}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(1))),DateTime,Closed,Open}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
-                ),
+                "HourBeginning{DateTime, Closed, Open}(DateTime(\"2016-08-11T02:00:00\"))",
             ),
             (
                 HourBeginning{Open, Closed}(DateTime(2013, 2, 13)),
                 "(2013-02-13 HB00]",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "HourBeginning{DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2013, 2, 13))))",
-                ),
+                "HourBeginning{DateTime, Open, Closed}(DateTime(\"2013-02-13T00:00:00\"))",
             ),
             (
                 HourEnding(ZonedDateTime(dt, tz"America/Winnipeg")),
                 "(2016-08-11 HE02-05:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "HourEnding{$ZonedDateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Hour(-1))),$ZonedDateTime,Open,Closed}"
-                    end,
-                    "($(repr(ZonedDateTime(dt, tz"America/Winnipeg"))))",
+                    "HourEnding{$ZonedDateTime, Open, Closed}",
+                    "(ZonedDateTime(2016, 8, 11, 2, tz\"America/Winnipeg\"))",
                 ),
             ),
             (
                 AnchoredInterval{Year(-1)}(Date(dt)),
                 "(YE 2016-08-11]",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Year(-1))), Date, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Year(-1))),Date,Open,Closed}"
-                    end,
-                    "($(repr(Date(2016, 8, 11))))",
-                ),
+                "AnchoredInterval{Year(-1), Date, Open, Closed}(Date(\"2016-08-11\"))",
             ),
             (
                 AnchoredInterval{Year(-1)}(ceil(Date(dt), Year)),
                 "(YE 2017-01-01]",
-                string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Year(-1))), Date, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Year(-1))),Date,Open,Closed}"
-                    end,
-                    "($(repr(Date(2017, 1, 1))))",
-                ),
+                "AnchoredInterval{Year(-1), Date, Open, Closed}(Date(\"2017-01-01\"))",
             ),
             (
                 AnchoredInterval{Month(-1)}(dt),
                 "(MoE 2016-08-11 02:00:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Month(-1))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Month(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2, 0, 0))))",
+                    "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
                 AnchoredInterval{Month(-1)}(ceil(dt, Month)),
                 "(MoE 2016-09-01]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Month(-1))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Month(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 9, 1))))",
+                    "AnchoredInterval{Month(-1), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-09-01T00:00:00\"))",
                 ),
             ),
             (
                 AnchoredInterval{Day(-1)}(DateTime(dt)),
                 "(DE 2016-08-11 02:00:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Day(-1))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Day(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
                 AnchoredInterval{Day(-1)}(ceil(DateTime(dt), Day)),
                 "(DE 2016-08-12]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Day(-1))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Day(-1))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 12))))",
+                    "AnchoredInterval{Day(-1), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-12T00:00:00\"))",
                 ),
             ),
             (
@@ -454,12 +357,8 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 AnchoredInterval{Day(-1)}(Date(dt)),
                 "(DE 2016-08-11]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Day(-1))), Date, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Day(-1))),Date,Open,Closed}"
-                    end,
-                    "($(repr(Date(2016, 8, 11))))",
+                    "AnchoredInterval{Day(-1), Date, Open, Closed}",
+                    "(Date(\"2016-08-11\"))",
                 ),
             ),
             (
@@ -470,48 +369,32 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
                 ),
                 "(DE 2016-08-12 00:00:00-05:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Day(-1))), $ZonedDateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Day(-1))),$ZonedDateTime,Open,Closed}"
-                    end,
-                    "($(repr(ZonedDateTime(2016, 8, 12, tz"America/Winnipeg"))))",
+                    "AnchoredInterval{Day(-1), $ZonedDateTime, Open, Closed}",
+                    "(ZonedDateTime(2016, 8, 12, tz\"America/Winnipeg\"))",
                 ),
             ),
             (
                 AnchoredInterval{Minute(-5)}(dt),
                 "(2016-08-11 5ME02:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Minute(-5))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Minute(-5))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "AnchoredInterval{Minute(-5), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
                 AnchoredInterval{Second(-30)}(dt),
                 "(2016-08-11 30SE02:00:00]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Second(-30))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Second(-30))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "AnchoredInterval{Second(-30), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
             ),
             (
                 AnchoredInterval{Millisecond(-10)}(dt),
                 "(2016-08-11 10msE02:00:00.000]",
                 string(
-                    if VERSION >= v"1.6.0"
-                        "AnchoredInterval{$(repr(Millisecond(-10))), DateTime, Open, Closed}"
-                    else
-                        "AnchoredInterval{$(repr(Millisecond(-10))),DateTime,Open,Closed}"
-                    end,
-                    "($(repr(DateTime(2016, 8, 11, 2))))",
+                    "AnchoredInterval{Millisecond(-10), DateTime, Open, Closed}",
+                    "(DateTime(\"2016-08-11T02:00:00\"))",
                 ),
            ),
         ]
@@ -532,23 +415,13 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         @test string(interval) == "(0 .. 10]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
 
-        shown = if VERSION >= v"1.6.0"
-            "AnchoredInterval{-10, $Int, Open, Closed}(10)"
-        else
-            "AnchoredInterval{-10,$Int,Open,Closed}(10)"
-        end
-        @test sprint(show, interval) == shown
+        @test sprint(show, interval) == "AnchoredInterval{-10, $Int, Open, Closed}(10)"
 
         interval = AnchoredInterval{25}('a')
         @test string(interval) == "[a .. z)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
 
-        shown = if VERSION >= v"1.6.0"
-            "AnchoredInterval{25, Char, Closed, Open}('a')"
-        else
-            "AnchoredInterval{25,Char,Closed,Open}('a')"
-        end
-        @test sprint(show, interval) == shown
+        @test sprint(show, interval) == "AnchoredInterval{25, Char, Closed, Open}('a')"
     end
 
     @testset "equality" begin
@@ -706,14 +579,14 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
         end
 
         @testset "StepRangeLen" begin
-            r = AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
-            r = r[1:5]
+            r = StepRangeLen(AnchoredInterval{-1}(1), 1, 5)
 
             # https://github.com/JuliaLang/julia/issues/33882
             @test r isa StepRangeLen
             @test first(r) == AnchoredInterval{-1}(1)
             @test step(r) == 1
             @test last(r) == AnchoredInterval{-1}(5)
+            @test r == AnchoredInterval{-1}(1):1:AnchoredInterval{-1}(5)
         end
 
         @testset "hourly, implicit" begin
@@ -871,15 +744,21 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
     @testset "astimezone" begin
         zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
+        utcdt = UTCDateTime(zdt)
 
         for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
             # Note: We cannot test different bound types here as HE cannot specify them
             @test isequal(astimezone(HE(zdt), tz), HE(astimezone(zdt, tz)))
+            @test isequal(astimezone(HE(utcdt), tz), HE(astimezone(utcdt, tz)))
 
             for (L, R) in BOUND_PERMUTATIONS
                 @test isequal(
                     astimezone(AnchoredInterval{Day(1), L, R}(zdt), tz),
                     AnchoredInterval{Day(1), L, R}(astimezone(zdt, tz)),
+                )
+                @test isequal(
+                    astimezone(AnchoredInterval{Day(1), L, R}(utcdt), tz),
+                    AnchoredInterval{Day(1), L, R}(astimezone(utcdt, tz)),
                 )
             end
         end
@@ -887,8 +766,12 @@ using Intervals: Bounded, Ending, Beginning, canonicalize, isunbounded
 
     @testset "timezone" begin
         zdt = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
-        ai = AnchoredInterval{Day(1)}(zdt)
-        @test timezone(ai) == tz"America/Winnipeg"
+        utcdt = UTCDateTime(zdt)
+        aiz = AnchoredInterval{Day(1)}(zdt)
+        aiutc = AnchoredInterval{Day(1)}(utcdt)
+
+        @test timezone(aiz) == tz"America/Winnipeg"
+        @test timezone(aiutc) == tz"UTC"
     end
 
     @testset "legacy deserialization" begin

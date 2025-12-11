@@ -1,7 +1,7 @@
 """
     Interval{T, L <: Bound, R <: Bound}
 
-An `Interval` represents a non-iterable range or span of values (non-interable because,
+An `Interval` represents a non-iterable range or span of values (non-iterable because,
 unlike a `StepRange`, no step is defined).
 
 An `Interval` can be closed (both `first` and `last` are included in the interval), open
@@ -35,19 +35,6 @@ A closed `Interval` can be constructed with the `..` infix constructor:
 julia> Dates.today() - Dates.Week(1) .. Dates.today()
 Interval{Date,Closed,Closed}(2018-01-24, 2018-01-31)
 ```
-
-### Note on Ordering
-
-The `Interval` constructor will compare `first` and `last`; if it finds that
-`first > last`, they will be reversed to ensure that `first < last`. This simplifies
-calls to `in` and `intersect`:
-
-```julia
-julia> i = Interval{Open,Closed}(Date(2016, 8, 11), Date(2013, 2, 13))
-Interval{Date,Closed,Open}(2013-02-13, 2016-08-11)
-```
-
-Note that the bounds are also reversed in this case.
 
 See also: [`AnchoredInterval`](@ref)
 """
@@ -378,6 +365,10 @@ function Base.issubset(a::AbstractInterval, b::AbstractInterval)
     return LeftEndpoint(a) ≥ LeftEndpoint(b) && RightEndpoint(a) ≤ RightEndpoint(b)
 end
 
+function Base.isdisjoint(a::AbstractInterval, b::AbstractInterval)
+    return RightEndpoint(a) < LeftEndpoint(b) || LeftEndpoint(a) > RightEndpoint(b)
+end
+
 Base.:⊈(a::AbstractInterval, b::AbstractInterval) = !issubset(a, b)
 Base.:⊉(a::AbstractInterval, b::AbstractInterval) = !issubset(b, a)
 
@@ -410,60 +401,6 @@ function Base.intersect(a::AbstractInterval{S}, b::AbstractInterval{T}) where {S
     !overlaps(a, b) && return Interval{promote_type(S, T)}()
     left = max(LeftEndpoint(a), LeftEndpoint(b))
     right = min(RightEndpoint(a), RightEndpoint(b))
-
-    return Interval(left, right)
-end
-
-# There is power in a union.
-"""
-    union(intervals::AbstractVector{<:AbstractInterval})
-
-Flattens a vector of overlapping intervals into a new, smaller vector containing only
-non-overlapping intervals.
-"""
-function Base.union(intervals::AbstractVector{<:AbstractInterval})
-    return union!(convert(Vector{AbstractInterval}, intervals))
-end
-
-"""
-    union!(intervals::AbstractVector{<:Union{Interval, AbstractInterval}})
-
-Flattens a vector of overlapping intervals in-place to be a smaller vector containing only
-non-overlapping intervals.
-"""
-function Base.union!(intervals::Union{AbstractVector{<:Interval}, AbstractVector{AbstractInterval}})
-    sort!(intervals)
-
-    i = 2
-    n = length(intervals)
-    while i <= n
-        prev = intervals[i - 1]
-        curr = intervals[i]
-
-        # If the current and previous intervals don't meet then move along
-        if !overlaps(prev, curr) && !contiguous(prev, curr)
-            i = i + 1
-
-        # If the two intervals meet then we absorb the current interval into
-        # the previous one.
-        else
-            intervals[i - 1] = merge(prev, curr)
-            deleteat!(intervals, i)
-            n -= 1
-        end
-    end
-
-    return intervals
-end
-
-"""
-    superset(intervals::AbstractArray{<:AbstractInterval}) -> Interval
-
-Create the smallest single interval which encompasses all of the provided intervals.
-"""
-function superset(intervals::AbstractArray{<:AbstractInterval})
-    left = minimum(LeftEndpoint.(intervals))
-    right = maximum(RightEndpoint.(intervals))
 
     return Interval(left, right)
 end
@@ -543,11 +480,11 @@ end
 
 ##### TIME ZONES #####
 
-function TimeZones.astimezone(i::Interval{ZonedDateTime, L, R}, tz::TimeZone) where {L,R}
+function TimeZones.astimezone(i::Interval{T, L, R}, tz::TimeZone) where {T, L,R}
     return Interval{ZonedDateTime, L, R}(astimezone(first(i), tz), astimezone(last(i), tz))
 end
 
-function TimeZones.timezone(i::Interval{ZonedDateTime})
+function TimeZones.timezone(i::Interval)
     if timezone(first(i)) != timezone(last(i))
         throw(ArgumentError("Interval $i contains mixed timezones."))
     end

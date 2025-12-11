@@ -6,7 +6,8 @@ const Right = Direction{:Right}()
 const Beginning = Left
 const Ending = Right
 
-struct Endpoint{T, D, B <: Bound}
+abstract type AbstractEndpoint end
+struct Endpoint{T, D, B <: Bound} <: AbstractEndpoint
     endpoint::T
 
     function Endpoint{T,D,B}(ep::T) where {T, D, B <: Bounded}

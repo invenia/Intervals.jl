@@ -9,6 +9,7 @@ using Intervals: isfinite
 using Serialization: deserialize
 using Test
 using TimeZones
+using UTCDateTimes
 
 const BOUND_PERMUTATIONS = product((Closed, Open), (Closed, Open))
 
@@ -20,6 +21,7 @@ include("test_utils.jl")
     include("interval.jl")
     include("anchoredinterval.jl")
     include("comparisons.jl")
+    include("sets.jl")
     include("plotting.jl")
 
     if VERSION >= v"1.3"

@@ -282,33 +282,17 @@
         interval = Interval{Open, Open}(1, 2)
         @test string(interval) == "(1 .. 2)"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-
-        shown = if VERSION >= v"1.6.0"
-             "Interval{$Int, Open, Open}(1, 2)"
-        else
-             "Interval{$Int,Open,Open}(1, 2)"
-        end
-        @test sprint(show, interval) == shown
+        @test sprint(show, interval) == "Interval{$Int, Open, Open}(1, 2)"
 
         interval = Interval{Open, Closed}('a', 'b')
         @test string(interval) == "(a .. b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-        shown = if VERSION >= v"1.6.0"
-            "Interval{Char, Open, Closed}('a', 'b')"
-        else
-            "Interval{Char,Open,Closed}('a', 'b')"
-        end
-        @test sprint(show, interval) == shown
+        @test sprint(show, interval) == "Interval{Char, Open, Closed}('a', 'b')"
 
         interval = Interval{Closed, Open}(Date(2012), Date(2013))
 
-        type_str = if VERSION >= v"1.6.0"
-            "Interval{Date, Closed, Open}"
-        else
-            "Interval{Date,Closed,Open}"
-        end
         shown = string(
-            type_str,
+            "Interval{Date, Closed, Open}",
             "(",
             sprint(show, Date(2012, 1, 1)),
             ", ",
@@ -323,12 +307,7 @@
         interval = Interval{Closed, Closed}("a", "b")
         @test string(interval) == "[a .. b]"
         @test sprint(show, interval, context=:compact=>true) == string(interval)
-        shown = if VERSION >= v"1.6.0"
-            "Interval{String, Closed, Closed}(\"a\", \"b\")"
-        else
-            "Interval{String,Closed,Closed}(\"a\", \"b\")"
-        end
-        @test sprint(show, interval) == shown
+        @test sprint(show, interval) == "Interval{String, Closed, Closed}(\"a\", \"b\")"
     end
 
     @testset "equality" begin
@@ -610,6 +589,8 @@
             @test  in(b - unit, interval) || isinf(b)
             @test !in(b + unit, interval) || isinf(b)
 
+            # As an Interval instance is itself a collection one could expect this to return
+            # `true`. The correct check in this case is `issubset`.
             @test_throws ArgumentError (in(Interval(a, b), Interval(a, b)))
         end
     end
@@ -713,12 +694,18 @@
     @testset "astimezone" begin
         zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
         zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"America/Winnipeg")
+        utcdt1 = UTCDateTime(zdt1)
+        utcdt2 = UTCDateTime(zdt2)
 
         for (L, R) in BOUND_PERMUTATIONS
             for tz in (tz"America/Winnipeg", tz"America/Regina", tz"UTC")
                 @test isequal(
                     astimezone(Interval{L, R}(zdt1, zdt2), tz),
                     Interval{L, R}(astimezone(zdt1, tz), astimezone(zdt2, tz)),
+                )
+                @test isequal(
+                    astimezone(Interval{L, R}(utcdt1, utcdt2), tz),
+                    Interval{L, R}(astimezone(utcdt1, tz), astimezone(utcdt2, tz)),
                 )
             end
         end
@@ -735,6 +722,12 @@
             zdt1 = ZonedDateTime(2013, 2, 13, 0, 30, tz"America/Winnipeg")
             zdt2 = ZonedDateTime(2016, 8, 11, 21, tz"Europe/London")
             @test_throws ArgumentError timezone(Interval(zdt1, zdt2))
+        end
+
+        @testset "utc" begin
+            utcdt1 = UTCDateTime(2013, 2, 13, 0, 30)
+            utcdt2 = UTCDateTime(2016, 8, 11, 21)
+            @test timezone(Interval(utcdt1, utcdt2)) == tz"UTC"
         end
     end
 
@@ -784,6 +777,7 @@
             Interval{Open, Open}(-10, -1),
             Interval{Open, Open}(13, 20),
         ]
+
         @test union!(intervals) == expected
         @test intervals == expected
 

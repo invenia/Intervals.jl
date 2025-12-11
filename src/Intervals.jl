@@ -1,5 +1,6 @@
 module Intervals
 
+using ArrowTypes: ArrowTypes, JuliaType, arrowname
 using Dates
 using Printf
 using RecipesBase
@@ -35,6 +36,7 @@ include("plotting.jl")
 include("docstrings.jl")
 include("deprecated.jl")
 include("compat.jl")
+include("arrow.jl")
 
 export Bound,
        Closed,

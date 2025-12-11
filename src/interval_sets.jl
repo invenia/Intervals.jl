@@ -22,7 +22,7 @@ julia> intersect(IntervalSet(1..5), IntervalSet(3..8))
 [3 .. 5]
 
 julia> symdiff(IntervalSet(1..5), IntervalSet(3..8))
-2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
+2-interval IntervalSet{Interval{Int64}}:
 [1 .. 3)
 (5 .. 8]
 
@@ -42,7 +42,7 @@ julia> intersect(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
 [8 .. 9]
 
 julia> setdiff(IntervalSet([1..5, 8..10]), IntervalSet([4..9, 12..14]))
-2-interval IntervalSet{Interval{Int64, L, R} where {L<:Bound, R<:Bound}}:
+2-interval IntervalSet{Interval{Int64}}:
 [1 .. 4)
 (9 .. 10]
 ```

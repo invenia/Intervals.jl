@@ -176,23 +176,29 @@ span(interval::AnchoredInterval{P}) where P = abs(P)
 
 ##### CONVERSION #####
 
-# Allows an interval to be converted to a scalar when the set contained by the interval only
-# contains a single element.
-function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
+function Base.only(interval::AnchoredInterval{P}) where {P}
     if isclosed(interval) && (sign(P) == 0 || first(interval) == last(interval))
         return first(interval)
     else
-        # Remove deprecation in version 2.0.0
-        depwarn(
-            "`convert(T, interval::AnchoredInterval{P,T})` is deprecated for " *
-            "intervals which are not closed with coinciding endpoints. " *
-            "Use `anchor(interval)` instead.",
-            :convert,
-        )
-        return anchor(interval)
+        throw(DomainError(interval,
+            "The interval is not closed with coinciding endpoints, " *
+            "did you meant to use `anchor(interval)`?"
+        ))
+    end
+end
 
-        # TODO: For when deprecation is removed
-        # throw(DomainError(interval, "The interval is not closed with coinciding endpoints"))
+# Remove in version 2.0.0
+function Base.convert(::Type{T}, interval::AnchoredInterval{P,T}) where {P,T}
+    depwarn(
+        "`convert(::Type{T}, interval::AnchoredInterval{P, T})` is deprecated, " *
+        "use `only(interval::AnchoredInterval{P,T})` for closed intervals with " *
+        "coinciding endpoints or `anchor(interval)` otherwise.",
+        :convert,
+    )
+    if isclosed(interval) && (sign(P) == 0 || first(interval) == last(interval))
+        return first(interval)
+    else
+        return anchor(interval)
     end
 end
 

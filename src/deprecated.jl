@@ -6,10 +6,10 @@ import Dates: Date, DateTime
 export Inclusivity, inclusivity
 include("inclusivity.jl")
 
-@deprecate Date(interval::Interval{Date}) convert(Date, interval)
-@deprecate DateTime(interval::Interval{DateTime}) convert(DateTime, interval)
-@deprecate Date(interval::AnchoredInterval{P, Date} where P) convert(Date, interval)
-@deprecate DateTime(interval::AnchoredInterval{P, DateTime} where P) convert(DateTime, interval)
+@deprecate Date(interval::Interval{Date}) only(interval)
+@deprecate DateTime(interval::Interval{DateTime}) only(interval)
+@deprecate Date(interval::AnchoredInterval{P, Date} where P) only(interval)
+@deprecate DateTime(interval::AnchoredInterval{P, DateTime} where P) only(interval)
 
 
 function Endpoint{T,D}(ep::T, included::Bool) where {T,D}

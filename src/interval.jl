@@ -297,6 +297,24 @@ function Base.isequal(a::AbstractInterval, b::AbstractInterval)
     return le && re
 end
 
+function Base.:(≈)(a::AbstractInterval, b::AbstractInterval)
+    first_a, last_a = first(a), last(a)
+    first_b, last_b = first(b), last(b)
+    # deal with unbounded intervals
+    if ((first_a === nothing && first_b !== nothing) ||
+        (first_a !== nothing && first_b === nothing) ||
+        (last_a === nothing && last_b !== nothing) ||
+        (last_a !== nothing && last_b === nothing))
+        return false
+    end
+    # deal with bounded intervals
+    if ((first_a !== nothing && !(first_a ≈ first_b)) ||
+        (last_a !== nothing && !(last_a ≈ last_b)))
+        return false
+    end
+    return true
+end
+
 # While it might be convincingly argued that this should define < instead of isless (see
 # https://github.com/invenia/Intervals.jl/issues/14), this breaks sort.
 Base.isless(a::AbstractInterval, b) = LeftEndpoint(a) < b

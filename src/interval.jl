@@ -245,6 +245,14 @@ function Base.convert(::Type{T}, interval::Interval{T}) where T
     end
 end
 
+function Base.convert(::Type{<:Interval{T}}, interval::Interval{S,L,R}) where {T,S,L,R}
+    return Interval{T,L,R}(first(interval), last(interval))
+end
+
+Base.promote_rule(::Type{Interval{T,L1,R1}}, ::Type{Interval{S,L2,R2}}) where {T,S,L1,R1,L2,R2} = Interval{promote_type(T,S), <:Union{L1,L2}, <:Union{R1,R2}}
+# hacky way to fix situations where T and S are the same but L and R are different
+Base.not_sametype(x::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}, y::Tuple{Interval{T,L1,R1}, Interval{T,L2,R2}}) where {T,L1,R1,L2,R2} = nothing
+
 ##### DISPLAY #####
 
 

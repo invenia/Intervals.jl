@@ -62,5 +62,6 @@ export Bound,
        less_than_disjoint,
        greater_than_disjoint,
        superset,
-       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉
+       .., ≪, ≫, ⊆, ⊇, ⊈, ⊉,
+       open, open!, close, close!, erode, erode!, dilate, dilate!
 end

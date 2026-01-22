@@ -533,3 +533,112 @@ function find_intersections_helper!(results, x, y, lt)
     end
     return results
 end
+
+
+import Base: open, close
+
+"""
+    dilate(x::IntervalSet, strel) -> y
+
+Widen each interval in `x` by `strel` on both sides.  In image processing this
+operation is know as morphological dilation.  See also `dilate!`, `erode`, and
+`open`.
+"""
+function dilate(x::IntervalSet, strel)
+    y = Interval[]
+    for item in x.items
+        f, l = first(item)-strel, last(item)+strel
+        push!(y, typeof(item)(f, l))
+    end
+    IntervalSet(union(y))
+end
+
+"""
+    dilate!(x::IntervalSet, strel) -> x
+
+Widen each interval in `x` inplace by `strel` on both sides.  In image
+processing this operation is know as morphological dilation.  See also
+`dilate`, `erode, `open`, and `close`.
+"""
+function dilate!(x::IntervalSet, strel)
+    for i in eachindex(x.items)
+        f, l = first(x.items[i])-strel, last(x.items[i])+strel
+        x.items[i] = typeof(x.items[i])(f, l)
+    end
+    union!(x)
+end
+
+"""
+    erode(x::IntervalSet, strel) -> y
+
+Narrow each interval in `x` by `strel` on both sides.  In image processing this
+operation is know as morphological erotion.  See also `erode!`, `dilate`,
+`open`, and `close`.
+"""
+function erode(x::IntervalSet, strel)
+    y = Interval[]
+    for item in x.items
+        f, l = first(item)+strel, last(item)-strel
+        f<l && push!(y, typeof(item)(f, l))
+    end
+    IntervalSet(union(y))
+end
+
+"""
+    erode!(x::IntervalSet, strel) -> x
+
+Narrow each interval in `x` inplace by `strel` on both sides.  In image
+processing this operation is know as morphological erotion.  See also `erode`,
+`dilate`, `open`, and `close`.
+"""
+function erode!(x::IntervalSet, strel)
+    i = firstindex(x.items)
+    while i<=lastindex(x.items)
+        f, l = first(x.items[i])+strel, last(x.items[i])-strel
+        if f<l
+            x.items[i] = typeof(x.items[i])(f, l)
+            i += 1
+        else
+            splice!(x.items, i)
+        end
+    end
+    union!(x)
+end
+
+"""
+    open(x::IntervalSet, strel) -> y
+
+Remove intervals whose span is less than twice `strel`.  In image processing
+this operation is know as morphological opening.  See also `open!`, `close`,
+`erode`, and `dilate`.
+"""
+open(x::IntervalSet, strel) = dilate(erode(x, strel), strel)
+
+"""
+    open!(x::IntervalSet, strel) -> x
+
+Remove intervals inplace whose span is less than twice `strel`.  In image
+processing this operation is know as morphological opening.  See also `open`,
+`close`, `erode`, and `dilate`.
+"""
+open!(x::IntervalSet, strel) = dilate!(erode!(x, strel), strel)
+
+"""
+    close(x::IntervalSet, strel) -> y
+
+Fill in gaps between intervals whose span is less than twice `strel`.  In image
+processing this operation is know as morphological closing.  See also `close`,
+`erode`, `dilate`, and `close`.
+"""
+close(x::IntervalSet, strel) = erode(dilate(x, strel), strel)
+
+"""
+    close!(x::IntervalSet, strel) -> x
+
+Fill in gaps between intervals inplace whose span is less than twice `strel`.
+In image processing this operation is know as morphological closing.  See also
+`close`, `erode`, `dilate`, and `close`.
+
+"""
+close!(x::IntervalSet, strel) = erode!(dilate!(x, strel), strel)
+
